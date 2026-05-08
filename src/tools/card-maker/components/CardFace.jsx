@@ -77,12 +77,13 @@ const CardFace = forwardRef(function CardFace(
         side.image ? (
           <img
             className="card-face__image"
+            data-fit={side.imageFit ?? 'cover'}
             src={side.image}
             alt=""
             style={{
               objectFit: side.imageFit ?? 'cover',
               ...(side.focus &&
-                (side.imageFit ?? 'cover') !== 'fill' && {
+                (side.imageFit ?? 'cover') === 'cover' && {
                   objectPosition: `${(side.focus.x ?? 0.5) * 100}% ${(side.focus.y ?? 0.5) * 100}%`,
                 }),
             }}

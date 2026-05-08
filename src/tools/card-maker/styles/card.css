@@ -93,6 +93,22 @@
   height: calc(var(--card-h) * 0.5);
 }
 
+/* In "fit inside" mode the IMG sizes to its rendered content so the
+   border wraps the image instead of an empty letterboxed slot. The
+   slot's max bounds match the cover-mode height. */
+.card-face__image[data-fit='contain'] {
+  width: auto;
+  height: auto;
+  max-width: 100%;
+  max-height: calc(var(--card-h) * 0.36);
+  align-self: center;
+  background: transparent;
+}
+
+.card-face[data-orientation='landscape'] .card-face__image[data-fit='contain'] {
+  max-height: calc(var(--card-h) * 0.5);
+}
+
 .card-face__image-placeholder {
   width: 100%;
   height: calc(var(--card-h) * 0.36);
