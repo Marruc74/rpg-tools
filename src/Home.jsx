@@ -8,8 +8,8 @@ const tools = [
   },
   {
     to: '/journal',
-    name: 'Session Journal',
-    description: 'Take printable session notes. Build entries from sections you choose — characters, NPCs, places, rumours, and more — and export each session to PDF.',
+    name: 'Journal Sheet',
+    description: 'Design a printable journal page with the sections and subsections you want — characters, NPCs, places, rumours, and more. Export the blank form to PDF and bring fresh copies to every session.',
   },
 ]
 

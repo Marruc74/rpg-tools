@@ -1,20 +1,17 @@
 import jsPDF from 'jspdf'
 import { toCanvas } from 'html-to-image'
+import { PRINT_ID } from '../components/PrintArea.jsx'
 
 const PAGE_W_MM = 210
 const PAGE_H_MM = 297
 
-function safeFilename(name) {
-  return (name || 'session').replace(/[^a-z0-9-_ ]/gi, '_').trim() || 'session'
-}
-
 // Renders the off-screen print area into one or more A4 pages. The
 // rendered node uses A4-width pixel sizing so the canvas can be sliced
 // vertically into pages without distortion.
-export async function exportEntryPdf(entry) {
-  const node = document.querySelector(`[data-print-id="${entry.id}"]`)
+export async function exportTemplatePdf() {
+  const node = document.querySelector(`[data-print-id="${PRINT_ID}"]`)
   if (!node) {
-    alert('Could not find the print area for this entry.')
+    alert('Could not find the print area.')
     return
   }
 
@@ -51,5 +48,5 @@ export async function exportEntryPdf(entry) {
     pageIndex++
   }
 
-  pdf.save(`${safeFilename(entry.title)}.pdf`)
+  pdf.save('journal-template.pdf')
 }

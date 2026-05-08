@@ -4,19 +4,15 @@ import { Sheet } from './PrintArea.jsx'
 const SCALE = 0.55
 const PAGE_HEIGHT_PX = 1188 // A4 height at 4 px/mm = 297 * 4
 
-export default function SheetPreview({ entry, onPageCountChange }) {
+export default function SheetPreview({ template }) {
   const sheetRef = useRef(null)
   const [pageCount, setPageCount] = useState(1)
 
-  // Measure rendered sheet height after every layout to keep the page
-  // count and break overlays accurate.
   useLayoutEffect(() => {
     const el = sheetRef.current
     if (!el) return
     const h = el.scrollHeight
-    const pages = Math.max(1, Math.ceil(h / PAGE_HEIGHT_PX))
-    setPageCount(pages)
-    onPageCountChange?.(pages)
+    setPageCount(Math.max(1, Math.ceil(h / PAGE_HEIGHT_PX)))
   })
 
   const breakLines = Math.max(0, pageCount - 1)
@@ -39,7 +35,7 @@ export default function SheetPreview({ entry, onPageCountChange }) {
           className="sheet-preview__scale"
           style={{ transform: `scale(${SCALE})`, transformOrigin: 'top left' }}
         >
-          <Sheet entry={entry} ref={sheetRef} />
+          <Sheet template={template} ref={sheetRef} />
           {Array.from({ length: breakLines }).map((_, i) => (
             <div
               key={i}
