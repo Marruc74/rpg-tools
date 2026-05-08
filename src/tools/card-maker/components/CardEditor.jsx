@@ -8,6 +8,7 @@ export default function CardEditor({ card, collectionStyle, categories, onChange
   const [activeSide, setActiveSide] = useState('front')
 
   const style = card.style ?? collectionStyle ?? DEFAULT_STYLE
+  const locked = !!card.locked
 
   // Always include the card's current category so a user-renamed or
   // collection-scoped category isn't silently lost from the dropdown.
@@ -22,8 +23,20 @@ export default function CardEditor({ card, collectionStyle, categories, onChange
   const updateSide = (sideKey, side) => onChange({ ...card, [sideKey]: side })
 
   return (
-    <section className="card-editor">
-      <h2>Edit card</h2>
+    <section className={`card-editor${locked ? ' card-editor--locked' : ''}`}>
+      <div className="card-editor__header">
+        <h2>Edit card</h2>
+        <button
+          type="button"
+          className={`lock-toggle${locked ? ' is-locked' : ''}`}
+          onClick={() => updateField({ locked: !locked })}
+          title={locked ? 'Unlock card to edit' : 'Lock card to prevent edits'}
+        >
+          {locked ? '🔒 Locked' : '🔓 Unlocked'}
+        </button>
+      </div>
+
+      <fieldset disabled={locked} className="card-editor__fieldset">
 
       <div className="row">
         <label className="field">
@@ -79,6 +92,7 @@ export default function CardEditor({ card, collectionStyle, categories, onChange
         hideImage={activeSide === 'back'}
         hideTitle={activeSide === 'back'}
       />
+      </fieldset>
     </section>
   )
 }

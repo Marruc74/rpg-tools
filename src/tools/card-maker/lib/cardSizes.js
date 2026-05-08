@@ -8,14 +8,32 @@ export const CARD_SIZES = [
 ]
 
 export const DEFAULT_SIZE_ID = 'poker'
+export const CUSTOM_SIZE_LABEL = 'Custom…'
 
 const PX_PER_MM = 4
 
-export function getCardSize(id) {
-  return CARD_SIZES.find((s) => s.id === id) ?? CARD_SIZES[0]
+// Accepts either a known size id (string) or a custom shape
+// `{ w, h, orientation? }` stored on the collection. Returns a normalized
+// `{ w, h, orientation, label? }`.
+export function getCardSize(value) {
+  if (value && typeof value === 'object') {
+    const w = Number(value.w) || CARD_SIZES[0].w
+    const h = Number(value.h) || CARD_SIZES[0].h
+    return {
+      w,
+      h,
+      orientation: value.orientation || (w > h ? 'landscape' : 'portrait'),
+      custom: true,
+    }
+  }
+  return CARD_SIZES.find((s) => s.id === value) ?? CARD_SIZES[0]
 }
 
-export function getCardSizePx(id) {
-  const s = getCardSize(id)
+export function getCardSizePx(value) {
+  const s = getCardSize(value)
   return { w: s.w * PX_PER_MM, h: s.h * PX_PER_MM, orientation: s.orientation }
+}
+
+export function isCustomSize(value) {
+  return !!(value && typeof value === 'object')
 }

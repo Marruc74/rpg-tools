@@ -1,7 +1,56 @@
-import { useState } from 'react'
+import { useRef, useState } from 'react'
 import ReactMarkdown from 'react-markdown'
 import remarkGfm from 'remark-gfm'
 import { compressImage } from '../lib/compressImage.js'
+
+function clamp01(v) {
+  return Math.max(0, Math.min(1, v))
+}
+
+function FocusPicker({ src, focus, onChange }) {
+  const ref = useRef(null)
+  const [dragging, setDragging] = useState(false)
+
+  const setFromEvent = (e) => {
+    const el = ref.current
+    if (!el) return
+    const rect = el.getBoundingClientRect()
+    const x = clamp01((e.clientX - rect.left) / rect.width)
+    const y = clamp01((e.clientY - rect.top) / rect.height)
+    onChange({ x, y })
+  }
+
+  return (
+    <div className="focus-picker">
+      <div
+        ref={ref}
+        className="focus-picker__image"
+        onPointerDown={(e) => {
+          e.currentTarget.setPointerCapture(e.pointerId)
+          setDragging(true)
+          setFromEvent(e)
+        }}
+        onPointerMove={(e) => {
+          if (dragging) setFromEvent(e)
+        }}
+        onPointerUp={(e) => {
+          e.currentTarget.releasePointerCapture(e.pointerId)
+          setDragging(false)
+        }}
+        style={{ backgroundImage: `url(${src})` }}
+      >
+        <div
+          className="focus-picker__dot"
+          style={{ left: `${focus.x * 100}%`, top: `${focus.y * 100}%` }}
+        />
+      </div>
+      <span className="hint">
+        Click or drag to set the focal point — what stays centered when the
+        image is cropped to fit the card.
+      </span>
+    </div>
+  )
+}
 
 export default function SideEditor({ side, onChange, hideImage = false, hideTitle = false }) {
   const update = (patch) => onChange({ ...side, ...patch })
@@ -47,11 +96,18 @@ export default function SideEditor({ side, onChange, hideImage = false, hideTitl
           <div className="image-row">
             <input type="file" accept="image/*" onChange={handleImage} />
             {side.image && (
-              <button type="button" className="link" onClick={() => update({ image: null })}>
+              <button type="button" className="link" onClick={() => update({ image: null, focus: undefined })}>
                 Remove image
               </button>
             )}
           </div>
+          {side.image && (
+            <FocusPicker
+              src={side.image}
+              focus={side.focus ?? { x: 0.5, y: 0.5 }}
+              onChange={(focus) => update({ focus })}
+            />
+          )}
         </div>
       )}
 

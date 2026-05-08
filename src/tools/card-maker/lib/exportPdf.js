@@ -2,21 +2,29 @@ import jsPDF from 'jspdf'
 import { nodeToCanvas } from './exportPng.js'
 import { getCardSize } from './cardSizes.js'
 
-// A4, mm
-const A4_W = 210
-const A4_H = 297
+// Page sizes in mm (portrait shape; layout swaps to landscape if cards are landscape).
+export const PAGE_SIZES = {
+  a4:     { w: 210, h: 297, label: 'A4' },
+  letter: { w: 216, h: 279, label: 'Letter' },
+  legal:  { w: 216, h: 356, label: 'Legal' },
+}
+
 const MARGIN_MIN = 8 // mm — minimum margin around grid
 
-function computeLayout(cardSize) {
+function computeLayout(cardSize, pageSizeId = 'a4', scale = 1) {
+  const page = PAGE_SIZES[pageSizeId] ?? PAGE_SIZES.a4
+  const cardW = cardSize.w * scale
+  const cardH = cardSize.h * scale
+
   const isLandscape = cardSize.orientation === 'landscape'
-  const pageW = isLandscape ? A4_H : A4_W
-  const pageH = isLandscape ? A4_W : A4_H
+  const pageW = isLandscape ? page.h : page.w
+  const pageH = isLandscape ? page.w : page.h
 
-  const cols = Math.max(1, Math.floor((pageW - 2 * MARGIN_MIN) / cardSize.w))
-  const rows = Math.max(1, Math.floor((pageH - 2 * MARGIN_MIN) / cardSize.h))
+  const cols = Math.max(1, Math.floor((pageW - 2 * MARGIN_MIN) / cardW))
+  const rows = Math.max(1, Math.floor((pageH - 2 * MARGIN_MIN) / cardH))
 
-  const gridW = cols * cardSize.w
-  const gridH = rows * cardSize.h
+  const gridW = cols * cardW
+  const gridH = rows * cardH
   const marginX = (pageW - gridW) / 2
   const marginY = (pageH - gridH) / 2
 
@@ -31,8 +39,8 @@ function computeLayout(cardSize) {
     marginX,
     marginY,
     orientation: isLandscape ? 'landscape' : 'portrait',
-    cardW: cardSize.w,
-    cardH: cardSize.h,
+    cardW,
+    cardH,
   }
 }
 
@@ -82,14 +90,20 @@ async function placeFaces(pdf, cards, layout, side, mirror) {
   }
 }
 
-// sides: 'both' | 'front' | 'back'
-export async function exportLibraryPdf(cards, sizeId, sides = 'both') {
+// options: { sides?: 'both'|'front'|'back', pageSize?: 'a4'|'letter'|'legal', scale?: number }
+export async function exportLibraryPdf(cards, sizeId, options = {}) {
+  const { sides = 'both', pageSize = 'a4', scale = 1 } = options
   if (cards.length === 0) {
     alert('No cards to export.')
     return
   }
   const cardSize = getCardSize(sizeId)
-  const layout = computeLayout(cardSize)
+  const layout = computeLayout(cardSize, pageSize, scale)
+
+  if (layout.cols === 0 || layout.rows === 0) {
+    alert('Card is too large for this page size at the chosen scale.')
+    return
+  }
 
   const pdf = new jsPDF({
     unit: 'mm',
@@ -109,4 +123,9 @@ export async function exportLibraryPdf(cards, sizeId, sides = 'both') {
 
   const suffix = sides === 'both' ? '' : `-${sides}`
   pdf.save(`cardmaker-library${suffix}.pdf`)
+}
+
+// Exposed for the PDF preview UI. Pure layout math, no side effects.
+export function computePdfLayout(cardSize, pageSizeId, scale) {
+  return computeLayout(cardSize, pageSizeId, scale)
 }

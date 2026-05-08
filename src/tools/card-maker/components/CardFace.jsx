@@ -75,7 +75,18 @@ const CardFace = forwardRef(function CardFace(
 
       {!hideImage && (
         side.image ? (
-          <img className="card-face__image" src={side.image} alt="" />
+          <img
+            className="card-face__image"
+            src={side.image}
+            alt=""
+            style={
+              side.focus
+                ? {
+                    objectPosition: `${(side.focus.x ?? 0.5) * 100}% ${(side.focus.y ?? 0.5) * 100}%`,
+                  }
+                : undefined
+            }
+          />
         ) : (
           <div className="card-face__image-placeholder">no image</div>
         )

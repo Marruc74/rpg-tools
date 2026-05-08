@@ -1,6 +1,6 @@
 import StyleFields from './StyleFields.jsx'
 import { DEFAULT_STYLE } from '../lib/newCard.js'
-import { CARD_SIZES, DEFAULT_SIZE_ID } from '../lib/cardSizes.js'
+import { CARD_SIZES, DEFAULT_SIZE_ID, isCustomSize } from '../lib/cardSizes.js'
 import { DEFAULT_CATEGORIES } from '../lib/library.js'
 
 export default function CollectionList({
@@ -86,17 +86,10 @@ export default function CollectionList({
           <p className="hint">
             Applied to <strong>{active.name || 'this collection'}</strong>.
           </p>
-          <label className="field field--inline">
-            <span>Card size</span>
-            <select
-              value={active.size ?? DEFAULT_SIZE_ID}
-              onChange={(e) => onUpdateSize(active.id, e.target.value)}
-            >
-              {CARD_SIZES.map((s) => (
-                <option key={s.id} value={s.id}>{s.label}</option>
-              ))}
-            </select>
-          </label>
+          <SizeField
+            size={active.size}
+            onChange={(next) => onUpdateSize(active.id, next)}
+          />
           <StyleFields
             style={active.style ?? DEFAULT_STYLE}
             onChange={(next) => onUpdateStyle(active.id, next)}
@@ -108,6 +101,67 @@ export default function CollectionList({
         </fieldset>
       )}
     </aside>
+  )
+}
+
+function SizeField({ size, onChange }) {
+  const isCustom = isCustomSize(size)
+  const dropdownValue = isCustom ? '__custom__' : (size ?? DEFAULT_SIZE_ID)
+
+  const handleSelect = (value) => {
+    if (value === '__custom__') {
+      onChange({ w: 63, h: 88, orientation: 'portrait' })
+    } else {
+      onChange(value)
+    }
+  }
+
+  const updateDim = (key, raw) => {
+    const num = Math.max(1, Math.min(500, Number(raw) || 0))
+    const next = { ...(typeof size === 'object' ? size : {}), [key]: num }
+    next.orientation = next.w > next.h ? 'landscape' : 'portrait'
+    onChange(next)
+  }
+
+  return (
+    <>
+      <label className="field field--inline">
+        <span>Card size</span>
+        <select
+          value={dropdownValue}
+          onChange={(e) => handleSelect(e.target.value)}
+        >
+          {CARD_SIZES.map((s) => (
+            <option key={s.id} value={s.id}>{s.label}</option>
+          ))}
+          <option value="__custom__">Custom…</option>
+        </select>
+      </label>
+      {isCustom && (
+        <div className="custom-size-row">
+          <label className="field field--inline">
+            <span>W (mm)</span>
+            <input
+              type="number"
+              min="10"
+              max="500"
+              value={size.w}
+              onChange={(e) => updateDim('w', e.target.value)}
+            />
+          </label>
+          <label className="field field--inline">
+            <span>H (mm)</span>
+            <input
+              type="number"
+              min="10"
+              max="500"
+              value={size.h}
+              onChange={(e) => updateDim('h', e.target.value)}
+            />
+          </label>
+        </div>
+      )}
+    </>
   )
 }
 

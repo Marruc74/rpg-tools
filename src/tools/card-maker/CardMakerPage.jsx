@@ -9,8 +9,11 @@ import CardPreview from './components/CardPreview.jsx'
 import Toolbar from './components/Toolbar.jsx'
 import HiddenExportArea from './components/HiddenExportArea.jsx'
 import StorageIndicator from './components/StorageIndicator.jsx'
+import PdfPreview from './components/PdfPreview.jsx'
+import SnapshotsModal from './components/SnapshotsModal.jsx'
 import { useUndoableState } from './hooks/useUndoableState.js'
 import { useBackupNudge } from './hooks/useBackupNudge.js'
+import { useSnapshots } from './hooks/useSnapshots.js'
 import { newCard } from './lib/newCard.js'
 import {
   LIBRARY_KEY,
@@ -32,6 +35,25 @@ export default function CardMakerPage() {
     migrateLibrary,
   )
   const backup = useBackupNudge()
+
+  const [pdfPreviewOpen, setPdfPreviewOpen] = useState(false)
+  const [pdfOptions, setPdfOptions] = useState({
+    sides: 'both',
+    pageSize: 'a4',
+    scale: 1,
+  })
+
+  const [snapshotsOpen, setSnapshotsOpen] = useState(false)
+  const snapshotsApi = useSnapshots()
+
+  const handleSaveSnapshot = (name) => snapshotsApi.save(name, library)
+  const handleRestoreSnapshot = (id) => {
+    const restored = snapshotsApi.restore(id)
+    if (restored) {
+      setLibrary(restored)
+      setSnapshotsOpen(false)
+    }
+  }
 
   const [overflowMap, setOverflowMap] = useState(() => new Map())
   const handleOverflowChange = useCallback((cardId, side, overflows) => {
@@ -227,9 +249,9 @@ export default function CardMakerPage() {
     await exportCardPngs(selected, frontRef.current, backRef.current)
   }
 
-  const handleExportPdf = async (sides = 'both') => {
+  const handleExportPdf = async (options = {}) => {
     if (cards.length === 0) return
-    await exportLibraryPdf(cards, activeCollection?.size, sides)
+    await exportLibraryPdf(cards, activeCollection?.size, options)
   }
 
   const handleExportLibraryJson = () => {
@@ -347,6 +369,10 @@ export default function CardMakerPage() {
           onRedo={history.redo}
           canUndo={history.canUndo}
           canRedo={history.canRedo}
+          onTogglePdfPreview={() => setPdfPreviewOpen((v) => !v)}
+          pdfPreviewOpen={pdfPreviewOpen}
+          onPdfOptionsChange={setPdfOptions}
+          onOpenSnapshots={() => setSnapshotsOpen(true)}
           hasSelection={!!selected}
           hasCollection={!!activeCollection}
           cardCount={cards.length}
@@ -405,6 +431,25 @@ export default function CardMakerPage() {
           </div>
         )}
       </main>
+
+      {pdfPreviewOpen && (
+        <PdfPreview
+          cards={cards}
+          sizeId={activeCollection?.size}
+          options={pdfOptions}
+          onClose={() => setPdfPreviewOpen(false)}
+        />
+      )}
+
+      {snapshotsOpen && (
+        <SnapshotsModal
+          snapshots={snapshotsApi.snapshots}
+          onSave={handleSaveSnapshot}
+          onRestore={handleRestoreSnapshot}
+          onDelete={snapshotsApi.remove}
+          onClose={() => setSnapshotsOpen(false)}
+        />
+      )}
 
       <HiddenExportArea
         cards={cards}

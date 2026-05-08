@@ -185,6 +185,15 @@ export default function CardList({
               <div className="card-list__body">
                 <div className="card-list__name">
                   {card.name || '(unnamed)'}
+                  {card.locked && (
+                    <span
+                      className="card-list__lock-badge"
+                      title="Card is locked"
+                      aria-label="Locked"
+                    >
+                      🔒
+                    </span>
+                  )}
                   {overflowingIds?.has(card.id) && (
                     <span
                       className="card-list__overflow-badge"
@@ -213,9 +222,13 @@ export default function CardList({
                   className="icon-button"
                   onClick={(e) => {
                     e.stopPropagation()
+                    if (card.locked) {
+                      alert('Card is locked. Unlock it before deleting.')
+                      return
+                    }
                     if (confirm(`Delete "${card.name}"?`)) onDelete(card.id)
                   }}
-                  title="Delete"
+                  title={card.locked ? 'Unlock to delete' : 'Delete'}
                   aria-label="Delete card"
                 >
                   ×
