@@ -6,6 +6,11 @@ const tools = [
     name: 'Card-Maker',
     description: 'Design printable cards for tabletop RPGs. Edit fronts and backs, organize them into collections, export as PNG or PDF.',
   },
+  {
+    to: '/journal',
+    name: 'Session Journal',
+    description: 'Take printable session notes. Build entries from sections you choose — characters, NPCs, places, rumours, and more — and export each session to PDF.',
+  },
 ]
 
 export default function Home() {

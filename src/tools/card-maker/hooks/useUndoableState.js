@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useRef, useState } from 'react'
-import { useIndexedDBState } from './useIndexedDBState.js'
+import { useIndexedDBState } from '../../../shared/hooks/useIndexedDBState.js'
 
 // Bursts of edits within this window collapse into a single undo entry.
 const COMMIT_DELAY_MS = 600
