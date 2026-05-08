@@ -174,6 +174,58 @@
 
 .table-editor__roll:hover { background: #3f3319; }
 
+.table-editor__tabs {
+  display: flex;
+  gap: 4px;
+  border-bottom: 1px solid #d8cfb8;
+  margin-bottom: -2px;
+}
+
+.table-editor__tabs button {
+  padding: 6px 14px;
+  border: none;
+  background: transparent;
+  font-size: 13px;
+  font-weight: 600;
+  color: #7a6a4a;
+  cursor: pointer;
+  border-bottom: 2px solid transparent;
+  margin-bottom: -1px;
+}
+
+.table-editor__tabs button.is-active {
+  color: #5a4a2c;
+  border-bottom-color: #5a4a2c;
+}
+
+.table-editor__roll-panel,
+.table-editor__edit-panel {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  flex: 1 1 auto;
+  min-height: 0;
+}
+
+.table-editor__roll-panel {
+  align-items: stretch;
+}
+
+.table-editor__description-display {
+  padding: 8px 12px;
+  background: #faf3df;
+  border-radius: 4px;
+  font-size: 13px;
+  font-style: italic;
+  color: #4a443a;
+}
+
+.table-editor__summary {
+  font-size: 12px;
+  color: #7a6a4a;
+  font-style: italic;
+}
+
 .table-editor__description {
   width: 100%;
   padding: 6px 10px;
