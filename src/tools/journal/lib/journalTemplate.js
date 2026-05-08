@@ -1,19 +1,22 @@
 import { v4 as uuid } from 'uuid'
 import { SECTION_TYPES, getSectionType } from './sectionTypes.js'
 
-// New, content-free schema: only the structure of a journal page is
-// stored. Each print is a fresh blank form.
 export const TEMPLATE_KEY = 'journal:template'
-export const TEMPLATE_VERSION = 1
+export const TEMPLATE_VERSION = 2
 
+const DEFAULT_TITLE = 'Session Notes'
+
+// Approximates the minimalist single-page layout: header info row, a
+// big notes block, then half-width side boxes.
 const DEFAULT_SECTION_IDS = [
+  'session',
   'date',
-  'characters',
-  'npcs',
+  'notes',
   'places',
+  'initiative',
+  'npcs',
   'items',
-  'rumours',
-  'next',
+  'combat',
 ]
 
 export function newSubsection(sub = {}) {
@@ -29,6 +32,8 @@ export function newSection(typeId) {
   return {
     id: uuid(),
     label: type.label,
+    span: type.span ?? 'full',
+    repeat: type.repeat ?? 1,
     subsections: type.subsections.map(newSubsection),
   }
 }
@@ -36,32 +41,36 @@ export function newSection(typeId) {
 export function emptyTemplate() {
   return {
     version: TEMPLATE_VERSION,
+    title: DEFAULT_TITLE,
     sections: DEFAULT_SECTION_IDS.map(newSection),
   }
 }
 
-// Replace the user's whole template with the catalog defaults.
-export function defaultTemplate() {
-  return emptyTemplate()
+export const defaultTemplate = emptyTemplate
+
+function normalizeSection(s) {
+  return {
+    id: s.id ?? uuid(),
+    label: s.label ?? '',
+    span: s.span === 'half' ? 'half' : 'full',
+    repeat: Math.max(1, Math.min(20, Number(s.repeat) || 1)),
+    subsections: Array.isArray(s.subsections) && s.subsections.length > 0
+      ? s.subsections.map((sub) => ({
+          id: sub.id ?? uuid(),
+          label: sub.label ?? '',
+          lines: Math.max(1, Math.min(20, Number(sub.lines) || 4)),
+        }))
+      : [{ id: uuid(), label: '', lines: 4 }],
+  }
 }
 
 export function migrateTemplate(value) {
   if (!value || typeof value !== 'object') return emptyTemplate()
-  if (value.version === TEMPLATE_VERSION && Array.isArray(value.sections)) {
-    // Defensive normalization in case stored data drifted.
+  if (Array.isArray(value.sections)) {
     return {
       version: TEMPLATE_VERSION,
-      sections: value.sections.map((s) => ({
-        id: s.id ?? uuid(),
-        label: s.label ?? '',
-        subsections: Array.isArray(s.subsections)
-          ? s.subsections.map((sub) => ({
-              id: sub.id ?? uuid(),
-              label: sub.label ?? '',
-              lines: Math.max(1, Math.min(20, sub.lines ?? 4)),
-            }))
-          : [{ id: uuid(), label: '', lines: 4 }],
-      })),
+      title: typeof value.title === 'string' ? value.title : DEFAULT_TITLE,
+      sections: value.sections.map(normalizeSection),
     }
   }
   return emptyTemplate()
@@ -88,7 +97,7 @@ function triggerDownload(payload, filename) {
 export function downloadTemplateJson(template) {
   triggerDownload(
     { kind: 'journalTemplate', version: TEMPLATE_VERSION, template },
-    `${safeFilename('journal-template')}.json`,
+    `${safeFilename(template.title)}.json`,
   )
 }
 
@@ -106,7 +115,6 @@ export function readJsonFile(file) {
           resolve(migrateTemplate(parsed.template))
           return
         }
-        // Tolerate raw template shape too.
         if (Array.isArray(parsed.sections)) {
           resolve(migrateTemplate(parsed))
           return

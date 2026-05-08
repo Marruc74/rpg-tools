@@ -2,9 +2,9 @@ import { forwardRef } from 'react'
 
 function LinedSpace({ lines }) {
   return (
-    <div className="journal-print__lines" aria-hidden="true">
+    <div className="js-lines" aria-hidden="true">
       {Array.from({ length: lines }).map((_, i) => (
-        <div key={i} className="journal-print__line" />
+        <div key={i} className="js-line" />
       ))}
     </div>
   )
@@ -12,50 +12,78 @@ function LinedSpace({ lines }) {
 
 function Subsection({ sub }) {
   const hasLabel = sub.label && sub.label.trim().length > 0
-  // Inline form-field: a single labeled writing line, label sits on the left.
   if (sub.lines === 1 && hasLabel) {
     return (
-      <div className="journal-print__inline">
-        <span className="journal-print__inline-label">{sub.label}</span>
-        <span className="journal-print__inline-rule" />
+      <div className="js-inline">
+        <span className="js-inline-label">{sub.label}</span>
+        <span className="js-inline-rule" />
       </div>
     )
   }
-  // Block: optional small label heading, then ruled lines.
   return (
-    <div className="journal-print__block">
-      {hasLabel && (
-        <div className="journal-print__sub-label">{sub.label}</div>
-      )}
+    <div className="js-block">
+      {hasLabel && <div className="js-sub-label">{sub.label}</div>}
       <LinedSpace lines={sub.lines} />
+    </div>
+  )
+}
+
+function SubsectionGroup({ subsections }) {
+  return (
+    <>
+      {subsections.map((sub) => (
+        <Subsection key={sub.id} sub={sub} />
+      ))}
+    </>
+  )
+}
+
+function SectionBox({ section }) {
+  const cls = `js-section js-section--${section.span === 'half' ? 'half' : 'full'}`
+  if (section.repeat > 1) {
+    return (
+      <div className={cls}>
+        {section.label && <div className="js-section__label">{section.label}</div>}
+        <div className="js-section__cards">
+          {Array.from({ length: section.repeat }).map((_, i) => (
+            <div key={i} className="js-card">
+              <SubsectionGroup subsections={section.subsections} />
+            </div>
+          ))}
+        </div>
+      </div>
+    )
+  }
+  return (
+    <div className={cls}>
+      {section.label && <div className="js-section__label">{section.label}</div>}
+      <div className="js-section__body">
+        <SubsectionGroup subsections={section.subsections} />
+      </div>
     </div>
   )
 }
 
 const PRINT_ID = 'journal-template-sheet'
 
-// A4-width rendering of the journal template. Used by both the
-// off-screen rasterization source for PDF export and the on-screen
-// scaled-down preview. Caller controls visibility.
 const Sheet = forwardRef(function Sheet({ template }, ref) {
   if (!template) return null
   return (
     <div className="journal-print" ref={ref}>
-      {template.sections.map((section) => (
-        <section key={section.id} className="journal-print__section">
-          {section.label && <h2>{section.label}</h2>}
-          {section.subsections.map((sub) => (
-            <Subsection key={sub.id} sub={sub} />
-          ))}
-        </section>
-      ))}
+      {template.title && (
+        <h1 className="journal-print__title">{template.title}</h1>
+      )}
+      <div className="journal-print__grid">
+        {template.sections.map((section) => (
+          <SectionBox key={section.id} section={section} />
+        ))}
+      </div>
     </div>
   )
 })
 
 export { Sheet, PRINT_ID }
 
-// Off-screen wrapper used as the rasterization source for PDF export.
 export default function PrintArea({ template }) {
   if (!template) return null
   return (

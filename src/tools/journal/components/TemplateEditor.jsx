@@ -2,10 +2,13 @@ import { useState } from 'react'
 import { SECTION_TYPES } from '../lib/sectionTypes.js'
 import { newSection, newSubsection } from '../lib/journalTemplate.js'
 
-const LINE_OPTIONS = [1, 2, 3, 4, 6, 8, 10]
+const LINE_OPTIONS = [1, 2, 3, 4, 5, 6, 8, 10]
+const REPEAT_OPTIONS = [1, 2, 3, 4, 6, 8, 10, 12]
 
 export default function TemplateEditor({ template, onChange }) {
   const [addType, setAddType] = useState('')
+
+  const updateTitle = (title) => onChange({ ...template, title })
 
   const updateSections = (next) => onChange({ ...template, sections: next })
 
@@ -35,13 +38,23 @@ export default function TemplateEditor({ template, onChange }) {
   return (
     <section className="template-editor">
       <header className="template-editor__header">
-        <h2>Sections</h2>
+        <h2>Template</h2>
         <p className="hint">
-          Build the page by picking sections and subsections. Nothing you type
-          here gets saved with the printed sheet — these labels become the
-          headings; the printed page underneath is blank for handwriting.
+          Pick sections, set their width and repeat count, and arrange them.
+          Nothing typed here is saved with the printed page — these labels
+          become the headings on a blank form for handwriting.
         </p>
       </header>
+
+      <label className="template-editor__title-field">
+        <span>Sheet title</span>
+        <input
+          type="text"
+          value={template.title ?? ''}
+          onChange={(e) => updateTitle(e.target.value)}
+          placeholder="Session Notes"
+        />
+      </label>
 
       <div className="template-editor__sections">
         {template.sections.length === 0 && (
@@ -113,6 +126,30 @@ function SectionRow({ section, canMoveUp, canMoveDown, onChange, onRemove, onMov
           <button className="icon-button" onClick={onMoveDown} disabled={!canMoveDown} title="Move down" aria-label="Move section down">↓</button>
           <button className="icon-button" onClick={onRemove} title="Remove section" aria-label="Remove section">×</button>
         </div>
+      </div>
+
+      <div className="section-row__meta">
+        <label>
+          <span>Width</span>
+          <select
+            value={section.span ?? 'full'}
+            onChange={(e) => onChange({ span: e.target.value })}
+          >
+            <option value="full">Full</option>
+            <option value="half">Half</option>
+          </select>
+        </label>
+        <label>
+          <span>Repeat</span>
+          <select
+            value={section.repeat ?? 1}
+            onChange={(e) => onChange({ repeat: Number(e.target.value) })}
+          >
+            {REPEAT_OPTIONS.map((n) => (
+              <option key={n} value={n}>{n}×</option>
+            ))}
+          </select>
+        </label>
       </div>
 
       <div className="section-row__subs">

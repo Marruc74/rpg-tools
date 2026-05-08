@@ -23,7 +23,7 @@
 
 .journal__main {
   display: grid;
-  grid-template-columns: 1fr 500px;
+  grid-template-columns: 1fr 540px;
   gap: 12px;
   padding: 16px;
   flex: 1 1 auto;
@@ -56,6 +56,28 @@
   color: #5a4a2c;
 }
 
+.template-editor__title-field {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  margin-bottom: 4px;
+}
+
+.template-editor__title-field span {
+  font-size: 11px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: #5a4a2c;
+}
+
+.template-editor__title-field input {
+  padding: 6px 10px;
+  border: 1px solid #d0c19a;
+  border-radius: 4px;
+  font-size: 14px;
+}
+
 .template-editor__sections {
   display: flex;
   flex-direction: column;
@@ -85,7 +107,7 @@
 
 .template-editor__add button:disabled { opacity: 0.4; }
 
-/* ---------- Section row (one row per chosen section) ---------- */
+/* ---------- Section row in editor ---------- */
 .section-row {
   border: 1px solid #ece4d0;
   border-radius: 6px;
@@ -128,6 +150,32 @@
   flex-shrink: 0;
 }
 
+.section-row__meta {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  padding: 8px 10px;
+  border-bottom: 1px solid #f0e8d2;
+  background: #fff;
+  font-size: 11px;
+  color: #5a4a2c;
+}
+
+.section-row__meta label {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.section-row__meta select,
+.section-row__meta input[type='number'] {
+  padding: 2px 6px;
+  border: 1px solid #d0c19a;
+  border-radius: 4px;
+  font-size: 12px;
+  width: 70px;
+}
+
 .section-row__subs {
   display: flex;
   flex-direction: column;
@@ -135,7 +183,6 @@
   gap: 6px;
 }
 
-/* ---------- Subsection row (label + line count) ---------- */
 .sub-row {
   display: flex;
   align-items: center;
@@ -167,77 +214,129 @@
   font-size: 12px;
 }
 
-/* ---------- Print area (rendered identically off-screen and inside preview) ---------- */
+/* ============================================================
+   Print sheet — minimalist boxed layout
+   ============================================================ */
 .journal-print {
   width: 840px; /* 210 mm * 4 px/mm */
-  background: #fdfaf3;
-  color: #1d1a16;
-  padding: 56px 56px;
-  font-family: 'Georgia', 'Times New Roman', serif;
-  font-size: 14px;
-  line-height: 1.5;
+  background: #fff;
+  color: #1a1a1a;
+  padding: 48px;
+  font-family: 'Helvetica Neue', 'Arial', sans-serif;
+  font-size: 13px;
+  line-height: 1.4;
   box-sizing: border-box;
 }
 
-.journal-print__section {
-  margin-bottom: 20px;
+.journal-print__title {
+  margin: 0 0 16px;
+  font-size: 26px;
+  font-weight: 800;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: #1a1a1a;
+}
+
+.journal-print__grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+  align-items: start;
+}
+
+/* ---- Section box ---- */
+.js-section {
+  position: relative;
+  border: 1.5px solid #1a1a1a;
+  border-radius: 6px;
+  padding: 22px 12px 12px;
+  background: #fff;
+  box-sizing: border-box;
   break-inside: avoid;
 }
 
-.journal-print__section h2 {
-  margin: 0 0 6px;
-  font-size: 16px;
-  font-variant: small-caps;
-  letter-spacing: 0.06em;
-  color: #5a4a2c;
-  border-bottom: 1px solid color-mix(in srgb, #5a4a2c 35%, transparent);
-  padding-bottom: 2px;
+.js-section--full { grid-column: 1 / -1; }
+.js-section--half { grid-column: span 1; }
+
+.js-section__label {
+  position: absolute;
+  top: 6px;
+  left: 12px;
+  font-size: 10px;
+  font-weight: 800;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: #1a1a1a;
+  background: #fff;
+  padding: 0 4px;
 }
 
-/* Block subsection: optional small label, then ruled lines */
-.journal-print__block {
-  margin: 8px 0;
+.js-section__body {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
 }
 
-.journal-print__sub-label {
-  font-size: 11px;
-  font-variant: small-caps;
+/* ---- Repeated cards inside a section ---- */
+.js-section__cards {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 8px;
+}
+
+.js-card {
+  border: 1px solid #1a1a1a;
+  border-radius: 4px;
+  padding: 8px 10px;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  background: #fff;
+}
+
+/* ---- Subsection rendering ---- */
+.js-block { margin: 0; }
+
+.js-sub-label {
+  font-size: 10px;
+  font-weight: 700;
   letter-spacing: 0.08em;
-  color: #6b5a3a;
+  text-transform: uppercase;
+  color: #1a1a1a;
   margin-bottom: 2px;
 }
 
-.journal-print__lines {
+.js-lines {
   display: flex;
   flex-direction: column;
 }
 
-.journal-print__line {
-  height: 26px;
-  border-bottom: 1px solid #b8a877;
+.js-line {
+  height: 24px;
+  border-bottom: 1px solid #1a1a1a;
 }
 
-/* Inline subsection: label sits on left of a single underline */
-.journal-print__inline {
+.js-inline {
   display: flex;
   align-items: flex-end;
-  gap: 10px;
-  margin: 8px 0;
+  gap: 8px;
+  margin: 0;
 }
 
-.journal-print__inline-label {
-  font-size: 11px;
-  font-variant: small-caps;
+.js-inline-label {
+  font-size: 10px;
+  font-weight: 700;
   letter-spacing: 0.08em;
-  color: #6b5a3a;
+  text-transform: uppercase;
+  color: #1a1a1a;
   flex-shrink: 0;
   padding-bottom: 4px;
 }
 
-.journal-print__inline-rule {
+.js-inline-rule {
   flex: 1 1 auto;
-  border-bottom: 1px solid #b8a877;
-  height: 26px;
+  border-bottom: 1px solid #1a1a1a;
+  height: 24px;
 }
 
 /* ---------- Sheet preview (on-screen) ---------- */
