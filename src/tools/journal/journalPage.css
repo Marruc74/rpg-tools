@@ -307,6 +307,29 @@
 
 .inspector__add:hover { background: #3f3319; }
 
+.inspector__preset {
+  display: flex;
+  gap: 6px;
+}
+
+.inspector__preset select {
+  flex: 1 1 auto;
+  padding: 6px 8px;
+  border: 1px solid #d0c19a;
+  border-radius: 4px;
+  font-size: 12px;
+}
+
+.inspector__preset button {
+  padding: 6px 14px;
+  border: 1px solid #b39966;
+  border-radius: 4px;
+  background: #fdfaf3;
+  font-size: 12px;
+}
+
+.inspector__preset button:disabled { opacity: 0.4; }
+
 .inspector__box-actions {
   display: grid;
   grid-template-columns: 1fr 1fr 1fr;
@@ -398,19 +421,15 @@
   background: #fbe4d6;
 }
 
-.inspector__trackers {
+.inspector__content {
   display: flex;
   flex-direction: column;
-  gap: 6px;
+  gap: 8px;
   border-top: 1px solid #f0e8d2;
   padding-top: 10px;
 }
 
-.inspector__trackers-head {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 8px;
+.inspector__content-head {
   font-size: 11px;
   font-weight: 600;
   text-transform: uppercase;
@@ -418,27 +437,100 @@
   color: #5a4a2c;
 }
 
-.inspector__trackers-head .link {
+.inspector__content-add {
+  display: flex;
+  gap: 6px;
+}
+
+.inspector__content-add select {
+  flex: 1 1 auto;
+  padding: 4px 8px;
+  border: 1px solid #d0c19a;
+  border-radius: 4px;
+  font-size: 12px;
+}
+
+.inspector__content-add button {
+  padding: 4px 12px;
+  border: 1px solid #b39966;
+  border-radius: 4px;
+  background: #fdfaf3;
+  font-size: 12px;
+}
+
+.inspector__content-add button:disabled { opacity: 0.4; }
+
+.content-row {
+  border: 1px solid #ece4d0;
+  border-radius: 4px;
+  background: #fff;
+}
+
+.content-row__head {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  padding: 6px 8px;
+  background: #f8f1dc;
+  border-bottom: 1px solid #f0e8d2;
+  border-radius: 4px 4px 0 0;
+}
+
+.content-row__kind {
+  flex: 1 1 auto;
+  font-size: 11px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
   color: #5a4a2c;
 }
 
-.tracker-row {
+.content-row__body {
+  padding: 8px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.content-row__label {
+  width: 100%;
+  padding: 4px 8px;
+  border: 1px solid #d0c19a;
+  border-radius: 4px;
+  font-size: 13px;
+}
+
+.content-row__count {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 11px;
+  color: #5a4a2c;
+}
+
+.content-row__count input {
+  width: 60px;
+  padding: 4px 6px;
+  border: 1px solid #d0c19a;
+  border-radius: 4px;
+  font-size: 13px;
+}
+
+.content-row__grid {
+  display: flex;
+  gap: 12px;
+  font-size: 11px;
+  color: #5a4a2c;
+}
+
+.content-row__grid label {
   display: flex;
   align-items: center;
   gap: 6px;
 }
 
-.tracker-row__label {
-  flex: 1 1 auto;
-  padding: 4px 8px;
-  border: 1px solid #d0c19a;
-  border-radius: 4px;
-  font-size: 13px;
-  min-width: 0;
-}
-
-.tracker-row__count {
-  width: 60px;
+.content-row__grid input {
+  width: 50px;
   padding: 4px 6px;
   border: 1px solid #d0c19a;
   border-radius: 4px;
@@ -469,25 +561,27 @@
   color: #1a1a1a;
 }
 
-/* Trackers — labeled rows of empty checkboxes inside a box. Same
-   markup is rendered both on the canvas (.canvas-box) and on the print
-   page (.print-box), so this style is shared. */
-.box-trackers {
-  padding: 2px 10px 8px;
+/* Box content (rendered identically on canvas and on the print page) */
+.box-content {
+  padding: 2px 10px 10px;
   display: flex;
   flex-direction: column;
-  gap: 6px;
+  gap: 8px;
   pointer-events: none;
+  flex: 1 1 auto;
+  min-height: 0;
+  overflow: hidden;
 }
 
-.box-tracker {
+/* Tracker (checkboxes) */
+.bc-tracker {
   display: flex;
   align-items: center;
   gap: 6px;
   flex-wrap: wrap;
 }
 
-.box-tracker__label {
+.bc-tracker__label {
   font-size: 10px;
   font-weight: 700;
   letter-spacing: 0.06em;
@@ -496,19 +590,112 @@
   min-width: 0;
 }
 
-.box-tracker__checks {
+.bc-tracker__checks {
   display: flex;
   flex-wrap: wrap;
   gap: 3px;
 }
 
-.box-tracker__check {
+.bc-tracker__check {
   width: 18px;
   height: 18px;
   border: 1.5px solid #1a1a1a;
   border-radius: 3px;
   box-sizing: border-box;
   display: inline-block;
+}
+
+/* Lined writing space */
+.bc-lines__label {
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: #1a1a1a;
+  margin-bottom: 2px;
+}
+
+.bc-lines__rules {
+  display: flex;
+  flex-direction: column;
+}
+
+.bc-lines__rule {
+  height: 24px;
+  border-bottom: 1px solid #1a1a1a;
+}
+
+/* Numbered list */
+.bc-numbered__label {
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: #1a1a1a;
+  margin-bottom: 2px;
+}
+
+.bc-numbered__rows {
+  display: flex;
+  flex-direction: column;
+}
+
+.bc-numbered__row {
+  display: flex;
+  align-items: flex-end;
+  gap: 6px;
+  height: 24px;
+}
+
+.bc-numbered__index {
+  font-size: 11px;
+  font-weight: 700;
+  color: #1a1a1a;
+  flex-shrink: 0;
+  width: 18px;
+  text-align: right;
+  padding-bottom: 4px;
+}
+
+.bc-numbered__rule {
+  flex: 1 1 auto;
+  border-bottom: 1px solid #1a1a1a;
+  height: 24px;
+}
+
+/* Grid */
+.bc-grid__label {
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: #1a1a1a;
+  margin-bottom: 4px;
+}
+
+.bc-grid {
+  display: grid;
+  gap: 0;
+  border: 1px solid #1a1a1a;
+  width: 100%;
+}
+
+.bc-grid__cell {
+  border-right: 1px solid #1a1a1a;
+  border-bottom: 1px solid #1a1a1a;
+  aspect-ratio: 1 / 1;
+  min-height: 18px;
+}
+
+.bc-grid__cell:nth-child(n) {
+  /* remove rightmost and bottommost double border */
+}
+
+.bc-grid > .bc-grid__cell:last-child { border-right: none; border-bottom: none; }
+
+.bc-grid-wrap {
+  display: flex;
+  flex-direction: column;
 }
 
 /* Shared title band used by both the canvas page and the print page */

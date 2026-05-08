@@ -1,12 +1,16 @@
+import { useState } from 'react'
 import {
   GRID_PX,
   MIN_W,
   MIN_H,
   MAX_TRACKER_COUNT,
+  MAX_GRID_DIM,
+  CONTENT_KINDS,
   snap,
   clamp,
-  newTracker,
+  newContentItem,
 } from '../lib/journalTemplate.js'
+import { BOX_PRESETS } from '../lib/presets.js'
 
 export default function BoxInspector({
   box,
@@ -15,6 +19,7 @@ export default function BoxInspector({
   pageDims,
   activePageIndex,
   onAddBox,
+  onAddPreset,
   onChangeBox,
   onChangeTemplate,
   onDeleteBox,
@@ -71,8 +76,151 @@ export default function BoxInspector({
       <button type="button" className="inspector__add" onClick={onAddBox}>
         + Add box{isMultiPage ? ` to ${pageLabel}` : ''}
       </button>
+      <PresetPicker onPick={onAddPreset} />
       {renderPanel()}
     </aside>
+  )
+}
+
+function PresetPicker({ onPick }) {
+  const [value, setValue] = useState('')
+  return (
+    <div className="inspector__preset">
+      <select value={value} onChange={(e) => setValue(e.target.value)}>
+        <option value="">+ Add preset…</option>
+        {BOX_PRESETS.map((p) => (
+          <option key={p.id} value={p.id}>{p.name}</option>
+        ))}
+      </select>
+      <button
+        type="button"
+        disabled={!value}
+        onClick={() => {
+          onPick(value)
+          setValue('')
+        }}
+      >
+        Add
+      </button>
+    </div>
+  )
+}
+
+function ContentEditor({ items, onUpdate, onRemove, onMove, onAdd }) {
+  const [addKind, setAddKind] = useState('')
+  return (
+    <div className="inspector__content">
+      <div className="inspector__content-head">
+        <span>Content</span>
+      </div>
+      {items.length === 0 && (
+        <p className="hint">
+          No content. Add a tracker (checkboxes), lined writing space,
+          numbered list, or grid using the menu below.
+        </p>
+      )}
+      {items.map((item, idx) => (
+        <ContentRow
+          key={item.id}
+          item={item}
+          canMoveUp={idx > 0}
+          canMoveDown={idx < items.length - 1}
+          onChange={(patch) => onUpdate(item.id, patch)}
+          onRemove={() => onRemove(item.id)}
+          onMoveUp={() => onMove(idx, -1)}
+          onMoveDown={() => onMove(idx, 1)}
+        />
+      ))}
+      <div className="inspector__content-add">
+        <select value={addKind} onChange={(e) => setAddKind(e.target.value)}>
+          <option value="">+ Add content…</option>
+          {CONTENT_KINDS.map((k) => (
+            <option key={k.id} value={k.id}>{k.label}</option>
+          ))}
+        </select>
+        <button
+          type="button"
+          disabled={!addKind}
+          onClick={() => {
+            onAdd(addKind)
+            setAddKind('')
+          }}
+        >
+          Add
+        </button>
+      </div>
+    </div>
+  )
+}
+
+function ContentRow({ item, canMoveUp, canMoveDown, onChange, onRemove, onMoveUp, onMoveDown }) {
+  const KIND_LABEL = {
+    tracker: 'Tracker',
+    lines: 'Lines',
+    numbered: 'Numbered',
+    grid: 'Grid',
+  }
+  return (
+    <div className="content-row">
+      <div className="content-row__head">
+        <span className="content-row__kind">{KIND_LABEL[item.kind]}</span>
+        <button className="icon-button" onClick={onMoveUp} disabled={!canMoveUp} title="Move up" aria-label="Move up">↑</button>
+        <button className="icon-button" onClick={onMoveDown} disabled={!canMoveDown} title="Move down" aria-label="Move down">↓</button>
+        <button className="icon-button" onClick={onRemove} title="Remove" aria-label="Remove">×</button>
+      </div>
+      <div className="content-row__body">
+        <input
+          type="text"
+          value={item.label}
+          onChange={(e) => onChange({ label: e.target.value })}
+          placeholder="Label (optional)"
+          className="content-row__label"
+        />
+        {item.kind === 'grid' ? (
+          <div className="content-row__grid">
+            <label>
+              <span>Cols</span>
+              <input
+                type="number"
+                min="1"
+                max={MAX_GRID_DIM}
+                value={item.cols}
+                onChange={(e) => onChange({ cols: clamp(Number(e.target.value) || 1, 1, MAX_GRID_DIM) })}
+              />
+            </label>
+            <label>
+              <span>Rows</span>
+              <input
+                type="number"
+                min="1"
+                max={MAX_GRID_DIM}
+                value={item.rows}
+                onChange={(e) => onChange({ rows: clamp(Number(e.target.value) || 1, 1, MAX_GRID_DIM) })}
+              />
+            </label>
+          </div>
+        ) : (
+          <label className="content-row__count">
+            <span>Count</span>
+            <input
+              type="number"
+              min="1"
+              max={item.kind === 'tracker' ? MAX_TRACKER_COUNT : 30}
+              value={item.count}
+              onChange={(e) =>
+                onChange({
+                  count: clamp(
+                    Number(e.target.value) || 1,
+                    1,
+                    item.kind === 'tracker' ? MAX_TRACKER_COUNT : 30,
+                  ),
+                })
+              }
+            />
+          </label>
+        )}
+      </div>
+    </div>
   )
 }
 
@@ -182,18 +330,30 @@ function BoxPanel({ box, pageDims, onChangeBox, onDeleteBox, onDuplicateBox, onB
     update({ [key]: clamp(snap(n), min, max) })
   }
 
-  const trackers = box.trackers ?? []
+  const content = box.content ?? []
 
-  const updateTracker = (id, patch) =>
+  const updateItem = (id, patch) =>
     update({
-      trackers: trackers.map((t) => (t.id === id ? { ...t, ...patch } : t)),
+      content: content.map((c) => (c.id === id ? { ...c, ...patch } : c)),
     })
 
-  const removeTracker = (id) =>
-    update({ trackers: trackers.filter((t) => t.id !== id) })
+  const removeItem = (id) =>
+    update({ content: content.filter((c) => c.id !== id) })
 
-  const addTracker = () =>
-    update({ trackers: [...trackers, newTracker({ label: '', count: 10 })] })
+  const addItem = (kind) => {
+    const item = newContentItem(kind)
+    if (!item) return
+    update({ content: [...content, item] })
+  }
+
+  const moveItem = (idx, delta) => {
+    const target = idx + delta
+    if (target < 0 || target >= content.length) return
+    const next = content.slice()
+    const [moved] = next.splice(idx, 1)
+    next.splice(target, 0, moved)
+    update({ content: next })
+  }
 
   return (
     <>
@@ -257,52 +417,13 @@ function BoxPanel({ box, pageDims, onChangeBox, onDeleteBox, onDuplicateBox, onB
         </label>
       </div>
 
-      <div className="inspector__trackers">
-        <div className="inspector__trackers-head">
-          <span>Trackers</span>
-          <button type="button" className="link" onClick={addTracker}>
-            + Add tracker
-          </button>
-        </div>
-        {trackers.length === 0 && (
-          <p className="hint">
-            No trackers. Add one to put a row of empty checkboxes inside this
-            box (e.g. HP, Arrows, Rations).
-          </p>
-        )}
-        {trackers.map((t) => (
-          <div key={t.id} className="tracker-row">
-            <input
-              type="text"
-              value={t.label}
-              onChange={(e) => updateTracker(t.id, { label: e.target.value })}
-              placeholder="Label (e.g. HP)"
-              className="tracker-row__label"
-            />
-            <input
-              type="number"
-              min="1"
-              max={MAX_TRACKER_COUNT}
-              value={t.count}
-              onChange={(e) =>
-                updateTracker(t.id, {
-                  count: clamp(Number(e.target.value) || 1, 1, MAX_TRACKER_COUNT),
-                })
-              }
-              className="tracker-row__count"
-            />
-            <button
-              type="button"
-              className="icon-button"
-              onClick={() => removeTracker(t.id)}
-              title="Remove tracker"
-              aria-label="Remove tracker"
-            >
-              ×
-            </button>
-          </div>
-        ))}
-      </div>
+      <ContentEditor
+        items={content}
+        onUpdate={updateItem}
+        onRemove={removeItem}
+        onMove={moveItem}
+        onAdd={addItem}
+      />
 
       <p className="hint">
         Coordinates are in pixels on the virtual A4 (840 × 1188). Snap is{' '}

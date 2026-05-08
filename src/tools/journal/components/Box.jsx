@@ -4,6 +4,7 @@ import {
   snap,
   clamp,
 } from '../lib/journalTemplate.js'
+import BoxContent from './BoxContent.jsx'
 
 const HANDLES = ['nw', 'n', 'ne', 'e', 'se', 's', 'sw', 'w']
 
@@ -106,7 +107,7 @@ export default function Box({
     window.addEventListener('pointerup', onUp)
   }
 
-  const trackers = box.trackers ?? []
+  const content = box.content ?? []
 
   return (
     <div
@@ -115,20 +116,7 @@ export default function Box({
       onPointerDown={beginMove}
     >
       <div className="canvas-box__title">{box.title || '(untitled)'}</div>
-      {trackers.length > 0 && (
-        <div className="box-trackers">
-          {trackers.map((t) => (
-            <div key={t.id} className="box-tracker">
-              {t.label && <span className="box-tracker__label">{t.label}</span>}
-              <div className="box-tracker__checks">
-                {Array.from({ length: t.count }).map((_, i) => (
-                  <span key={i} className="box-tracker__check" />
-                ))}
-              </div>
-            </div>
-          ))}
-        </div>
-      )}
+      <BoxContent items={content} />
       {isSelected &&
         HANDLES.map((h) => (
           <div

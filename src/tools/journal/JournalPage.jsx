@@ -14,6 +14,7 @@ import {
   newTemplate,
   newBox,
   newPage,
+  newContentItem,
   downloadTemplateJson,
   downloadLibraryJson,
   readJsonFile,
@@ -23,6 +24,7 @@ import {
   clamp,
 } from './lib/journalTemplate.js'
 import { exportTemplatePdf } from './lib/exportJournalPdf.js'
+import { BOX_PRESETS } from './lib/presets.js'
 
 function computeGuides(boxes, dragStartMap) {
   const vert = new Set()
@@ -326,10 +328,10 @@ export default function JournalPage() {
       id: uuid(),
       x: clamp(original.x + 16, 0, PAGE_W - original.w),
       y: clamp(original.y + 16, 0, PAGE_H - original.h),
-      trackers: (original.trackers ?? []).map((t) => ({ ...t, id: uuid() })),
+      content: (original.content ?? []).map((c) => ({ ...c, id: uuid() })),
     }
     updateBoxes([...activePage.boxes, copy])
-    setSelectedBoxId(copy.id)
+    setSelectedBoxIds(new Set([copy.id]))
   }
 
   const handleBringToFront = (id) => {
@@ -371,7 +373,36 @@ export default function JournalPage() {
 
     const box = newBox({ title: 'New box', x, y, w: NEW_W, h: NEW_H })
     updateBoxes([...activePage.boxes, box])
-    setSelectedBoxId(box.id)
+    setSelectedBoxIds(new Set([box.id]))
+  }
+
+  const handleAddPreset = (presetId) => {
+    if (!activeTemplate || !activePage) return
+    const preset = BOX_PRESETS.find((p) => p.id === presetId)
+    if (!preset) return
+
+    const TOP_OF_SHEET = 88
+    const layoutBottom = activePage.boxes.reduce(
+      (max, b) => Math.max(max, b.y + b.h),
+      TOP_OF_SHEET - 8,
+    )
+    let y = snap(layoutBottom + 8)
+    let x = 24
+    if (y + preset.h > PAGE_H) y = TOP_OF_SHEET
+    if (x + preset.w > PAGE_W) x = PAGE_W - preset.w
+
+    const box = newBox({
+      title: preset.title || 'Untitled',
+      x,
+      y,
+      w: preset.w,
+      h: preset.h,
+      content: preset.content
+        .map((c) => newContentItem(c.kind, c))
+        .filter(Boolean),
+    })
+    updateBoxes([...activePage.boxes, box])
+    setSelectedBoxIds(new Set([box.id]))
   }
 
   /* ---------- keyboard ---------- */
@@ -554,6 +585,7 @@ export default function JournalPage() {
               pageDims={pageDims}
               activePageIndex={activePageIndex}
               onAddBox={handleAddBox}
+              onAddPreset={handleAddPreset}
               onChangeBox={handleChangeBox}
               onChangeTemplate={(patch) => updateActiveTemplate(patch)}
               onDeleteBox={handleDeleteBox}

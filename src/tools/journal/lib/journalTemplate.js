@@ -58,20 +58,61 @@ export function newBox(overrides = {}) {
     y: snap(overrides.y ?? 24),
     w: snap(overrides.w ?? 240),
     h: snap(overrides.h ?? 160),
-    trackers: [],
+    content: [],
     ...overrides,
     id: overrides.id ?? uuid(),
   }
 }
 
 export const MAX_TRACKER_COUNT = 60
+export const MAX_GRID_DIM = 30
 
-export function newTracker(overrides = {}) {
-  return {
-    id: uuid(),
-    label: typeof overrides.label === 'string' ? overrides.label : '',
-    count: clamp(Number(overrides.count) || 10, 1, MAX_TRACKER_COUNT),
+export const CONTENT_KINDS = [
+  { id: 'tracker',  label: 'Tracker (checkboxes)' },
+  { id: 'lines',    label: 'Lined writing space' },
+  { id: 'numbered', label: 'Numbered list' },
+  { id: 'grid',     label: 'Grid' },
+]
+
+export function newContentItem(kind, overrides = {}) {
+  switch (kind) {
+    case 'tracker':
+      return {
+        id: uuid(),
+        kind: 'tracker',
+        label: typeof overrides.label === 'string' ? overrides.label : '',
+        count: clamp(Number(overrides.count) || 10, 1, MAX_TRACKER_COUNT),
+      }
+    case 'lines':
+      return {
+        id: uuid(),
+        kind: 'lines',
+        label: typeof overrides.label === 'string' ? overrides.label : '',
+        count: clamp(Number(overrides.count) || 4, 1, 30),
+      }
+    case 'numbered':
+      return {
+        id: uuid(),
+        kind: 'numbered',
+        label: typeof overrides.label === 'string' ? overrides.label : '',
+        count: clamp(Number(overrides.count) || 6, 1, 30),
+      }
+    case 'grid':
+      return {
+        id: uuid(),
+        kind: 'grid',
+        label: typeof overrides.label === 'string' ? overrides.label : '',
+        cols: clamp(Number(overrides.cols) || 6, 1, MAX_GRID_DIM),
+        rows: clamp(Number(overrides.rows) || 4, 1, MAX_GRID_DIM),
+      }
+    default:
+      return null
   }
+}
+
+// Back-compat alias — most call sites still want a tracker by default.
+export function newTracker(overrides = {}) {
+  return newContentItem('tracker', overrides)
 }
 
 export function newPage(boxes = []) {
@@ -117,11 +158,27 @@ export function emptyLibrary() {
 
 export const defaultLibrary = emptyLibrary
 
-function normalizeTracker(t) {
-  return {
-    id: t.id ?? uuid(),
-    label: typeof t.label === 'string' ? t.label : '',
-    count: clamp(Number(t.count) || 1, 1, MAX_TRACKER_COUNT),
+function normalizeContentItem(c) {
+  if (!c || typeof c !== 'object') return null
+  const id = c.id ?? uuid()
+  const label = typeof c.label === 'string' ? c.label : ''
+  switch (c.kind) {
+    case 'tracker':
+      return { id, kind: 'tracker', label, count: clamp(Number(c.count) || 1, 1, MAX_TRACKER_COUNT) }
+    case 'lines':
+      return { id, kind: 'lines', label, count: clamp(Number(c.count) || 1, 1, 30) }
+    case 'numbered':
+      return { id, kind: 'numbered', label, count: clamp(Number(c.count) || 1, 1, 30) }
+    case 'grid':
+      return {
+        id,
+        kind: 'grid',
+        label,
+        cols: clamp(Number(c.cols) || 1, 1, MAX_GRID_DIM),
+        rows: clamp(Number(c.rows) || 1, 1, MAX_GRID_DIM),
+      }
+    default:
+      return null
   }
 }
 
@@ -130,11 +187,25 @@ function normalizeBox(b) {
   const y = snap(clamp(Number(b.y) || 0, 0, PAGE_H - MIN_H))
   const w = snap(clamp(Number(b.w) || MIN_W, MIN_W, PAGE_W - x))
   const h = snap(clamp(Number(b.h) || MIN_H, MIN_H, PAGE_H - y))
+
+  // Forward-migrate the legacy `trackers` field onto the unified
+  // `content` array.
+  let content
+  if (Array.isArray(b.content)) {
+    content = b.content.map(normalizeContentItem).filter(Boolean)
+  } else if (Array.isArray(b.trackers)) {
+    content = b.trackers
+      .map((t) => normalizeContentItem({ ...t, kind: 'tracker' }))
+      .filter(Boolean)
+  } else {
+    content = []
+  }
+
   return {
     id: b.id ?? uuid(),
     title: typeof b.title === 'string' ? b.title : '',
     x, y, w, h,
-    trackers: Array.isArray(b.trackers) ? b.trackers.map(normalizeTracker) : [],
+    content,
   }
 }
 
