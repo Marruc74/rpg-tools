@@ -1,8 +1,17 @@
-export default function TableList({ tables, activeId, onSelect, onNew, onDuplicate, onRemove, onRename }) {
+export default function TableList({ tables, activeId, onSelect, onNew, onDuplicate, onRemove, onRename, onAddStarterPack }) {
   return (
     <aside className="tables-list">
       <div className="tables-list__header">
         <button className="primary" onClick={onNew}>+ New table</button>
+        {onAddStarterPack && (
+          <button
+            className="tables-list__starter"
+            onClick={onAddStarterPack}
+            title="Add the built-in starter pack of standard tables"
+          >
+            + Starter pack
+          </button>
+        )}
       </div>
       <ul className="tables-list__items">
         {tables.length === 0 && <li className="tables-list__empty">No tables yet.</li>}

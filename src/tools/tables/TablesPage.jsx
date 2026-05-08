@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useRef, useState } from 'react'
 import { v4 as uuid } from 'uuid'
 import './tablesPage.css'
 import { useIndexedDBState } from '../../shared/hooks/useIndexedDBState.js'
@@ -9,6 +9,10 @@ import {
   newTable,
   rollTable as rollTableLib,
   addHistoryEntry,
+  applyStarterPack,
+  downloadTableJson,
+  downloadLibraryJson,
+  readJsonFile,
 } from './lib/tablesLibrary.js'
 import TableList from './components/TableList.jsx'
 import TableEditor from './components/TableEditor.jsx'
@@ -21,6 +25,7 @@ export default function TablesPage() {
   )
   const [lastResult, setLastResult] = useState(null)
   const [error, setError] = useState(null)
+  const fileInputRef = useRef(null)
 
   const tables = library.tables
   const activeTable =
@@ -86,6 +91,62 @@ export default function TablesPage() {
     setLibrary({ ...library, history: [] })
   }
 
+  const handleAddStarterPack = () => {
+    const { library: next, addedCount } = applyStarterPack(library)
+    if (addedCount === 0) {
+      alert('All starter tables are already in your library.')
+      return
+    }
+    setLibrary(next)
+    alert(`Added ${addedCount} starter table${addedCount === 1 ? '' : 's'}.`)
+  }
+
+  const handleExportTable = () => {
+    if (!activeTable) return
+    downloadTableJson(activeTable)
+  }
+
+  const handleExportLibrary = () => downloadLibraryJson(library)
+
+  const handleImportClick = () => fileInputRef.current?.click()
+
+  const handleImportFile = async (e) => {
+    const file = e.target.files?.[0]
+    e.target.value = ''
+    if (!file) return
+    try {
+      const parsed = await readJsonFile(file)
+      if (parsed.kind === 'table') {
+        setLibrary({
+          ...library,
+          tables: [...library.tables, parsed.table],
+          activeTableId: parsed.table.id,
+        })
+        return
+      }
+      if (parsed.kind === 'library') {
+        const replace =
+          tables.length === 0
+            ? true
+            : confirm('Replace your current tables with the imported library? Click Cancel to merge by name (existing tables kept, new ones added).')
+        if (replace) {
+          setLibrary(parsed.library)
+        } else {
+          const existing = new Set(tables.map((t) => t.name.trim().toLowerCase()))
+          const merged = [
+            ...tables,
+            ...parsed.library.tables.filter(
+              (t) => !existing.has(t.name.trim().toLowerCase()),
+            ),
+          ]
+          setLibrary({ ...library, tables: merged })
+        }
+      }
+    } catch (err) {
+      alert(`Import failed: ${err.message}`)
+    }
+  }
+
   if (!isReady) {
     return (
       <div className="tables">
@@ -99,6 +160,24 @@ export default function TablesPage() {
     <div className="tables">
       <header className="tables__header">
         <h1>Random tables</h1>
+        <div className="tables__toolbar">
+          <button onClick={handleExportTable} disabled={!activeTable} title="Export the active table as JSON">
+            Export table
+          </button>
+          <button onClick={handleExportLibrary} disabled={tables.length === 0} title="Export the entire library as JSON">
+            Export library
+          </button>
+          <button onClick={handleImportClick} title="Import a table or library JSON">
+            Import…
+          </button>
+          <input
+            ref={fileInputRef}
+            type="file"
+            accept="application/json"
+            onChange={handleImportFile}
+            style={{ display: 'none' }}
+          />
+        </div>
       </header>
 
       <main className="tables__main">
@@ -110,6 +189,7 @@ export default function TablesPage() {
           onDuplicate={handleDuplicate}
           onRemove={handleRemove}
           onRename={handleRename}
+          onAddStarterPack={handleAddStarterPack}
         />
 
         {activeTable ? (
