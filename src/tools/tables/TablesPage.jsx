@@ -12,7 +12,6 @@ import {
 } from './lib/tablesLibrary.js'
 import TableList from './components/TableList.jsx'
 import TableEditor from './components/TableEditor.jsx'
-import RollHistory from './components/RollHistory.jsx'
 
 export default function TablesPage() {
   const [library, setLibrary, isReady] = useIndexedDBState(
@@ -117,8 +116,10 @@ export default function TablesPage() {
           <TableEditor
             table={activeTable}
             lastResult={lastResult}
+            history={library.history}
             onChange={(next) => updateTable(activeTable.id, next)}
             onRoll={handleRoll}
+            onClearHistory={handleClearHistory}
           />
         ) : (
           <div className="empty-state">
@@ -126,8 +127,6 @@ export default function TablesPage() {
             <button onClick={handleNew} className="primary">+ Create your first table</button>
           </div>
         )}
-
-        <RollHistory history={library.history} onClear={handleClearHistory} />
       </main>
 
       {error && <div className="tables__error">{error}</div>}

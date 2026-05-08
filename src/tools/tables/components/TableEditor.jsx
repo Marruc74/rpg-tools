@@ -1,7 +1,8 @@
 import { useEffect, useState } from 'react'
 import { newEntry } from '../lib/tablesLibrary.js'
+import RollHistory from './RollHistory.jsx'
 
-export default function TableEditor({ table, lastResult, onChange, onRoll }) {
+export default function TableEditor({ table, lastResult, history, onChange, onRoll, onClearHistory }) {
   const [tab, setTab] = useState('roll')
   // Reset to the Roll tab when switching tables — most-frequent screen.
   useEffect(() => {
@@ -81,6 +82,10 @@ export default function TableEditor({ table, lastResult, onChange, onRoll }) {
             {usableEntries.length === 0
               ? 'No usable entries — add some on the Edit tab.'
               : `${usableEntries.length} entr${usableEntries.length === 1 ? 'y' : 'ies'} · total weight ${totalWeight}`}
+          </div>
+
+          <div className="table-editor__history">
+            <RollHistory history={history} onClear={onClearHistory} />
           </div>
         </div>
       ) : (

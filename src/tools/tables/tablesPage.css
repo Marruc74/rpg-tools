@@ -23,7 +23,7 @@
   flex: 1 1 auto;
   min-height: 0;
   display: grid;
-  grid-template-columns: 220px 1fr 280px;
+  grid-template-columns: 240px 1fr;
   gap: 12px;
   padding: 16px;
   overflow: hidden;
@@ -226,6 +226,14 @@
   font-style: italic;
 }
 
+.table-editor__history {
+  flex: 1 1 auto;
+  min-height: 0;
+  overflow-y: auto;
+  border-top: 1px solid #f0e8d2;
+  padding-top: 8px;
+}
+
 .table-editor__description {
   width: 100%;
   padding: 6px 10px;
@@ -331,13 +339,8 @@
   text-align: center;
 }
 
-/* History */
+/* History (now nested inside the editor's Roll panel) */
 .tables-history {
-  background: #fdfaf3;
-  border: 1px solid #d8cfb8;
-  border-radius: 6px;
-  padding: 12px;
-  overflow-y: auto;
   display: flex;
   flex-direction: column;
   gap: 8px;
@@ -442,10 +445,6 @@
   font-style: italic;
 }
 
-@media (max-width: 1100px) {
-  .tables__main { grid-template-columns: 200px 1fr 240px; }
-}
-
 @media (max-width: 900px) {
   .tables__main {
     display: flex;
@@ -453,5 +452,5 @@
     gap: 12px;
     overflow-y: auto;
   }
-  .tables-list, .table-editor, .tables-history { width: 100%; }
+  .tables-list, .table-editor { width: 100%; }
 }
