@@ -413,10 +413,12 @@
 .inspector__preset {
   display: flex;
   gap: 6px;
+  min-width: 0;
 }
 
 .inspector__preset select {
-  flex: 1 1 auto;
+  flex: 1 1 0;
+  min-width: 0;
   padding: 6px 8px;
   border: 1px solid #d0c19a;
   border-radius: 4px;
@@ -424,6 +426,7 @@
 }
 
 .inspector__preset button {
+  flex-shrink: 0;
   padding: 6px 14px;
   border: 1px solid #b39966;
   border-radius: 4px;
@@ -581,10 +584,12 @@
 .inspector__content-add {
   display: flex;
   gap: 6px;
+  min-width: 0;
 }
 
 .inspector__content-add select {
-  flex: 1 1 auto;
+  flex: 1 1 0;
+  min-width: 0;
   padding: 4px 8px;
   border: 1px solid #d0c19a;
   border-radius: 4px;
@@ -592,6 +597,7 @@
 }
 
 .inspector__content-add button {
+  flex-shrink: 0;
   padding: 4px 12px;
   border: 1px solid #b39966;
   border-radius: 4px;
