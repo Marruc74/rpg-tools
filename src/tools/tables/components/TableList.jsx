@@ -1,4 +1,4 @@
-export default function TableList({ tables, activeId, onSelect, onNew, onDuplicate, onRemove, onRename, onAddStarterPack }) {
+export default function TableList({ tables, activeId, onSelect, onNew, onDuplicate, onRemove, onAddStarterPack }) {
   return (
     <aside className="tables-list">
       <div className="tables-list__header">
@@ -23,13 +23,7 @@ export default function TableList({ tables, activeId, onSelect, onNew, onDuplica
               className={active ? 'is-selected' : ''}
               onClick={() => onSelect(t.id)}
             >
-              <input
-                className="tables-list__name"
-                value={t.name}
-                onChange={(e) => onRename(t.id, e.target.value)}
-                onClick={(e) => e.stopPropagation()}
-                placeholder="Table name"
-              />
+              <span className="tables-list__name">{t.name || '(unnamed)'}</span>
               <div className="tables-list__meta">
                 {t.entries.length} entr{t.entries.length === 1 ? 'y' : 'ies'}
               </div>

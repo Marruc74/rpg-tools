@@ -73,8 +73,6 @@ export default function TablesPage() {
     })
   }
 
-  const handleRename = (id, name) => updateTable(id, { name })
-
   const handleRoll = (table) => {
     const result = rollTableLib(table)
     if (!result) {
@@ -188,7 +186,6 @@ export default function TablesPage() {
           onNew={handleNew}
           onDuplicate={handleDuplicate}
           onRemove={handleRemove}
-          onRename={handleRename}
           onAddStarterPack={handleAddStarterPack}
         />
 

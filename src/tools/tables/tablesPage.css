@@ -133,20 +133,14 @@
 .tables-list__name {
   grid-column: 1;
   grid-row: 1;
-  border: 1px solid transparent;
-  background: transparent;
   font-weight: 600;
   font-size: 13px;
   color: #5a4a2c;
   padding: 2px 4px;
-  border-radius: 3px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
   min-width: 0;
-}
-
-.tables-list__name:hover, .tables-list__name:focus {
-  border-color: #d0c19a;
-  background: #fff;
-  outline: none;
 }
 
 .tables-list__meta {
