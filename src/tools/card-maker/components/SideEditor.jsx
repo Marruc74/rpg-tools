@@ -2,16 +2,18 @@ import { useRef, useState } from 'react'
 import ReactMarkdown from 'react-markdown'
 import remarkGfm from 'remark-gfm'
 import { compressImage } from '../lib/compressImage.js'
+import { IMAGE_FIT_OPTIONS } from '../lib/newCard.js'
 
 function clamp01(v) {
   return Math.max(0, Math.min(1, v))
 }
 
-function FocusPicker({ src, focus, onChange }) {
+function FocusPicker({ src, focus, onChange, disabled = false }) {
   const ref = useRef(null)
   const [dragging, setDragging] = useState(false)
 
   const setFromEvent = (e) => {
+    if (disabled) return
     const el = ref.current
     if (!el) return
     const rect = el.getBoundingClientRect()
@@ -21,11 +23,12 @@ function FocusPicker({ src, focus, onChange }) {
   }
 
   return (
-    <div className="focus-picker">
+    <div className={`focus-picker${disabled ? ' is-disabled' : ''}`}>
       <div
         ref={ref}
         className="focus-picker__image"
         onPointerDown={(e) => {
+          if (disabled) return
           e.currentTarget.setPointerCapture(e.pointerId)
           setDragging(true)
           setFromEvent(e)
@@ -34,6 +37,7 @@ function FocusPicker({ src, focus, onChange }) {
           if (dragging) setFromEvent(e)
         }}
         onPointerUp={(e) => {
+          if (disabled) return
           e.currentTarget.releasePointerCapture(e.pointerId)
           setDragging(false)
         }}
@@ -45,8 +49,9 @@ function FocusPicker({ src, focus, onChange }) {
         />
       </div>
       <span className="hint">
-        Click or drag to set the focal point — what stays centered when the
-        image is cropped to fit the card.
+        {disabled
+          ? 'Focal point only applies when the image keeps its aspect ratio.'
+          : 'Click or drag to set the focal point — what stays centered when the image is cropped to fit the card.'}
       </span>
     </div>
   )
@@ -102,11 +107,25 @@ export default function SideEditor({ side, onChange, hideImage = false, hideTitl
             )}
           </div>
           {side.image && (
-            <FocusPicker
-              src={side.image}
-              focus={side.focus ?? { x: 0.5, y: 0.5 }}
-              onChange={(focus) => update({ focus })}
-            />
+            <>
+              <label className="field field--inline">
+                <span>Fit</span>
+                <select
+                  value={side.imageFit ?? 'cover'}
+                  onChange={(e) => update({ imageFit: e.target.value })}
+                >
+                  {IMAGE_FIT_OPTIONS.map((opt) => (
+                    <option key={opt.value} value={opt.value}>{opt.label}</option>
+                  ))}
+                </select>
+              </label>
+              <FocusPicker
+                src={side.image}
+                focus={side.focus ?? { x: 0.5, y: 0.5 }}
+                onChange={(focus) => update({ focus })}
+                disabled={(side.imageFit ?? 'cover') === 'fill'}
+              />
+            </>
           )}
         </div>
       )}

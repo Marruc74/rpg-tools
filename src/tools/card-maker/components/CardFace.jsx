@@ -79,13 +79,13 @@ const CardFace = forwardRef(function CardFace(
             className="card-face__image"
             src={side.image}
             alt=""
-            style={
-              side.focus
-                ? {
-                    objectPosition: `${(side.focus.x ?? 0.5) * 100}% ${(side.focus.y ?? 0.5) * 100}%`,
-                  }
-                : undefined
-            }
+            style={{
+              objectFit: side.imageFit ?? 'cover',
+              ...(side.focus &&
+                (side.imageFit ?? 'cover') !== 'fill' && {
+                  objectPosition: `${(side.focus.x ?? 0.5) * 100}% ${(side.focus.y ?? 0.5) * 100}%`,
+                }),
+            }}
           />
         ) : (
           <div className="card-face__image-placeholder">no image</div>

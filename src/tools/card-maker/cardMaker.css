@@ -497,6 +497,9 @@ input, select, textarea {
   box-shadow: 0 0 0 2px rgba(0, 0, 0, 0.25);
 }
 
+.focus-picker.is-disabled { opacity: 0.45; }
+.focus-picker.is-disabled .focus-picker__image { cursor: not-allowed; }
+
 .pdf-preview {
   position: fixed;
   inset: 0;

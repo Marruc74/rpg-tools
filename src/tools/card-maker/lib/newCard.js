@@ -15,8 +15,14 @@ export const BORDER_WIDTHS = [
   { value: 5, label: 'Thick (5 px)' },
 ]
 
+export const IMAGE_FIT_OPTIONS = [
+  { value: 'cover',   label: 'Crop to fit (keeps ratio)' },
+  { value: 'contain', label: 'Fit inside (keeps ratio, may letterbox)' },
+  { value: 'fill',    label: 'Stretch to fit (ignores ratio)' },
+]
+
 export function emptySide() {
-  return { title: '', image: null, body: '', stats: [] }
+  return { title: '', image: null, body: '', stats: [], imageFit: 'cover' }
 }
 
 export function newCard(overrides = {}) {
