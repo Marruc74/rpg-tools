@@ -32,20 +32,39 @@ export default function PrintArea({ template }) {
               {template.game && <div className="page-titleband__game">{template.game}</div>}
             </div>
           )}
-          {page.boxes.map((box) => (
-            <div
-              key={box.id}
-              className="print-box"
-              style={{
-                left: box.x,
-                top: box.y,
-                width: box.w,
-                height: box.h,
-              }}
-            >
-              <div className="print-box__title">{box.title}</div>
-            </div>
-          ))}
+          {page.boxes.map((box) => {
+            const trackers = box.trackers ?? []
+            return (
+              <div
+                key={box.id}
+                className="print-box"
+                style={{
+                  left: box.x,
+                  top: box.y,
+                  width: box.w,
+                  height: box.h,
+                }}
+              >
+                <div className="print-box__title">{box.title}</div>
+                {trackers.length > 0 && (
+                  <div className="box-trackers">
+                    {trackers.map((t) => (
+                      <div key={t.id} className="box-tracker">
+                        {t.label && (
+                          <span className="box-tracker__label">{t.label}</span>
+                        )}
+                        <div className="box-tracker__checks">
+                          {Array.from({ length: t.count }).map((_, i) => (
+                            <span key={i} className="box-tracker__check" />
+                          ))}
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
+            )
+          })}
         </div>
       ))}
     </div>

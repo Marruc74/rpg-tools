@@ -1,4 +1,14 @@
-import { GRID_PX, MIN_W, MIN_H, PAGE_W, PAGE_H, snap, clamp } from '../lib/journalTemplate.js'
+import {
+  GRID_PX,
+  MIN_W,
+  MIN_H,
+  PAGE_W,
+  PAGE_H,
+  MAX_TRACKER_COUNT,
+  snap,
+  clamp,
+  newTracker,
+} from '../lib/journalTemplate.js'
 
 export default function BoxInspector({
   box,
@@ -78,6 +88,19 @@ function BoxPanel({ box, onChangeBox, onDeleteBox }) {
     update({ [key]: clamp(snap(n), min, max) })
   }
 
+  const trackers = box.trackers ?? []
+
+  const updateTracker = (id, patch) =>
+    update({
+      trackers: trackers.map((t) => (t.id === id ? { ...t, ...patch } : t)),
+    })
+
+  const removeTracker = (id) =>
+    update({ trackers: trackers.filter((t) => t.id !== id) })
+
+  const addTracker = () =>
+    update({ trackers: [...trackers, newTracker({ label: '', count: 10 })] })
+
   return (
     <>
       <h2>Box</h2>
@@ -127,6 +150,53 @@ function BoxPanel({ box, onChangeBox, onDeleteBox }) {
             onChange={(e) => setNumber('h', e.target.value, MIN_H, PAGE_H - box.y)}
           />
         </label>
+      </div>
+
+      <div className="inspector__trackers">
+        <div className="inspector__trackers-head">
+          <span>Trackers</span>
+          <button type="button" className="link" onClick={addTracker}>
+            + Add tracker
+          </button>
+        </div>
+        {trackers.length === 0 && (
+          <p className="hint">
+            No trackers. Add one to put a row of empty checkboxes inside this
+            box (e.g. HP, Arrows, Rations).
+          </p>
+        )}
+        {trackers.map((t) => (
+          <div key={t.id} className="tracker-row">
+            <input
+              type="text"
+              value={t.label}
+              onChange={(e) => updateTracker(t.id, { label: e.target.value })}
+              placeholder="Label (e.g. HP)"
+              className="tracker-row__label"
+            />
+            <input
+              type="number"
+              min="1"
+              max={MAX_TRACKER_COUNT}
+              value={t.count}
+              onChange={(e) =>
+                updateTracker(t.id, {
+                  count: clamp(Number(e.target.value) || 1, 1, MAX_TRACKER_COUNT),
+                })
+              }
+              className="tracker-row__count"
+            />
+            <button
+              type="button"
+              className="icon-button"
+              onClick={() => removeTracker(t.id)}
+              title="Remove tracker"
+              aria-label="Remove tracker"
+            >
+              ×
+            </button>
+          </div>
+        ))}
       </div>
 
       <p className="hint">

@@ -66,6 +66,8 @@ export default function Box({ box, scale, isSelected, onSelect, onChange }) {
     window.addEventListener('pointerup', onUp)
   }
 
+  const trackers = box.trackers ?? []
+
   return (
     <div
       className={`canvas-box${isSelected ? ' is-selected' : ''}`}
@@ -73,6 +75,20 @@ export default function Box({ box, scale, isSelected, onSelect, onChange }) {
       onPointerDown={beginDrag('move', null)}
     >
       <div className="canvas-box__title">{box.title || '(untitled)'}</div>
+      {trackers.length > 0 && (
+        <div className="box-trackers">
+          {trackers.map((t) => (
+            <div key={t.id} className="box-tracker">
+              {t.label && <span className="box-tracker__label">{t.label}</span>}
+              <div className="box-tracker__checks">
+                {Array.from({ length: t.count }).map((_, i) => (
+                  <span key={i} className="box-tracker__check" />
+                ))}
+              </div>
+            </div>
+          ))}
+        </div>
+      )}
       {isSelected &&
         HANDLES.map((h) => (
           <div

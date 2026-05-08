@@ -333,6 +333,53 @@
   background: #fbe4d6;
 }
 
+.inspector__trackers {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  border-top: 1px solid #f0e8d2;
+  padding-top: 10px;
+}
+
+.inspector__trackers-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  font-size: 11px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: #5a4a2c;
+}
+
+.inspector__trackers-head .link {
+  color: #5a4a2c;
+}
+
+.tracker-row {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.tracker-row__label {
+  flex: 1 1 auto;
+  padding: 4px 8px;
+  border: 1px solid #d0c19a;
+  border-radius: 4px;
+  font-size: 13px;
+  min-width: 0;
+}
+
+.tracker-row__count {
+  width: 60px;
+  padding: 4px 6px;
+  border: 1px solid #d0c19a;
+  border-radius: 4px;
+  font-size: 13px;
+}
+
 /* ---------- Print area (off-screen, full A4) ---------- */
 .print-page {
   font-family: 'Helvetica Neue', 'Arial', sans-serif;
@@ -355,6 +402,48 @@
   letter-spacing: 0.08em;
   text-transform: uppercase;
   color: #1a1a1a;
+}
+
+/* Trackers — labeled rows of empty checkboxes inside a box. Same
+   markup is rendered both on the canvas (.canvas-box) and on the print
+   page (.print-box), so this style is shared. */
+.box-trackers {
+  padding: 2px 10px 8px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  pointer-events: none;
+}
+
+.box-tracker {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  flex-wrap: wrap;
+}
+
+.box-tracker__label {
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: #1a1a1a;
+  min-width: 0;
+}
+
+.box-tracker__checks {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 3px;
+}
+
+.box-tracker__check {
+  width: 12px;
+  height: 12px;
+  border: 1px solid #1a1a1a;
+  border-radius: 2px;
+  box-sizing: border-box;
+  display: inline-block;
 }
 
 /* Shared title band used by both the canvas page and the print page */

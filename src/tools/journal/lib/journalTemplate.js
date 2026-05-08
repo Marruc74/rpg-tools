@@ -29,8 +29,19 @@ export function newBox(overrides = {}) {
     y: snap(overrides.y ?? 24),
     w: snap(overrides.w ?? 240),
     h: snap(overrides.h ?? 160),
+    trackers: [],
     ...overrides,
     id: overrides.id ?? uuid(),
+  }
+}
+
+export const MAX_TRACKER_COUNT = 60
+
+export function newTracker(overrides = {}) {
+  return {
+    id: uuid(),
+    label: typeof overrides.label === 'string' ? overrides.label : '',
+    count: clamp(Number(overrides.count) || 10, 1, MAX_TRACKER_COUNT),
   }
 }
 
@@ -75,6 +86,14 @@ export function emptyLibrary() {
 
 export const defaultLibrary = emptyLibrary
 
+function normalizeTracker(t) {
+  return {
+    id: t.id ?? uuid(),
+    label: typeof t.label === 'string' ? t.label : '',
+    count: clamp(Number(t.count) || 1, 1, MAX_TRACKER_COUNT),
+  }
+}
+
 function normalizeBox(b) {
   const x = snap(clamp(Number(b.x) || 0, 0, PAGE_W - MIN_W))
   const y = snap(clamp(Number(b.y) || 0, 0, PAGE_H - MIN_H))
@@ -84,6 +103,7 @@ function normalizeBox(b) {
     id: b.id ?? uuid(),
     title: typeof b.title === 'string' ? b.title : '',
     x, y, w, h,
+    trackers: Array.isArray(b.trackers) ? b.trackers.map(normalizeTracker) : [],
   }
 }
 
