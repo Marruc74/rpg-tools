@@ -5,6 +5,7 @@ import EntryList from './components/EntryList.jsx'
 import EntryEditor from './components/EntryEditor.jsx'
 import JournalToolbar from './components/JournalToolbar.jsx'
 import PrintArea from './components/PrintArea.jsx'
+import SheetPreview from './components/SheetPreview.jsx'
 import { useIndexedDBState } from '../../shared/hooks/useIndexedDBState.js'
 import {
   JOURNAL_KEY,
@@ -171,7 +172,10 @@ export default function JournalPage() {
         />
 
         {activeEntry ? (
-          <EntryEditor entry={activeEntry} onChange={updateEntry} />
+          <>
+            <EntryEditor entry={activeEntry} onChange={updateEntry} />
+            <SheetPreview entry={activeEntry} />
+          </>
         ) : (
           <div className="empty-state">
             <p>No entry selected.</p>
