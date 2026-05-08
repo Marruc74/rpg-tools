@@ -18,6 +18,7 @@ import {
   readJsonFile,
   PAGE_W,
   PAGE_H,
+  snap,
 } from './lib/journalTemplate.js'
 import { exportTemplatePdf } from './lib/exportJournalPdf.js'
 
@@ -116,17 +117,32 @@ export default function JournalPage() {
 
   const handleAddBox = () => {
     if (!activeTemplate) return
-    // Place new boxes at the top-left of the page, offset slightly per
-    // additional add so they stack visibly rather than overlapping the
-    // existing default boxes (which start at y = 80).
-    const stagger = (activeTemplate.boxes.length % 6) * 16
-    const box = newBox({
-      title: 'New box',
-      x: 16 + stagger,
-      y: 16 + stagger,
-      w: 240,
-      h: 144,
-    })
+
+    const NEW_W = 240
+    const NEW_H = 144
+    // Title band lives at top: 24 with ~50 px of content, so 88 is the
+    // first y that's clear of the title + game subtitle.
+    const TOP_OF_SHEET = 88
+
+    // Find the bottom of the existing layout so we can drop the new box
+    // into empty space below it. If the page is full, fall back to the
+    // top of the sheet (just under the title band).
+    const layoutBottom = activeTemplate.boxes.reduce(
+      (max, b) => Math.max(max, b.y + b.h),
+      TOP_OF_SHEET - 8,
+    )
+    const stagger = (activeTemplate.boxes.length % 6) * 8
+
+    let y = snap(layoutBottom + 8 + stagger)
+    let x = snap(24 + stagger)
+    if (y + NEW_H > PAGE_H) {
+      // No room below — drop it under the title band, staggered.
+      y = snap(TOP_OF_SHEET + stagger)
+      x = snap(24 + stagger)
+    }
+    if (x + NEW_W > PAGE_W) x = PAGE_W - NEW_W
+
+    const box = newBox({ title: 'New box', x, y, w: NEW_W, h: NEW_H })
     updateBoxes([...activeTemplate.boxes, box])
     setSelectedBoxId(box.id)
   }
