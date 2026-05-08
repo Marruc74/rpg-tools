@@ -23,6 +23,7 @@ export default function PrintArea({ template }) {
           key={page.id}
           className="print-page"
           data-print-page={i}
+          data-theme={template.theme ?? 'minimalist'}
           style={{ width: w, height: h, position: 'relative', background: '#fff' }}
         >
           {i === 0 && (template.title || template.game) && (
@@ -31,21 +32,27 @@ export default function PrintArea({ template }) {
               {template.game && <div className="page-titleband__game">{template.game}</div>}
             </div>
           )}
-          {page.boxes.map((box) => (
-            <div
-              key={box.id}
-              className="print-box"
-              style={{
-                left: box.x,
-                top: box.y,
-                width: box.w,
-                height: box.h,
-              }}
-            >
-              <div className="print-box__title">{box.title}</div>
-              <BoxContent items={box.content ?? []} />
-            </div>
-          ))}
+          {page.boxes.map((box) => {
+            const s = box.style ?? {}
+            return (
+              <div
+                key={box.id}
+                className="print-box"
+                data-border={s.border ?? 'normal'}
+                data-radius={s.radius ?? 'rounded'}
+                data-fill={s.fill ?? 'white'}
+                style={{
+                  left: box.x,
+                  top: box.y,
+                  width: box.w,
+                  height: box.h,
+                }}
+              >
+                <div className="print-box__title">{box.title}</div>
+                <BoxContent items={box.content ?? []} />
+              </div>
+            )
+          })}
         </div>
       ))}
     </div>

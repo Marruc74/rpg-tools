@@ -5,6 +5,7 @@ export default function JournalToolbar({
   onRedo,
   canUndo,
   canRedo,
+  onPreview,
   onPrintPdf,
   onExportTemplate,
   onExportLibrary,
@@ -28,6 +29,9 @@ export default function JournalToolbar({
         ↷ Redo
       </button>
       <span className="toolbar__sep" />
+      <button onClick={onPreview} title="Show print preview">
+        Preview
+      </button>
       <button onClick={onPrintPdf} title="Generate a printable PDF of the active template">
         Print PDF
       </button>

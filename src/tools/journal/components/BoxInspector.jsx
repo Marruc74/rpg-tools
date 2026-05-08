@@ -11,6 +11,12 @@ import {
   newContentItem,
 } from '../lib/journalTemplate.js'
 import { BOX_PRESETS } from '../lib/presets.js'
+import {
+  BOX_BORDER_OPTIONS,
+  BOX_RADIUS_OPTIONS,
+  BOX_FILL_OPTIONS,
+  TEMPLATE_THEMES,
+} from '../lib/journalTemplate.js'
 
 export default function BoxInspector({
   box,
@@ -102,6 +108,42 @@ function PresetPicker({ onPick }) {
       >
         Add
       </button>
+    </div>
+  )
+}
+
+function StyleEditor({ box, onChange }) {
+  const s = box.style ?? { border: 'normal', radius: 'rounded', fill: 'white' }
+  const setStyle = (patch) => onChange({ style: { ...s, ...patch } })
+  return (
+    <div className="inspector__style">
+      <div className="inspector__style-head">Style</div>
+      <div className="inspector__style-grid">
+        <label>
+          <span>Border</span>
+          <select value={s.border} onChange={(e) => setStyle({ border: e.target.value })}>
+            {BOX_BORDER_OPTIONS.map((o) => (
+              <option key={o} value={o}>{o}</option>
+            ))}
+          </select>
+        </label>
+        <label>
+          <span>Corners</span>
+          <select value={s.radius} onChange={(e) => setStyle({ radius: e.target.value })}>
+            {BOX_RADIUS_OPTIONS.map((o) => (
+              <option key={o} value={o}>{o}</option>
+            ))}
+          </select>
+        </label>
+        <label>
+          <span>Fill</span>
+          <select value={s.fill} onChange={(e) => setStyle({ fill: e.target.value })}>
+            {BOX_FILL_OPTIONS.map((o) => (
+              <option key={o} value={o}>{o}</option>
+            ))}
+          </select>
+        </label>
+      </div>
     </div>
   )
 }
@@ -291,6 +333,20 @@ function SheetPanel({ template, activePageIndex, onChangeTemplate, onAddPage, on
         </label>
       </div>
 
+      <label className="field">
+        <span>Theme</span>
+        <select
+          value={template.theme}
+          onChange={(e) => onChangeTemplate({ theme: e.target.value })}
+        >
+          {TEMPLATE_THEMES.map((t) => (
+            <option key={t} value={t}>
+              {t.charAt(0).toUpperCase() + t.slice(1)}
+            </option>
+          ))}
+        </select>
+      </label>
+
       <div className="inspector__pages">
         <div className="inspector__pages-head">
           <span>Pages ({pageCount})</span>
@@ -416,6 +472,8 @@ function BoxPanel({ box, pageDims, onChangeBox, onDeleteBox, onDuplicateBox, onB
           />
         </label>
       </div>
+
+      <StyleEditor box={box} onChange={update} />
 
       <ContentEditor
         items={content}

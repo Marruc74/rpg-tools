@@ -123,6 +123,7 @@ export default function TemplateCanvas({
       <div className="canvas-area__viewport" ref={setContainerEl}>
         <div
           className="canvas-area__page"
+          data-theme={template.theme ?? 'minimalist'}
           style={{
             transform: `scale(${scale})`,
             transformOrigin: 'top left',

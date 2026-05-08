@@ -50,6 +50,10 @@ export function clamp(value, min, max) {
   return Math.max(min, Math.min(max, value))
 }
 
+export const BOX_BORDER_OPTIONS = ['none', 'thin', 'normal', 'thick']
+export const BOX_RADIUS_OPTIONS = ['sharp', 'rounded']
+export const BOX_FILL_OPTIONS = ['white', 'cream', 'gray', 'transparent']
+
 export function newBox(overrides = {}) {
   return {
     id: uuid(),
@@ -59,6 +63,7 @@ export function newBox(overrides = {}) {
     w: snap(overrides.w ?? 240),
     h: snap(overrides.h ?? 160),
     content: [],
+    style: { border: 'normal', radius: 'rounded', fill: 'white' },
     ...overrides,
     id: overrides.id ?? uuid(),
   }
@@ -133,6 +138,8 @@ function defaultFrontBoxes() {
   ]
 }
 
+export const TEMPLATE_THEMES = ['minimalist', 'parchment']
+
 export function newTemplate(overrides = {}) {
   return {
     id: uuid(),
@@ -141,6 +148,7 @@ export function newTemplate(overrides = {}) {
     game: '',
     pageSize: 'a4',
     orientation: 'portrait',
+    theme: 'minimalist',
     pages: [newPage(defaultFrontBoxes())],
     ...overrides,
     id: overrides.id ?? uuid(),
@@ -201,11 +209,19 @@ function normalizeBox(b) {
     content = []
   }
 
+  const styleIn = b.style && typeof b.style === 'object' ? b.style : {}
+  const style = {
+    border: BOX_BORDER_OPTIONS.includes(styleIn.border) ? styleIn.border : 'normal',
+    radius: BOX_RADIUS_OPTIONS.includes(styleIn.radius) ? styleIn.radius : 'rounded',
+    fill: BOX_FILL_OPTIONS.includes(styleIn.fill) ? styleIn.fill : 'white',
+  }
+
   return {
     id: b.id ?? uuid(),
     title: typeof b.title === 'string' ? b.title : '',
     x, y, w, h,
     content,
+    style,
   }
 }
 
@@ -233,6 +249,7 @@ function normalizeTemplate(t) {
     game: typeof t.game === 'string' ? t.game : '',
     pageSize: PAGE_SIZES_MM[t.pageSize] ? t.pageSize : 'a4',
     orientation: t.orientation === 'landscape' ? 'landscape' : 'portrait',
+    theme: TEMPLATE_THEMES.includes(t.theme) ? t.theme : 'minimalist',
     pages,
   }
 }

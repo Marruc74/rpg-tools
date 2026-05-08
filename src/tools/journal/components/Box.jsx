@@ -108,10 +108,14 @@ export default function Box({
   }
 
   const content = box.content ?? []
+  const s = box.style ?? {}
 
   return (
     <div
       className={`canvas-box${isSelected ? ' is-selected' : ''}`}
+      data-border={s.border ?? 'normal'}
+      data-radius={s.radius ?? 'rounded'}
+      data-fill={s.fill ?? 'white'}
       style={{ left: box.x, top: box.y, width: box.w, height: box.h }}
       onPointerDown={beginMove}
     >

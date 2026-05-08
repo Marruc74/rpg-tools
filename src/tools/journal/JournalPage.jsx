@@ -6,6 +6,7 @@ import TemplateCanvas from './components/TemplateCanvas.jsx'
 import BoxInspector from './components/BoxInspector.jsx'
 import JournalToolbar from './components/JournalToolbar.jsx'
 import PrintArea from './components/PrintArea.jsx'
+import PrintPreview from './components/PrintPreview.jsx'
 import { useUndoableState } from '../../shared/hooks/useUndoableState.js'
 import {
   LIBRARY_KEY,
@@ -65,6 +66,7 @@ export default function JournalPage() {
   const [selectedBoxIds, setSelectedBoxIds] = useState(() => new Set())
   const [activePageIndex, setActivePageIndex] = useState(0)
   const [guides, setGuides] = useState({ vertical: [], horizontal: [] })
+  const [previewOpen, setPreviewOpen] = useState(false)
   const dragStartRef = useRef(null)
 
   const { undo, redo } = history
@@ -542,6 +544,7 @@ export default function JournalPage() {
           onRedo={redo}
           canUndo={history.canUndo}
           canRedo={history.canRedo}
+          onPreview={() => setPreviewOpen(true)}
           onPrintPdf={handlePrintPdf}
           onExportTemplate={handleExportTemplate}
           onExportLibrary={handleExportLibrary}
@@ -609,6 +612,17 @@ export default function JournalPage() {
       </main>
 
       <PrintArea template={activeTemplate} />
+
+      {previewOpen && activeTemplate && (
+        <PrintPreview
+          template={activeTemplate}
+          onClose={() => setPreviewOpen(false)}
+          onPrint={async () => {
+            await handlePrintPdf()
+            setPreviewOpen(false)
+          }}
+        />
+      )}
     </div>
   )
 }

@@ -196,6 +196,97 @@
   background-size: 8px 8px;
 }
 
+.modal-backdrop {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.5);
+  z-index: 100;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 20px;
+}
+
+.print-preview {
+  background: #fdfaf3;
+  border: 1px solid #d8cfb8;
+  border-radius: 8px;
+  width: 100%;
+  max-width: 1100px;
+  max-height: 90vh;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+.print-preview__header {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  padding: 12px 16px;
+  border-bottom: 1px solid #d8cfb8;
+  background: #ece4d0;
+  font-size: 13px;
+  color: #5a4a2c;
+}
+
+.print-preview__header strong { font-size: 14px; }
+.print-preview__header .hint { flex: 1; }
+
+.print-preview__actions {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.print-preview__actions button {
+  padding: 6px 14px;
+  border: 1px solid #b39966;
+  border-radius: 4px;
+  background: #fdfaf3;
+  font-size: 13px;
+}
+
+.print-preview__actions button.link {
+  background: transparent;
+  border: none;
+  color: #5a4a2c;
+  text-decoration: underline;
+}
+
+.print-preview__body {
+  flex: 1 1 auto;
+  overflow: auto;
+  background: #6b6357;
+  padding: 24px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 24px;
+}
+
+.print-preview__page-wrap {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  align-items: flex-start;
+}
+
+.print-preview__page-label {
+  font-size: 12px;
+  font-weight: 600;
+  color: #fdfaf3;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+
+.print-preview__scale {
+  flex-shrink: 0;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.4);
+  overflow: hidden;
+  background: #fff;
+}
+
 .canvas-marquee {
   position: absolute;
   border: 1px dashed #c97a4a;
@@ -233,8 +324,20 @@
   cursor: grab;
   user-select: none;
   display: flex;
+  flex-direction: column;
   align-items: stretch;
 }
+
+.canvas-box[data-border='none']   { border-width: 0; }
+.canvas-box[data-border='thin']   { border-width: 1px; }
+.canvas-box[data-border='normal'] { border-width: 1.5px; }
+.canvas-box[data-border='thick']  { border-width: 2.5px; }
+.canvas-box[data-radius='sharp']   { border-radius: 0; }
+.canvas-box[data-radius='rounded'] { border-radius: 4px; }
+.canvas-box[data-fill='white']       { background: rgba(255, 255, 255, 0.92); }
+.canvas-box[data-fill='cream']       { background: #fbf6e8; }
+.canvas-box[data-fill='gray']        { background: rgba(0, 0, 0, 0.05); }
+.canvas-box[data-fill='transparent'] { background: transparent; }
 
 .canvas-box:active { cursor: grabbing; }
 
@@ -421,6 +524,44 @@
   background: #fbe4d6;
 }
 
+.inspector__style {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  border-top: 1px solid #f0e8d2;
+  padding-top: 10px;
+}
+
+.inspector__style-head {
+  font-size: 11px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: #5a4a2c;
+}
+
+.inspector__style-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr 1fr;
+  gap: 6px;
+}
+
+.inspector__style-grid label {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  font-size: 11px;
+  color: #5a4a2c;
+}
+
+.inspector__style-grid select {
+  padding: 4px 6px;
+  border: 1px solid #d0c19a;
+  border-radius: 4px;
+  font-size: 12px;
+  text-transform: capitalize;
+}
+
 .inspector__content {
   display: flex;
   flex-direction: column;
@@ -551,6 +692,17 @@
   background: #fff;
   box-sizing: border-box;
 }
+
+.print-box[data-border='none']   { border-width: 0; }
+.print-box[data-border='thin']   { border-width: 1px; }
+.print-box[data-border='normal'] { border-width: 1.5px; }
+.print-box[data-border='thick']  { border-width: 2.5px; }
+.print-box[data-radius='sharp']   { border-radius: 0; }
+.print-box[data-radius='rounded'] { border-radius: 4px; }
+.print-box[data-fill='white']       { background: #fff; }
+.print-box[data-fill='cream']       { background: #fbf6e8; }
+.print-box[data-fill='gray']        { background: #f0f0f0; }
+.print-box[data-fill='transparent'] { background: transparent; }
 
 .print-box__title {
   padding: 6px 10px;
@@ -696,6 +848,89 @@
 .bc-grid-wrap {
   display: flex;
   flex-direction: column;
+}
+
+/* ============================================================
+   Theme: parchment
+   Applied via [data-theme='parchment'] on the canvas page or print
+   page. Cascades to all boxes / lines / labels via descendant
+   selectors.
+   ============================================================ */
+[data-theme='parchment'] {
+  background: #fdfaf3 !important;
+  background-image: none !important;
+}
+
+[data-theme='parchment'] .page-titleband__title,
+[data-theme='parchment'] .print-page__title {
+  font-family: 'Georgia', 'Times New Roman', serif !important;
+  color: #5a4a2c !important;
+}
+
+[data-theme='parchment'] .page-titleband__game {
+  font-family: 'Georgia', 'Times New Roman', serif !important;
+  color: #8a6a3a !important;
+}
+
+[data-theme='parchment'] .canvas-box,
+[data-theme='parchment'] .print-box {
+  border-color: #5a4a2c;
+  background: #fdfaf3;
+}
+
+[data-theme='parchment'] .canvas-box[data-fill='white'],
+[data-theme='parchment'] .print-box[data-fill='white'] {
+  background: #fdfaf3;
+}
+
+[data-theme='parchment'] .canvas-box[data-fill='cream'],
+[data-theme='parchment'] .print-box[data-fill='cream'] {
+  background: #f4e8c4;
+}
+
+[data-theme='parchment'] .canvas-box[data-fill='gray'],
+[data-theme='parchment'] .print-box[data-fill='gray'] {
+  background: #ece4d0;
+}
+
+[data-theme='parchment'] .canvas-box__title,
+[data-theme='parchment'] .print-box__title {
+  font-family: 'Georgia', 'Times New Roman', serif;
+  color: #5a4a2c;
+  font-variant: small-caps;
+  letter-spacing: 0.04em;
+}
+
+[data-theme='parchment'] .bc-tracker__label,
+[data-theme='parchment'] .bc-lines__label,
+[data-theme='parchment'] .bc-numbered__label,
+[data-theme='parchment'] .bc-grid__label {
+  color: #5a4a2c;
+  font-variant: small-caps;
+  letter-spacing: 0.06em;
+}
+
+[data-theme='parchment'] .bc-tracker__check {
+  border-color: #5a4a2c;
+}
+
+[data-theme='parchment'] .bc-lines__rule,
+[data-theme='parchment'] .bc-numbered__rule {
+  border-color: #b8a877;
+}
+
+[data-theme='parchment'] .bc-numbered__index {
+  color: #5a4a2c;
+  font-family: 'Georgia', 'Times New Roman', serif;
+}
+
+[data-theme='parchment'] .bc-grid {
+  border-color: #5a4a2c;
+}
+
+[data-theme='parchment'] .bc-grid__cell {
+  border-right-color: #5a4a2c;
+  border-bottom-color: #5a4a2c;
 }
 
 /* Shared title band used by both the canvas page and the print page */
