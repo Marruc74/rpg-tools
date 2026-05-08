@@ -18,6 +18,9 @@ export default function BoxInspector({
   onChangeBox,
   onChangeTemplate,
   onDeleteBox,
+  onDuplicateBox,
+  onBringToFront,
+  onSendToBack,
   onToggleTwoSided,
 }) {
   const isMultiPage = template.pages.length > 1
@@ -30,7 +33,14 @@ export default function BoxInspector({
       </button>
 
       {box ? (
-        <BoxPanel box={box} onChangeBox={onChangeBox} onDeleteBox={onDeleteBox} />
+        <BoxPanel
+          box={box}
+          onChangeBox={onChangeBox}
+          onDeleteBox={onDeleteBox}
+          onDuplicateBox={onDuplicateBox}
+          onBringToFront={onBringToFront}
+          onSendToBack={onSendToBack}
+        />
       ) : (
         <SheetPanel
           template={template}
@@ -80,7 +90,7 @@ function SheetPanel({ template, onChangeTemplate, onToggleTwoSided }) {
   )
 }
 
-function BoxPanel({ box, onChangeBox, onDeleteBox }) {
+function BoxPanel({ box, onChangeBox, onDeleteBox, onDuplicateBox, onBringToFront, onSendToBack }) {
   const update = (patch) => onChangeBox(box.id, patch)
   const setNumber = (key, value, min, max) => {
     const n = Number(value)
@@ -104,6 +114,17 @@ function BoxPanel({ box, onChangeBox, onDeleteBox }) {
   return (
     <>
       <h2>Box</h2>
+      <div className="inspector__box-actions">
+        <button type="button" onClick={() => onDuplicateBox(box.id)} title="Duplicate (Ctrl+D)">
+          ⧉ Duplicate
+        </button>
+        <button type="button" onClick={() => onBringToFront(box.id)} title="Bring to front">
+          ↑ Front
+        </button>
+        <button type="button" onClick={() => onSendToBack(box.id)} title="Send to back">
+          ↓ Back
+        </button>
+      </div>
       <label className="field">
         <span>Title</span>
         <input

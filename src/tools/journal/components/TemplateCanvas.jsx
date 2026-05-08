@@ -27,20 +27,6 @@ export default function TemplateCanvas({
     return () => obs.disconnect()
   }, [containerEl])
 
-  useEffect(() => {
-    const onKey = (e) => {
-      if (!selectedBoxId) return
-      const t = e.target
-      if (t && (t.tagName === 'INPUT' || t.tagName === 'TEXTAREA' || t.isContentEditable)) return
-      if (e.key === 'Delete' || e.key === 'Backspace') {
-        e.preventDefault()
-        onDeleteBox(selectedBoxId)
-      }
-    }
-    window.addEventListener('keydown', onKey)
-    return () => window.removeEventListener('keydown', onKey)
-  }, [selectedBoxId, onDeleteBox])
-
   const activePage = template.pages[activePageIndex] ?? template.pages[0]
   const boxes = activePage?.boxes ?? []
   const isMultiPage = template.pages.length > 1

@@ -279,6 +279,24 @@
 
 .inspector__add:hover { background: #3f3319; }
 
+.inspector__box-actions {
+  display: grid;
+  grid-template-columns: 1fr 1fr 1fr;
+  gap: 4px;
+}
+
+.inspector__box-actions button {
+  padding: 6px 4px;
+  border: 1px solid #d0c19a;
+  border-radius: 4px;
+  background: #fdfaf3;
+  font-size: 11px;
+  color: #5a4a2c;
+  cursor: pointer;
+}
+
+.inspector__box-actions button:hover { background: #f5edd6; }
+
 .inspector__checkbox {
   display: flex;
   align-items: center;

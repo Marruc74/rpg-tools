@@ -6,7 +6,7 @@ import TemplateCanvas from './components/TemplateCanvas.jsx'
 import BoxInspector from './components/BoxInspector.jsx'
 import JournalToolbar from './components/JournalToolbar.jsx'
 import PrintArea from './components/PrintArea.jsx'
-import { useIndexedDBState } from '../../shared/hooks/useIndexedDBState.js'
+import { useUndoableState } from '../../shared/hooks/useUndoableState.js'
 import {
   LIBRARY_KEY,
   emptyLibrary,
@@ -19,18 +19,23 @@ import {
   readJsonFile,
   PAGE_W,
   PAGE_H,
+  GRID_PX,
   snap,
+  clamp,
 } from './lib/journalTemplate.js'
 import { exportTemplatePdf } from './lib/exportJournalPdf.js'
 
 export default function JournalPage() {
-  const [library, setLibrary, isReady] = useIndexedDBState(
+  const [library, setLibrary, history] = useUndoableState(
     LIBRARY_KEY,
     emptyLibrary(),
     migrateLibrary,
   )
+  const isReady = history.isReady
   const [selectedBoxId, setSelectedBoxId] = useState(null)
   const [activePageIndex, setActivePageIndex] = useState(0)
+
+  const { undo, redo } = history
 
   const templates = library.templates
   const activeId = library.activeTemplateId
@@ -156,6 +161,45 @@ export default function JournalPage() {
     if (selectedBoxId === id) setSelectedBoxId(null)
   }
 
+  const handleDuplicateBox = (id) => {
+    if (!activePage) return
+    const original = activePage.boxes.find((b) => b.id === id)
+    if (!original) return
+    const copy = {
+      ...structuredClone(original),
+      id: uuid(),
+      x: clamp(original.x + 16, 0, PAGE_W - original.w),
+      y: clamp(original.y + 16, 0, PAGE_H - original.h),
+      trackers: (original.trackers ?? []).map((t) => ({ ...t, id: uuid() })),
+    }
+    updateBoxes([...activePage.boxes, copy])
+    setSelectedBoxId(copy.id)
+  }
+
+  const handleNudgeBox = (id, dx, dy) => {
+    if (!activePage) return
+    const box = activePage.boxes.find((b) => b.id === id)
+    if (!box) return
+    handleChangeBox(id, {
+      x: clamp(box.x + dx, 0, PAGE_W - box.w),
+      y: clamp(box.y + dy, 0, PAGE_H - box.h),
+    })
+  }
+
+  const handleBringToFront = (id) => {
+    if (!activePage) return
+    const box = activePage.boxes.find((b) => b.id === id)
+    if (!box) return
+    updateBoxes([...activePage.boxes.filter((b) => b.id !== id), box])
+  }
+
+  const handleSendToBack = (id) => {
+    if (!activePage) return
+    const box = activePage.boxes.find((b) => b.id === id)
+    if (!box) return
+    updateBoxes([box, ...activePage.boxes.filter((b) => b.id !== id)])
+  }
+
   const handleAddBox = () => {
     if (!activeTemplate || !activePage) return
 
@@ -183,6 +227,67 @@ export default function JournalPage() {
     updateBoxes([...activePage.boxes, box])
     setSelectedBoxId(box.id)
   }
+
+  /* ---------- keyboard ---------- */
+  // All keyboard shortcuts in one place. Skipped while focus is in a
+  // text input so typing labels doesn't trigger nudges.
+  useEffect(() => {
+    const onKey = (e) => {
+      const t = e.target
+      const inEditable =
+        t && (t.tagName === 'INPUT' || t.tagName === 'TEXTAREA' || t.isContentEditable)
+      if (inEditable) return
+
+      const mod = e.ctrlKey || e.metaKey
+
+      // Undo / redo
+      if (mod) {
+        const key = e.key.toLowerCase()
+        if (key === 'z' && !e.shiftKey) {
+          e.preventDefault()
+          undo()
+          return
+        }
+        if ((key === 'z' && e.shiftKey) || key === 'y') {
+          e.preventDefault()
+          redo()
+          return
+        }
+        if (key === 'd' && selectedBoxId) {
+          e.preventDefault()
+          handleDuplicateBox(selectedBoxId)
+          return
+        }
+      }
+
+      if (!selectedBoxId) return
+
+      // Delete
+      if (e.key === 'Delete' || e.key === 'Backspace') {
+        e.preventDefault()
+        handleDeleteBox(selectedBoxId)
+        return
+      }
+
+      // Arrow nudge — Shift = 4× the snap (i.e. 32 px)
+      const step = e.shiftKey ? GRID_PX * 4 : GRID_PX
+      if (e.key === 'ArrowLeft') {
+        e.preventDefault()
+        handleNudgeBox(selectedBoxId, -step, 0)
+      } else if (e.key === 'ArrowRight') {
+        e.preventDefault()
+        handleNudgeBox(selectedBoxId, step, 0)
+      } else if (e.key === 'ArrowUp') {
+        e.preventDefault()
+        handleNudgeBox(selectedBoxId, 0, -step)
+      } else if (e.key === 'ArrowDown') {
+        e.preventDefault()
+        handleNudgeBox(selectedBoxId, 0, step)
+      }
+    }
+    window.addEventListener('keydown', onKey)
+    return () => window.removeEventListener('keydown', onKey)
+  }, [selectedBoxId, activePage, undo, redo])
 
   /* ---------- export / import ---------- */
   const handlePrintPdf = async () => {
@@ -249,6 +354,10 @@ export default function JournalPage() {
       <header className="journal__header">
         <h1>Journal Sheet</h1>
         <JournalToolbar
+          onUndo={undo}
+          onRedo={redo}
+          canUndo={history.canUndo}
+          canRedo={history.canRedo}
           onPrintPdf={handlePrintPdf}
           onExportTemplate={handleExportTemplate}
           onExportLibrary={handleExportLibrary}
@@ -288,6 +397,9 @@ export default function JournalPage() {
               onChangeBox={handleChangeBox}
               onChangeTemplate={(patch) => updateActiveTemplate(patch)}
               onDeleteBox={handleDeleteBox}
+              onDuplicateBox={handleDuplicateBox}
+              onBringToFront={handleBringToFront}
+              onSendToBack={handleSendToBack}
               onToggleTwoSided={handleToggleTwoSided}
             />
           </>

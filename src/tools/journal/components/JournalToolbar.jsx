@@ -1,6 +1,10 @@
 import { useRef } from 'react'
 
 export default function JournalToolbar({
+  onUndo,
+  onRedo,
+  canUndo,
+  canRedo,
   onPrintPdf,
   onExportTemplate,
   onExportLibrary,
@@ -17,6 +21,13 @@ export default function JournalToolbar({
 
   return (
     <div className="toolbar">
+      <button onClick={onUndo} disabled={!canUndo} title="Undo (Ctrl+Z)">
+        ↶ Undo
+      </button>
+      <button onClick={onRedo} disabled={!canRedo} title="Redo (Ctrl+Shift+Z)">
+        ↷ Redo
+      </button>
+      <span className="toolbar__sep" />
       <button onClick={onPrintPdf} title="Generate a printable PDF of the active template">
         Print PDF
       </button>
