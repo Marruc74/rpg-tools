@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useRef, useState } from 'react'
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { v4 as uuid } from 'uuid'
 import './cardMaker.css'
 import './styles/card.css'
@@ -10,6 +10,7 @@ import Toolbar from './components/Toolbar.jsx'
 import HiddenExportArea from './components/HiddenExportArea.jsx'
 import StorageIndicator from './components/StorageIndicator.jsx'
 import { useUndoableState } from './hooks/useUndoableState.js'
+import { useBackupNudge } from './hooks/useBackupNudge.js'
 import { newCard } from './lib/newCard.js'
 import {
   LIBRARY_KEY,
@@ -30,6 +31,25 @@ export default function CardMakerPage() {
     emptyLibrary(),
     migrateLibrary,
   )
+  const backup = useBackupNudge()
+
+  const [overflowMap, setOverflowMap] = useState(() => new Map())
+  const handleOverflowChange = useCallback((cardId, side, overflows) => {
+    setOverflowMap((prev) => {
+      const cur = prev.get(cardId) ?? { front: false, back: false }
+      if (cur[side] === overflows) return prev
+      const next = new Map(prev)
+      next.set(cardId, { ...cur, [side]: overflows })
+      return next
+    })
+  }, [])
+  const overflowingIds = useMemo(() => {
+    const set = new Set()
+    for (const [id, sides] of overflowMap) {
+      if (sides.front || sides.back) set.add(id)
+    }
+    return set
+  }, [overflowMap])
 
   const collections = library.collections
   const activeCollectionId = library.activeCollectionId
@@ -123,6 +143,28 @@ export default function CardMakerPage() {
     })
   }
 
+  const handleDuplicateCollection = (id) => {
+    const original = collections.find((c) => c.id === id)
+    if (!original) return
+    const copy = {
+      ...structuredClone(original),
+      id: uuid(),
+      name: `${original.name} (copy)`,
+      cards: original.cards.map((card) => ({
+        ...structuredClone(card),
+        id: uuid(),
+      })),
+    }
+    const idx = collections.findIndex((c) => c.id === id)
+    const next = [...collections]
+    next.splice(idx + 1, 0, copy)
+    setLibrary({
+      ...library,
+      collections: next,
+      activeCollectionId: copy.id,
+    })
+  }
+
   const handleRenameCollection = (id, name) => updateCollection(id, { name })
 
   const handleUpdateCollectionStyle = (id, style) =>
@@ -185,16 +227,20 @@ export default function CardMakerPage() {
     await exportCardPngs(selected, frontRef.current, backRef.current)
   }
 
-  const handleExportPdf = async () => {
+  const handleExportPdf = async (sides = 'both') => {
     if (cards.length === 0) return
-    await exportLibraryPdf(cards, activeCollection?.size)
+    await exportLibraryPdf(cards, activeCollection?.size, sides)
   }
 
-  const handleExportLibraryJson = () => downloadJson(library)
+  const handleExportLibraryJson = () => {
+    downloadJson(library)
+    backup.markExported()
+  }
 
   const handleExportCollectionJson = () => {
     if (!activeCollection) return
     downloadCollectionJson(activeCollection)
+    backup.markExported()
   }
 
   const handleExportCardJson = () => {
@@ -267,8 +313,26 @@ export default function CardMakerPage() {
     )
   }
 
+  const hasAnyCards = collections.some((c) => c.cards.length > 0)
+  const showBackupBanner = backup.isStale && hasAnyCards
+
   return (
     <div className="app">
+      {showBackupBanner && (
+        <div className="backup-banner" role="status">
+          <span>
+            {backup.lastExport
+              ? `It's been over 2 weeks since your last library export. Browser storage isn't a backup — keep a JSON copy somewhere safe.`
+              : `Tip: export your library to JSON every now and then. Browser storage is local to this machine and can be wiped.`}
+          </span>
+          <div className="backup-banner__actions">
+            <button onClick={handleExportLibraryJson}>Export library now</button>
+            <button onClick={backup.snooze} className="link">
+              Remind me later
+            </button>
+          </div>
+        </div>
+      )}
       <header className="app__header">
         <h1>Card-Maker</h1>
         <StorageIndicator library={library} />
@@ -296,6 +360,7 @@ export default function CardMakerPage() {
           onSelect={handleSelectCollection}
           onNew={handleNewCollection}
           onDelete={handleDeleteCollection}
+          onDuplicate={handleDuplicateCollection}
           onRename={handleRenameCollection}
           onUpdateStyle={handleUpdateCollectionStyle}
           onUpdateSize={handleUpdateCollectionSize}
@@ -304,7 +369,10 @@ export default function CardMakerPage() {
 
         <CardList
           cards={cards}
+          categories={activeCollection?.categories ?? []}
+          sizeId={activeCollection?.size}
           selectedId={selectedId}
+          overflowingIds={overflowingIds}
           onSelect={setSelectedId}
           onNew={handleNewCard}
           onDelete={handleDeleteCard}
@@ -342,6 +410,7 @@ export default function CardMakerPage() {
         cards={cards}
         gameName={activeCollection?.name ?? ''}
         sizeId={activeCollection?.size}
+        onOverflowChange={handleOverflowChange}
       />
     </div>
   )

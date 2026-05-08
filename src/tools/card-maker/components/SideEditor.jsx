@@ -1,7 +1,11 @@
+import { useState } from 'react'
+import ReactMarkdown from 'react-markdown'
+import remarkGfm from 'remark-gfm'
 import { compressImage } from '../lib/compressImage.js'
 
 export default function SideEditor({ side, onChange, hideImage = false, hideTitle = false }) {
   const update = (patch) => onChange({ ...side, ...patch })
+  const [bodyMode, setBodyMode] = useState('edit')
 
   const handleImage = async (e) => {
     const file = e.target.files?.[0]
@@ -51,19 +55,48 @@ export default function SideEditor({ side, onChange, hideImage = false, hideTitl
         </div>
       )}
 
-      <label className="field">
-        <span>Body</span>
-        <textarea
-          rows={hideImage ? 9 : 5}
-          value={side.body}
-          onChange={(e) => update({ body: e.target.value })}
-          placeholder={'Description, lore, rule text…\n\n**bold**, *italic*, `code`, lists, > quotes'}
-        />
+      <div className="field">
+        <div className="body-field__header">
+          <span>Body</span>
+          <div className="body-field__tabs">
+            <button
+              type="button"
+              className={bodyMode === 'edit' ? 'is-active' : ''}
+              onClick={() => setBodyMode('edit')}
+            >
+              Edit
+            </button>
+            <button
+              type="button"
+              className={bodyMode === 'split' ? 'is-active' : ''}
+              onClick={() => setBodyMode('split')}
+            >
+              Split
+            </button>
+          </div>
+        </div>
+        <div className={`body-field body-field--${bodyMode}`}>
+          <textarea
+            rows={hideImage ? 9 : 5}
+            value={side.body}
+            onChange={(e) => update({ body: e.target.value })}
+            placeholder={'Description, lore, rule text…\n\n**bold**, *italic*, `code`, lists, > quotes'}
+          />
+          {bodyMode === 'split' && (
+            <div className="body-field__preview">
+              {side.body ? (
+                <ReactMarkdown remarkPlugins={[remarkGfm]}>{side.body}</ReactMarkdown>
+              ) : (
+                <p className="hint">Preview appears here.</p>
+              )}
+            </div>
+          )}
+        </div>
         <span className="hint">
           Markdown supported: <code>**bold**</code> <code>*italic*</code> <code>- list</code>{' '}
           <code>### heading</code> <code>&gt; quote</code> <code>`code`</code>
         </span>
-      </label>
+      </div>
 
       <div className="field">
         <span>Stats</span>

@@ -1,8 +1,18 @@
+import { useCallback } from 'react'
 import CardFace from './CardFace.jsx'
 
 // Renders every card's front and back at full size, off-screen, so the PDF
-// exporter can html2canvas them by data attribute.
-export default function HiddenExportArea({ cards, gameName, sizeId }) {
+// exporter can rasterize them by data attribute. Also serves as the
+// authoritative place to detect content overflow per card, since it
+// renders cards at their final pixel dimensions.
+export default function HiddenExportArea({ cards, gameName, sizeId, onOverflowChange }) {
+  const makeReporter = useCallback(
+    (cardId, side) => (overflows) => {
+      onOverflowChange?.(cardId, side, overflows)
+    },
+    [onOverflowChange],
+  )
+
   return (
     <div
       aria-hidden="true"
@@ -22,6 +32,7 @@ export default function HiddenExportArea({ cards, gameName, sizeId }) {
               style={card.style}
               gameName={gameName}
               sizeId={sizeId}
+              onOverflowChange={makeReporter(card.id, 'front')}
             />
           </div>
           <div data-export-id={card.id} data-export-side="back">
@@ -33,6 +44,7 @@ export default function HiddenExportArea({ cards, gameName, sizeId }) {
               sizeId={sizeId}
               hideImage
               hideTitle
+              onOverflowChange={makeReporter(card.id, 'back')}
             />
           </div>
         </div>

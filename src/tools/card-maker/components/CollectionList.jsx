@@ -9,6 +9,7 @@ export default function CollectionList({
   onSelect,
   onNew,
   onDelete,
+  onDuplicate,
   onRename,
   onUpdateStyle,
   onUpdateSize,
@@ -43,24 +44,37 @@ export default function CollectionList({
                   {col.cards.length} card{col.cards.length === 1 ? '' : 's'}
                 </div>
               </div>
-              {collections.length > 1 && (
+              <div className="collection-list__actions">
                 <button
                   className="icon-button"
                   onClick={(e) => {
                     e.stopPropagation()
-                    if (
-                      confirm(
-                        `Delete collection "${col.name}" and its ${col.cards.length} card(s)?`,
-                      )
-                    ) {
-                      onDelete(col.id)
-                    }
+                    onDuplicate(col.id)
                   }}
-                  title="Delete collection"
+                  title="Duplicate collection"
+                  aria-label="Duplicate collection"
                 >
-                  ×
+                  ⧉
                 </button>
-              )}
+                {collections.length > 1 && (
+                  <button
+                    className="icon-button"
+                    onClick={(e) => {
+                      e.stopPropagation()
+                      if (
+                        confirm(
+                          `Delete collection "${col.name}" and its ${col.cards.length} card(s)?`,
+                        )
+                      ) {
+                        onDelete(col.id)
+                      }
+                    }}
+                    title="Delete collection"
+                  >
+                    ×
+                  </button>
+                )}
+              </div>
             </li>
           )
         })}

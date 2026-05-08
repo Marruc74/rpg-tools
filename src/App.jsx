@@ -17,7 +17,7 @@ function Shell() {
   return (
     <div className="shell">
       <header className="shell__header">
-        <Link to="/" className="shell__brand">RPG Tools</Link>
+        <Link to="/" className="shell__brand">RPG Toolkit</Link>
         <nav className="shell__nav">
           <NavLink to="/card-maker">Card-Maker</NavLink>
         </nav>

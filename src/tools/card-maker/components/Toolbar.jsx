@@ -1,4 +1,4 @@
-import { useRef } from 'react'
+import { useRef, useState } from 'react'
 
 export default function Toolbar({
   onExportPng,
@@ -15,6 +15,7 @@ export default function Toolbar({
   hasCollection,
   cardCount,
 }) {
+  const [pdfSides, setPdfSides] = useState('both')
   const fileInputRef = useRef(null)
 
   const handleImportClick = () => fileInputRef.current?.click()
@@ -38,9 +39,20 @@ export default function Toolbar({
       <button onClick={onExportPng} disabled={!hasSelection}>
         Export PNG (this card)
       </button>
-      <button onClick={onExportPdf} disabled={cardCount === 0}>
-        Export PDF (all {cardCount})
+      <button onClick={() => onExportPdf(pdfSides)} disabled={cardCount === 0}>
+        Export PDF ({cardCount})
       </button>
+      <select
+        className="toolbar__select"
+        value={pdfSides}
+        onChange={(e) => setPdfSides(e.target.value)}
+        title="Which sides to include in PDF"
+        disabled={cardCount === 0}
+      >
+        <option value="both">Both sides</option>
+        <option value="front">Front only</option>
+        <option value="back">Back only</option>
+      </select>
       <span className="toolbar__sep" />
       <button onClick={onExportCardJson} disabled={!hasSelection} title="Export selected card as JSON">
         Export card

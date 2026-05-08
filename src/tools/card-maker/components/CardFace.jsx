@@ -1,4 +1,4 @@
-import { forwardRef } from 'react'
+import { forwardRef, useEffect, useLayoutEffect, useRef } from 'react'
 import ReactMarkdown from 'react-markdown'
 import remarkGfm from 'remark-gfm'
 import { getCardSizePx } from '../lib/cardSizes.js'
@@ -12,10 +12,28 @@ const CardFace = forwardRef(function CardFace(
     sizeId,
     hideImage = false,
     hideTitle = false,
+    onOverflowChange,
   },
   ref,
 ) {
   const dim = getCardSizePx(sizeId)
+  const internalRef = useRef(null)
+
+  // Forward the internal ref to the caller's ref (object or function).
+  useEffect(() => {
+    if (typeof ref === 'function') ref(internalRef.current)
+    else if (ref) ref.current = internalRef.current
+  })
+
+  // Report whether the card content overflows its fixed footprint. Runs
+  // after layout so measurements are correct, and re-checks whenever the
+  // input that affects size changes.
+  useLayoutEffect(() => {
+    if (!onOverflowChange || !internalRef.current) return
+    const el = internalRef.current
+    const overflows = el.scrollHeight > el.clientHeight + 1
+    onOverflowChange(overflows)
+  }, [side, style, sizeId, hideImage, hideTitle, onOverflowChange])
   const stats = (side.stats || []).filter(
     (s) => (s.label && s.label.trim()) || (s.value && s.value.trim()),
   )
@@ -37,7 +55,7 @@ const CardFace = forwardRef(function CardFace(
       className="card-face"
       data-category={category}
       data-orientation={dim.orientation}
-      ref={ref}
+      ref={internalRef}
       style={inlineStyle}
     >
       {!hideTitle && (

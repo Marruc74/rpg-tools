@@ -82,7 +82,8 @@ async function placeFaces(pdf, cards, layout, side, mirror) {
   }
 }
 
-export async function exportLibraryPdf(cards, sizeId) {
+// sides: 'both' | 'front' | 'back'
+export async function exportLibraryPdf(cards, sizeId, sides = 'both') {
   if (cards.length === 0) {
     alert('No cards to export.')
     return
@@ -96,9 +97,16 @@ export async function exportLibraryPdf(cards, sizeId) {
     orientation: layout.orientation,
   })
 
-  await placeFaces(pdf, cards, layout, 'front', false)
-  pdf.addPage([layout.pageW, layout.pageH], layout.orientation)
-  await placeFaces(pdf, cards, layout, 'back', true)
+  if (sides === 'front' || sides === 'both') {
+    await placeFaces(pdf, cards, layout, 'front', false)
+  }
+  if (sides === 'back' || sides === 'both') {
+    if (sides === 'both') {
+      pdf.addPage([layout.pageW, layout.pageH], layout.orientation)
+    }
+    await placeFaces(pdf, cards, layout, 'back', sides === 'both')
+  }
 
-  pdf.save('cardmaker-library.pdf')
+  const suffix = sides === 'both' ? '' : `-${sides}`
+  pdf.save(`cardmaker-library${suffix}.pdf`)
 }
