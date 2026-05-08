@@ -15,6 +15,11 @@ export default function TemplateList({
       <ul className="template-list__items">
         {templates.map((t) => {
           const isActive = t.id === activeId
+          const boxCount = (t.pages ?? []).reduce(
+            (n, p) => n + (p.boxes?.length ?? 0),
+            0,
+          )
+          const sides = (t.pages ?? []).length === 2 ? '2 sides' : '1 side'
           return (
             <li
               key={t.id}
@@ -29,7 +34,7 @@ export default function TemplateList({
                 placeholder="Template name"
               />
               <div className="template-list__meta">
-                {t.boxes.length} box{t.boxes.length === 1 ? '' : 'es'}
+                {boxCount} box{boxCount === 1 ? '' : 'es'} · {sides}
               </div>
               <div className="template-list__actions">
                 <button
