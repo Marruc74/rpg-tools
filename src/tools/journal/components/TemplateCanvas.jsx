@@ -2,23 +2,22 @@ import { useEffect, useState } from 'react'
 import Box from './Box.jsx'
 import { PAGE_W, PAGE_H } from '../lib/journalTemplate.js'
 
-const PAGE_HEIGHT_PX = PAGE_H
-
 export default function TemplateCanvas({
   template,
+  activePageIndex,
+  onChangeActivePage,
   selectedBoxId,
   onSelectBox,
   onChangeBox,
   onDeleteBox,
 }) {
-  // Auto-scale to fit the viewport's width.
   const [scale, setScale] = useState(0.55)
   const [containerEl, setContainerEl] = useState(null)
 
   useEffect(() => {
     if (!containerEl) return
     const measure = () => {
-      const w = containerEl.clientWidth - 32 // padding
+      const w = containerEl.clientWidth - 32
       const next = Math.max(0.25, Math.min(0.9, w / PAGE_W))
       setScale(next)
     }
@@ -28,7 +27,6 @@ export default function TemplateCanvas({
     return () => obs.disconnect()
   }, [containerEl])
 
-  // Delete key removes the selected box.
   useEffect(() => {
     const onKey = (e) => {
       if (!selectedBoxId) return
@@ -43,12 +41,29 @@ export default function TemplateCanvas({
     return () => window.removeEventListener('keydown', onKey)
   }, [selectedBoxId, onDeleteBox])
 
-  const pageCount = Math.max(1, Math.ceil(PAGE_HEIGHT_PX / PAGE_HEIGHT_PX)) // single A4 for now
+  const activePage = template.pages[activePageIndex] ?? template.pages[0]
+  const boxes = activePage?.boxes ?? []
+  const isMultiPage = template.pages.length > 1
 
   return (
     <section className="canvas-area">
       <header className="canvas-area__header">
-        <h2>{template.title}</h2>
+        <div className="canvas-area__header-left">
+          <h2>{template.title || 'Untitled sheet'}</h2>
+          {isMultiPage && (
+            <div className="canvas-area__tabs">
+              {template.pages.map((_, i) => (
+                <button
+                  key={i}
+                  className={i === activePageIndex ? 'is-active' : ''}
+                  onClick={() => onChangeActivePage(i)}
+                >
+                  {i === 0 ? 'Front' : 'Back'}
+                </button>
+              ))}
+            </div>
+          )}
+        </div>
         <span className="hint">Drag boxes to move; corners and edges resize. Click empty area to deselect; Delete removes.</span>
       </header>
       <div className="canvas-area__viewport" ref={setContainerEl}>
@@ -61,17 +76,16 @@ export default function TemplateCanvas({
             height: PAGE_H,
           }}
           onPointerDown={(e) => {
-            // Click on the page background (not a box) deselects.
             if (e.target === e.currentTarget) onSelectBox(null)
           }}
         >
-          {(template.title || template.game) && (
+          {activePageIndex === 0 && (template.title || template.game) && (
             <div className="page-titleband">
               {template.title && <div className="page-titleband__title">{template.title}</div>}
               {template.game && <div className="page-titleband__game">{template.game}</div>}
             </div>
           )}
-          {template.boxes.map((box) => (
+          {boxes.map((box) => (
             <Box
               key={box.id}
               box={box}

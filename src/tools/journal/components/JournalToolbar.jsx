@@ -1,7 +1,6 @@
 import { useRef } from 'react'
 
 export default function JournalToolbar({
-  onAddBox,
   onPrintPdf,
   onExportTemplate,
   onExportLibrary,
@@ -18,10 +17,6 @@ export default function JournalToolbar({
 
   return (
     <div className="toolbar">
-      <button onClick={onAddBox} title="Add a new box to the active template">
-        + Add box
-      </button>
-      <span className="toolbar__sep" />
       <button onClick={onPrintPdf} title="Generate a printable PDF of the active template">
         Print PDF
       </button>

@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from 'react'
+import { useEffect, useState } from 'react'
 import { v4 as uuid } from 'uuid'
 import './journalPage.css'
 import TemplateList from './components/TemplateList.jsx'
@@ -13,6 +13,7 @@ import {
   migrateLibrary,
   newTemplate,
   newBox,
+  newPage,
   downloadTemplateJson,
   downloadLibraryJson,
   readJsonFile,
@@ -29,11 +30,26 @@ export default function JournalPage() {
     migrateLibrary,
   )
   const [selectedBoxId, setSelectedBoxId] = useState(null)
+  const [activePageIndex, setActivePageIndex] = useState(0)
 
   const templates = library.templates
   const activeId = library.activeTemplateId
   const activeTemplate =
     templates.find((t) => t.id === activeId) ?? templates[0] ?? null
+
+  // Clamp activePageIndex if a template's page count drops below it.
+  useEffect(() => {
+    if (!activeTemplate) return
+    if (activePageIndex >= activeTemplate.pages.length) {
+      setActivePageIndex(0)
+    }
+  }, [activeTemplate, activePageIndex])
+
+  // Reset selection + page when switching templates.
+  useEffect(() => {
+    setSelectedBoxId(null)
+    setActivePageIndex(0)
+  }, [activeId])
 
   // If the active template id ever points at a removed template, fix it.
   useEffect(() => {
@@ -42,13 +58,9 @@ export default function JournalPage() {
     }
   }, [templates, activeTemplate])
 
-  // Drop selection when switching templates.
-  useEffect(() => {
-    setSelectedBoxId(null)
-  }, [activeId])
-
-  const selectedBox =
-    activeTemplate?.boxes.find((b) => b.id === selectedBoxId) ?? null
+  const activePage = activeTemplate?.pages[activePageIndex] ?? activeTemplate?.pages[0]
+  const boxes = activePage?.boxes ?? []
+  const selectedBox = boxes.find((b) => b.id === selectedBoxId) ?? null
 
   /* ---------- template management ---------- */
   const updateTemplate = (id, patch) =>
@@ -79,7 +91,10 @@ export default function JournalPage() {
       ...structuredClone(original),
       id: uuid(),
       name: `${original.name} (copy)`,
-      boxes: original.boxes.map((b) => ({ ...b, id: uuid() })),
+      pages: original.pages.map((p) => ({
+        id: uuid(),
+        boxes: p.boxes.map((b) => ({ ...b, id: uuid() })),
+      })),
     }
     const idx = templates.findIndex((t) => t.id === id)
     const next = [...templates]
@@ -99,51 +114,73 @@ export default function JournalPage() {
 
   const handleRenameTemplate = (id, name) => updateTemplate(id, { name })
 
+  /* ---------- page management ---------- */
+  const updateActivePage = (patch) => {
+    if (!activeTemplate || !activePage) return
+    updateActiveTemplate({
+      pages: activeTemplate.pages.map((p, i) =>
+        i === activePageIndex ? { ...p, ...patch } : p,
+      ),
+    })
+  }
+
+  const handleToggleTwoSided = (twoSided) => {
+    if (!activeTemplate) return
+    if (twoSided) {
+      if (activeTemplate.pages.length >= 2) return
+      updateActiveTemplate({
+        pages: [...activeTemplate.pages, newPage()],
+      })
+    } else {
+      if (activeTemplate.pages.length <= 1) return
+      const back = activeTemplate.pages[1]
+      if (back.boxes.length > 0) {
+        if (!confirm('Remove the back side and all of its boxes?')) return
+      }
+      updateActiveTemplate({ pages: [activeTemplate.pages[0]] })
+      setActivePageIndex(0)
+    }
+  }
+
   /* ---------- box management ---------- */
-  const updateBoxes = (next) => updateActiveTemplate({ boxes: next })
+  const updateBoxes = (next) => updateActivePage({ boxes: next })
 
   const handleChangeBox = (id, patch) => {
-    if (!activeTemplate) return
-    updateBoxes(
-      activeTemplate.boxes.map((b) => (b.id === id ? { ...b, ...patch } : b)),
-    )
+    if (!activePage) return
+    updateBoxes(activePage.boxes.map((b) => (b.id === id ? { ...b, ...patch } : b)))
   }
 
   const handleDeleteBox = (id) => {
-    if (!activeTemplate) return
-    updateBoxes(activeTemplate.boxes.filter((b) => b.id !== id))
+    if (!activePage) return
+    updateBoxes(activePage.boxes.filter((b) => b.id !== id))
     if (selectedBoxId === id) setSelectedBoxId(null)
   }
 
   const handleAddBox = () => {
-    if (!activeTemplate) return
+    if (!activeTemplate || !activePage) return
 
     const NEW_W = 240
     const NEW_H = 144
-    // Title band lives at top: 24 with ~50 px of content, so 88 is the
-    // first y that's clear of the title + game subtitle.
+    // Title band sits at top:24 with ~50px of content; 88 is the first
+    // y clear of it.
     const TOP_OF_SHEET = 88
 
-    // Find the bottom of the existing layout so we can drop the new box
-    // into empty space below it. If the page is full, fall back to the
-    // top of the sheet (just under the title band).
-    const layoutBottom = activeTemplate.boxes.reduce(
+    const layoutBottom = activePage.boxes.reduce(
       (max, b) => Math.max(max, b.y + b.h),
       TOP_OF_SHEET - 8,
     )
-    const stagger = (activeTemplate.boxes.length % 6) * 8
+    const stagger = (activePage.boxes.length % 6) * 8
 
     let y = snap(layoutBottom + 8 + stagger)
     let x = snap(24 + stagger)
     if (y + NEW_H > PAGE_H) {
-      // No room below — drop it under the title band, staggered.
       y = snap(TOP_OF_SHEET + stagger)
       x = snap(24 + stagger)
     }
     if (x + NEW_W > PAGE_W) x = PAGE_W - NEW_W
 
     const box = newBox({ title: 'New box', x, y, w: NEW_W, h: NEW_H })
-    updateBoxes([...activeTemplate.boxes, box])
+    updateBoxes([...activePage.boxes, box])
     setSelectedBoxId(box.id)
   }
 
@@ -174,7 +211,8 @@ export default function JournalPage() {
       }
       if (parsed.kind === 'library') {
         const replace =
-          templates.length === 1 && templates[0].boxes.length === 0
+          templates.length === 1 &&
+          templates[0].pages.every((p) => p.boxes.length === 0)
             ? true
             : confirm('Replace your current library with the imported one? Click Cancel to merge templates.')
         if (replace) {
@@ -211,7 +249,6 @@ export default function JournalPage() {
       <header className="journal__header">
         <h1>Journal Sheet</h1>
         <JournalToolbar
-          onAddBox={handleAddBox}
           onPrintPdf={handlePrintPdf}
           onExportTemplate={handleExportTemplate}
           onExportLibrary={handleExportLibrary}
@@ -233,6 +270,11 @@ export default function JournalPage() {
           <>
             <TemplateCanvas
               template={activeTemplate}
+              activePageIndex={activePageIndex}
+              onChangeActivePage={(i) => {
+                setActivePageIndex(i)
+                setSelectedBoxId(null)
+              }}
               selectedBoxId={selectedBoxId}
               onSelectBox={setSelectedBoxId}
               onChangeBox={handleChangeBox}
@@ -241,9 +283,12 @@ export default function JournalPage() {
             <BoxInspector
               box={selectedBox}
               template={activeTemplate}
+              activePageIndex={activePageIndex}
+              onAddBox={handleAddBox}
               onChangeBox={handleChangeBox}
               onChangeTemplate={(patch) => updateActiveTemplate(patch)}
               onDeleteBox={handleDeleteBox}
+              onToggleTwoSided={handleToggleTwoSided}
             />
           </>
         ) : (

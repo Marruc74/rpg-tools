@@ -1,38 +1,77 @@
 import { GRID_PX, MIN_W, MIN_H, PAGE_W, PAGE_H, snap, clamp } from '../lib/journalTemplate.js'
 
-export default function BoxInspector({ box, template, onChangeBox, onChangeTemplate, onDeleteBox }) {
-  if (!box) {
-    return (
-      <aside className="inspector">
-        <h2>Sheet</h2>
-        <label className="field">
-          <span>Sheet title</span>
-          <input
-            type="text"
-            value={template.title}
-            onChange={(e) => onChangeTemplate({ title: e.target.value })}
-            placeholder="Session Notes"
-          />
-        </label>
-        <label className="field">
-          <span>Game</span>
-          <input
-            type="text"
-            value={template.game ?? ''}
-            onChange={(e) => onChangeTemplate({ game: e.target.value })}
-            placeholder="e.g. Curse of Strahd"
-          />
-        </label>
-        <p className="hint">
-          Click a box to edit its title and size. Use the Add box button in the
-          toolbar to create new ones.
-        </p>
-      </aside>
-    )
-  }
+export default function BoxInspector({
+  box,
+  template,
+  activePageIndex,
+  onAddBox,
+  onChangeBox,
+  onChangeTemplate,
+  onDeleteBox,
+  onToggleTwoSided,
+}) {
+  const isMultiPage = template.pages.length > 1
+  const sideLabel = activePageIndex === 0 ? 'front' : 'back'
 
+  return (
+    <aside className="inspector">
+      <button type="button" className="inspector__add" onClick={onAddBox}>
+        + Add box{isMultiPage ? ` to ${sideLabel}` : ''}
+      </button>
+
+      {box ? (
+        <BoxPanel box={box} onChangeBox={onChangeBox} onDeleteBox={onDeleteBox} />
+      ) : (
+        <SheetPanel
+          template={template}
+          onChangeTemplate={onChangeTemplate}
+          onToggleTwoSided={onToggleTwoSided}
+        />
+      )}
+    </aside>
+  )
+}
+
+function SheetPanel({ template, onChangeTemplate, onToggleTwoSided }) {
+  return (
+    <>
+      <h2>Sheet</h2>
+      <label className="field">
+        <span>Sheet title</span>
+        <input
+          type="text"
+          value={template.title}
+          onChange={(e) => onChangeTemplate({ title: e.target.value })}
+          placeholder="Session Notes"
+        />
+      </label>
+      <label className="field">
+        <span>Game</span>
+        <input
+          type="text"
+          value={template.game ?? ''}
+          onChange={(e) => onChangeTemplate({ game: e.target.value })}
+          placeholder="e.g. Curse of Strahd"
+        />
+      </label>
+      <label className="inspector__checkbox">
+        <input
+          type="checkbox"
+          checked={template.pages.length > 1}
+          onChange={(e) => onToggleTwoSided(e.target.checked)}
+        />
+        <span>Two-sided sheet</span>
+      </label>
+      <p className="hint">
+        Click a box to edit its title and size. Add box drops a new one into
+        empty space on the active side.
+      </p>
+    </>
+  )
+}
+
+function BoxPanel({ box, onChangeBox, onDeleteBox }) {
   const update = (patch) => onChangeBox(box.id, patch)
-
   const setNumber = (key, value, min, max) => {
     const n = Number(value)
     if (Number.isNaN(n)) return
@@ -40,7 +79,7 @@ export default function BoxInspector({ box, template, onChangeBox, onChangeTempl
   }
 
   return (
-    <aside className="inspector">
+    <>
       <h2>Box</h2>
       <label className="field">
         <span>Title</span>
@@ -104,6 +143,6 @@ export default function BoxInspector({ box, template, onChangeBox, onChangeTempl
       >
         Delete box
       </button>
-    </aside>
+    </>
   )
 }

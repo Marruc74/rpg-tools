@@ -140,11 +140,39 @@
   background: #ece4d0;
 }
 
+.canvas-area__header-left {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+}
+
 .canvas-area__header h2 {
   margin: 0;
   font-size: 13px;
   font-family: 'Georgia', serif;
   color: #5a4a2c;
+}
+
+.canvas-area__tabs {
+  display: flex;
+  gap: 2px;
+}
+
+.canvas-area__tabs button {
+  padding: 3px 12px;
+  font-size: 11px;
+  font-weight: 600;
+  border: 1px solid #d0c19a;
+  background: #fbf6e8;
+  border-radius: 4px;
+  color: #5a4a2c;
+  cursor: pointer;
+}
+
+.canvas-area__tabs button.is-active {
+  background: #5a4a2c;
+  color: #fbf6e8;
+  border-color: #5a4a2c;
 }
 
 .canvas-area__viewport {
@@ -236,6 +264,32 @@
   font-family: 'Georgia', serif;
   color: #5a4a2c;
 }
+
+.inspector__add {
+  width: 100%;
+  padding: 10px 12px;
+  border: 1px solid #5a4a2c;
+  background: #5a4a2c;
+  color: #fdfaf3;
+  border-radius: 4px;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.inspector__add:hover { background: #3f3319; }
+
+.inspector__checkbox {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 13px;
+  color: #5a4a2c;
+  cursor: pointer;
+  padding: 4px 0;
+}
+
+.inspector__checkbox input { cursor: pointer; }
 
 .inspector .field {
   display: flex;

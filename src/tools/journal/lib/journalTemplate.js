@@ -1,11 +1,11 @@
 import { v4 as uuid } from 'uuid'
 
-// Library stores N templates; each template lays boxes out by absolute
-// pixel position on a virtual A4 page (840 × 1188 px logical). Grid
-// snap rounds positions to GRID_PX. Min box size enforces usability.
+// Library stores N templates; each template has one or two pages
+// (front, optional back). Each page lays boxes by absolute pixel
+// position on a virtual A4 page (840 × 1188 px). 8 px snap.
 
 export const LIBRARY_KEY = 'journal:library'
-export const LIBRARY_VERSION = 3
+export const LIBRARY_VERSION = 4
 
 export const PAGE_W = 840
 export const PAGE_H = 1188
@@ -21,7 +21,7 @@ export function clamp(value, min, max) {
   return Math.max(min, Math.min(max, value))
 }
 
-function newBoxAt(overrides = {}) {
+export function newBox(overrides = {}) {
   return {
     id: uuid(),
     title: 'Untitled',
@@ -34,13 +34,11 @@ function newBoxAt(overrides = {}) {
   }
 }
 
-export function newBox(overrides = {}) {
-  return newBoxAt(overrides)
+export function newPage(boxes = []) {
+  return { id: uuid(), boxes }
 }
 
-// A starter template that lays out a "session notes"-like sheet so a
-// new user has something to drag around immediately.
-function defaultBoxes() {
+function defaultFrontBoxes() {
   return [
     newBox({ title: 'Session #',     x: 24,  y: 80,  w: 240, h: 64 }),
     newBox({ title: 'Date',          x: 280, y: 80,  w: 240, h: 64 }),
@@ -60,7 +58,7 @@ export function newTemplate(overrides = {}) {
     name: 'New template',
     title: 'Session Notes',
     game: '',
-    boxes: defaultBoxes(),
+    pages: [newPage(defaultFrontBoxes())],
     ...overrides,
     id: overrides.id ?? uuid(),
   }
@@ -89,26 +87,40 @@ function normalizeBox(b) {
   }
 }
 
+function normalizePage(p) {
+  return {
+    id: p.id ?? uuid(),
+    boxes: Array.isArray(p.boxes) ? p.boxes.map(normalizeBox) : [],
+  }
+}
+
 function normalizeTemplate(t) {
+  // Forward-migrate v3 (top-level boxes) into pages[0].
+  let pages
+  if (Array.isArray(t.pages) && t.pages.length > 0) {
+    pages = t.pages.slice(0, 2).map(normalizePage)
+  } else if (Array.isArray(t.boxes)) {
+    pages = [normalizePage({ boxes: t.boxes })]
+  } else {
+    pages = [newPage(defaultFrontBoxes())]
+  }
   return {
     id: t.id ?? uuid(),
     name: typeof t.name === 'string' && t.name ? t.name : 'Template',
     title: typeof t.title === 'string' ? t.title : 'Session Notes',
     game: typeof t.game === 'string' ? t.game : '',
-    boxes: Array.isArray(t.boxes) ? t.boxes.map(normalizeBox) : [],
+    pages,
   }
 }
 
 export function migrateLibrary(value) {
   if (!value || typeof value !== 'object') return emptyLibrary()
-  if (value.version === LIBRARY_VERSION && Array.isArray(value.templates)) {
+  if (Array.isArray(value.templates)) {
     const templates = value.templates.map(normalizeTemplate)
     const activeTemplateId =
       templates.find((t) => t.id === value.activeTemplateId)?.id ?? templates[0]?.id
     return { version: LIBRARY_VERSION, templates, activeTemplateId }
   }
-  // Older shapes (v1 sections, v2 sections+span+repeat) are discarded —
-  // the user explicitly said data doesn't need to be saved.
   return emptyLibrary()
 }
 
