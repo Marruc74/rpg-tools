@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { v4 as uuid } from 'uuid'
 import './journalPage.css'
 import TemplateList from './components/TemplateList.jsx'
@@ -25,6 +25,35 @@ import {
 } from './lib/journalTemplate.js'
 import { exportTemplatePdf } from './lib/exportJournalPdf.js'
 
+function computeGuides(boxes, dragStartMap) {
+  const vert = new Set()
+  const horz = new Set()
+  const moving = boxes.filter((b) => dragStartMap.has(b.id))
+  const stationary = boxes.filter((b) => !dragStartMap.has(b.id))
+  if (moving.length === 0 || stationary.length === 0) {
+    return { vertical: [], horizontal: [] }
+  }
+  for (const m of moving) {
+    const mxs = [m.x, m.x + m.w / 2, m.x + m.w]
+    const mys = [m.y, m.y + m.h / 2, m.y + m.h]
+    for (const s of stationary) {
+      const sxs = [s.x, s.x + s.w / 2, s.x + s.w]
+      const sys = [s.y, s.y + s.h / 2, s.y + s.h]
+      for (const mx of mxs) {
+        for (const sx of sxs) {
+          if (Math.abs(mx - sx) < 1) vert.add(Math.round(sx))
+        }
+      }
+      for (const my of mys) {
+        for (const sy of sys) {
+          if (Math.abs(my - sy) < 1) horz.add(Math.round(sy))
+        }
+      }
+    }
+  }
+  return { vertical: [...vert], horizontal: [...horz] }
+}
+
 export default function JournalPage() {
   const [library, setLibrary, history] = useUndoableState(
     LIBRARY_KEY,
@@ -32,8 +61,10 @@ export default function JournalPage() {
     migrateLibrary,
   )
   const isReady = history.isReady
-  const [selectedBoxId, setSelectedBoxId] = useState(null)
+  const [selectedBoxIds, setSelectedBoxIds] = useState(() => new Set())
   const [activePageIndex, setActivePageIndex] = useState(0)
+  const [guides, setGuides] = useState({ vertical: [], horizontal: [] })
+  const dragStartRef = useRef(null)
 
   const { undo, redo } = history
 
@@ -52,7 +83,7 @@ export default function JournalPage() {
 
   // Reset selection + page when switching templates.
   useEffect(() => {
-    setSelectedBoxId(null)
+    setSelectedBoxIds(new Set())
     setActivePageIndex(0)
   }, [activeId])
 
@@ -65,7 +96,41 @@ export default function JournalPage() {
 
   const activePage = activeTemplate?.pages[activePageIndex] ?? activeTemplate?.pages[0]
   const boxes = activePage?.boxes ?? []
-  const selectedBox = boxes.find((b) => b.id === selectedBoxId) ?? null
+  const selectedBoxes = boxes.filter((b) => selectedBoxIds.has(b.id))
+  // Inspector's Box panel only makes sense with one selection.
+  const primarySelectedBox = selectedBoxes.length === 1 ? selectedBoxes[0] : null
+
+  const handleSelectBox = (id, additive = false) => {
+    if (id === null) {
+      setSelectedBoxIds(new Set())
+      return
+    }
+    if (additive) {
+      setSelectedBoxIds((prev) => {
+        const next = new Set(prev)
+        if (next.has(id)) next.delete(id)
+        else next.add(id)
+        return next
+      })
+    } else {
+      // Plain click on an already-selected (single) box keeps the
+      // selection; clicking a different box replaces.
+      if (selectedBoxIds.size === 1 && selectedBoxIds.has(id)) return
+      if (selectedBoxIds.has(id) && selectedBoxIds.size > 1) return
+      setSelectedBoxIds(new Set([id]))
+    }
+  }
+
+  const handleSelectMany = (ids, additive = false) => {
+    setSelectedBoxIds((prev) => {
+      if (additive) {
+        const next = new Set(prev)
+        ids.forEach((id) => next.add(id))
+        return next
+      }
+      return new Set(ids)
+    })
+  }
 
   /* ---------- template management ---------- */
   const updateTemplate = (id, patch) =>
@@ -150,6 +215,50 @@ export default function JournalPage() {
   /* ---------- box management ---------- */
   const updateBoxes = (next) => updateActivePage({ boxes: next })
 
+  /* ---------- gesture move (multi-box drag) ---------- */
+  const handleMoveStart = (sourceBoxId, additive) => {
+    if (!activePage) return
+    // Pick the set of boxes that participate in this drag. If the
+    // dragged box is already part of the selection, drag everything
+    // selected; otherwise this drag works on just that box and updates
+    // the selection accordingly.
+    let dragIds
+    if (selectedBoxIds.has(sourceBoxId)) {
+      dragIds = new Set(selectedBoxIds)
+    } else if (additive) {
+      dragIds = new Set(selectedBoxIds).add(sourceBoxId)
+      setSelectedBoxIds(dragIds)
+    } else {
+      dragIds = new Set([sourceBoxId])
+      setSelectedBoxIds(dragIds)
+    }
+    const map = new Map()
+    activePage.boxes.forEach((b) => {
+      if (dragIds.has(b.id)) map.set(b.id, { x: b.x, y: b.y })
+    })
+    dragStartRef.current = map
+  }
+
+  const handleMoveDelta = (dx, dy) => {
+    if (!dragStartRef.current || !activePage) return
+    const next = activePage.boxes.map((b) => {
+      const start = dragStartRef.current.get(b.id)
+      if (!start) return b
+      return {
+        ...b,
+        x: clamp(snap(start.x + dx), 0, PAGE_W - b.w),
+        y: clamp(snap(start.y + dy), 0, PAGE_H - b.h),
+      }
+    })
+    updateBoxes(next)
+    setGuides(computeGuides(next, dragStartRef.current))
+  }
+
+  const handleMoveEnd = () => {
+    dragStartRef.current = null
+    setGuides({ vertical: [], horizontal: [] })
+  }
+
   const handleChangeBox = (id, patch) => {
     if (!activePage) return
     updateBoxes(activePage.boxes.map((b) => (b.id === id ? { ...b, ...patch } : b)))
@@ -158,7 +267,51 @@ export default function JournalPage() {
   const handleDeleteBox = (id) => {
     if (!activePage) return
     updateBoxes(activePage.boxes.filter((b) => b.id !== id))
-    if (selectedBoxId === id) setSelectedBoxId(null)
+    setSelectedBoxIds((prev) => {
+      if (!prev.has(id)) return prev
+      const next = new Set(prev)
+      next.delete(id)
+      return next
+    })
+  }
+
+  const handleDeleteSelected = () => {
+    if (!activePage || selectedBoxIds.size === 0) return
+    const ids = selectedBoxIds
+    if (ids.size > 1 && !confirm(`Delete ${ids.size} boxes?`)) return
+    updateBoxes(activePage.boxes.filter((b) => !ids.has(b.id)))
+    setSelectedBoxIds(new Set())
+  }
+
+  const handleDuplicateSelected = () => {
+    if (!activePage || selectedBoxIds.size === 0) return
+    const additions = []
+    activePage.boxes.forEach((b) => {
+      if (!selectedBoxIds.has(b.id)) return
+      additions.push({
+        ...structuredClone(b),
+        id: uuid(),
+        x: clamp(b.x + 16, 0, PAGE_W - b.w),
+        y: clamp(b.y + 16, 0, PAGE_H - b.h),
+        trackers: (b.trackers ?? []).map((t) => ({ ...t, id: uuid() })),
+      })
+    })
+    updateBoxes([...activePage.boxes, ...additions])
+    setSelectedBoxIds(new Set(additions.map((b) => b.id)))
+  }
+
+  const handleNudgeSelected = (dx, dy) => {
+    if (!activePage || selectedBoxIds.size === 0) return
+    updateBoxes(
+      activePage.boxes.map((b) => {
+        if (!selectedBoxIds.has(b.id)) return b
+        return {
+          ...b,
+          x: clamp(b.x + dx, 0, PAGE_W - b.w),
+          y: clamp(b.y + dy, 0, PAGE_H - b.h),
+        }
+      }),
+    )
   }
 
   const handleDuplicateBox = (id) => {
@@ -174,16 +327,6 @@ export default function JournalPage() {
     }
     updateBoxes([...activePage.boxes, copy])
     setSelectedBoxId(copy.id)
-  }
-
-  const handleNudgeBox = (id, dx, dy) => {
-    if (!activePage) return
-    const box = activePage.boxes.find((b) => b.id === id)
-    if (!box) return
-    handleChangeBox(id, {
-      x: clamp(box.x + dx, 0, PAGE_W - box.w),
-      y: clamp(box.y + dy, 0, PAGE_H - box.h),
-    })
   }
 
   const handleBringToFront = (id) => {
@@ -253,19 +396,26 @@ export default function JournalPage() {
           redo()
           return
         }
-        if (key === 'd' && selectedBoxId) {
+        if (key === 'd' && selectedBoxIds.size > 0) {
           e.preventDefault()
-          handleDuplicateBox(selectedBoxId)
+          handleDuplicateSelected()
+          return
+        }
+        if (key === 'a') {
+          e.preventDefault()
+          if (activePage) {
+            setSelectedBoxIds(new Set(activePage.boxes.map((b) => b.id)))
+          }
           return
         }
       }
 
-      if (!selectedBoxId) return
+      if (selectedBoxIds.size === 0) return
 
       // Delete
       if (e.key === 'Delete' || e.key === 'Backspace') {
         e.preventDefault()
-        handleDeleteBox(selectedBoxId)
+        handleDeleteSelected()
         return
       }
 
@@ -273,21 +423,21 @@ export default function JournalPage() {
       const step = e.shiftKey ? GRID_PX * 4 : GRID_PX
       if (e.key === 'ArrowLeft') {
         e.preventDefault()
-        handleNudgeBox(selectedBoxId, -step, 0)
+        handleNudgeSelected(-step, 0)
       } else if (e.key === 'ArrowRight') {
         e.preventDefault()
-        handleNudgeBox(selectedBoxId, step, 0)
+        handleNudgeSelected(step, 0)
       } else if (e.key === 'ArrowUp') {
         e.preventDefault()
-        handleNudgeBox(selectedBoxId, 0, -step)
+        handleNudgeSelected(0, -step)
       } else if (e.key === 'ArrowDown') {
         e.preventDefault()
-        handleNudgeBox(selectedBoxId, 0, step)
+        handleNudgeSelected(0, step)
       }
     }
     window.addEventListener('keydown', onKey)
     return () => window.removeEventListener('keydown', onKey)
-  }, [selectedBoxId, activePage, undo, redo])
+  }, [selectedBoxIds, activePage, undo, redo])
 
   /* ---------- export / import ---------- */
   const handlePrintPdf = async () => {
@@ -382,15 +532,20 @@ export default function JournalPage() {
               activePageIndex={activePageIndex}
               onChangeActivePage={(i) => {
                 setActivePageIndex(i)
-                setSelectedBoxId(null)
+                setSelectedBoxIds(new Set())
               }}
-              selectedBoxId={selectedBoxId}
-              onSelectBox={setSelectedBoxId}
+              selectedBoxIds={selectedBoxIds}
+              onSelectBox={handleSelectBox}
+              onSelectMany={handleSelectMany}
               onChangeBox={handleChangeBox}
-              onDeleteBox={handleDeleteBox}
+              onMoveStart={handleMoveStart}
+              onMoveDelta={handleMoveDelta}
+              onMoveEnd={handleMoveEnd}
+              guides={guides}
             />
             <BoxInspector
-              box={selectedBox}
+              box={primarySelectedBox}
+              selectionCount={selectedBoxIds.size}
               template={activeTemplate}
               activePageIndex={activePageIndex}
               onAddBox={handleAddBox}
@@ -401,6 +556,8 @@ export default function JournalPage() {
               onBringToFront={handleBringToFront}
               onSendToBack={handleSendToBack}
               onToggleTwoSided={handleToggleTwoSided}
+              onDeleteSelected={handleDeleteSelected}
+              onDuplicateSelected={handleDuplicateSelected}
             />
           </>
         ) : (

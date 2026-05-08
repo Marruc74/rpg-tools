@@ -9,12 +9,61 @@ import {
 
 const HANDLES = ['nw', 'n', 'ne', 'e', 'se', 's', 'sw', 'w']
 
-export default function Box({ box, scale, isSelected, onSelect, onChange }) {
-  const beginDrag = (mode, handle) => (e) => {
+// Box now distinguishes two drag modes:
+//   - move: delegated to the parent (so multiple selected boxes move
+//     together). Box reports gesture deltas via onMoveStart /
+//     onMoveDelta / onMoveEnd.
+//   - resize: stays per-box, since resize is single-box only.
+export default function Box({
+  box,
+  scale,
+  isSelected,
+  onSelect,
+  onChange,
+  onMoveStart,
+  onMoveDelta,
+  onMoveEnd,
+}) {
+  const beginMove = (e) => {
     if (e.button !== undefined && e.button !== 0) return
     e.stopPropagation()
     e.preventDefault()
-    onSelect()
+
+    const startMouseX = e.clientX
+    const startMouseY = e.clientY
+    const additive = e.ctrlKey || e.metaKey
+    let dragging = false
+
+    const onMove = (ev) => {
+      const dx = (ev.clientX - startMouseX) / scale
+      const dy = (ev.clientY - startMouseY) / scale
+      const moved = Math.abs(dx) > 2 || Math.abs(dy) > 2
+      if (!dragging && moved) {
+        dragging = true
+        onMoveStart(box.id, additive)
+      }
+      if (dragging) {
+        onMoveDelta(dx, dy)
+      }
+    }
+    const onUp = () => {
+      window.removeEventListener('pointermove', onMove)
+      window.removeEventListener('pointerup', onUp)
+      if (dragging) {
+        onMoveEnd()
+      } else {
+        onSelect(additive)
+      }
+    }
+    window.addEventListener('pointermove', onMove)
+    window.addEventListener('pointerup', onUp)
+  }
+
+  const beginResize = (handle) => (e) => {
+    if (e.button !== undefined && e.button !== 0) return
+    e.stopPropagation()
+    e.preventDefault()
+    onSelect(false, false)
 
     const start = {
       mouseX: e.clientX,
@@ -28,15 +77,6 @@ export default function Box({ box, scale, isSelected, onSelect, onChange }) {
     const onMove = (ev) => {
       const dx = (ev.clientX - start.mouseX) / scale
       const dy = (ev.clientY - start.mouseY) / scale
-
-      if (mode === 'move') {
-        const x = clamp(snap(start.x + dx), 0, PAGE_W - start.w)
-        const y = clamp(snap(start.y + dy), 0, PAGE_H - start.h)
-        onChange({ x, y })
-        return
-      }
-
-      // resize — derive new x/y/w/h from which edges the handle grabs
       let { x, y, w, h } = start
       if (handle.includes('e')) {
         w = clamp(snap(start.w + dx), MIN_W, PAGE_W - start.x)
@@ -56,12 +96,10 @@ export default function Box({ box, scale, isSelected, onSelect, onChange }) {
       }
       onChange({ x, y, w, h })
     }
-
     const onUp = () => {
       window.removeEventListener('pointermove', onMove)
       window.removeEventListener('pointerup', onUp)
     }
-
     window.addEventListener('pointermove', onMove)
     window.addEventListener('pointerup', onUp)
   }
@@ -72,7 +110,7 @@ export default function Box({ box, scale, isSelected, onSelect, onChange }) {
     <div
       className={`canvas-box${isSelected ? ' is-selected' : ''}`}
       style={{ left: box.x, top: box.y, width: box.w, height: box.h }}
-      onPointerDown={beginDrag('move', null)}
+      onPointerDown={beginMove}
     >
       <div className="canvas-box__title">{box.title || '(untitled)'}</div>
       {trackers.length > 0 && (
@@ -94,7 +132,7 @@ export default function Box({ box, scale, isSelected, onSelect, onChange }) {
           <div
             key={h}
             className={`canvas-box__handle canvas-box__handle--${h}`}
-            onPointerDown={beginDrag('resize', h)}
+            onPointerDown={beginResize(h)}
           />
         ))}
     </div>

@@ -12,6 +12,7 @@ import {
 
 export default function BoxInspector({
   box,
+  selectionCount,
   template,
   activePageIndex,
   onAddBox,
@@ -22,17 +23,24 @@ export default function BoxInspector({
   onBringToFront,
   onSendToBack,
   onToggleTwoSided,
+  onDeleteSelected,
+  onDuplicateSelected,
 }) {
   const isMultiPage = template.pages.length > 1
   const sideLabel = activePageIndex === 0 ? 'front' : 'back'
 
-  return (
-    <aside className="inspector">
-      <button type="button" className="inspector__add" onClick={onAddBox}>
-        + Add box{isMultiPage ? ` to ${sideLabel}` : ''}
-      </button>
-
-      {box ? (
+  const renderPanel = () => {
+    if (selectionCount > 1) {
+      return (
+        <MultiPanel
+          count={selectionCount}
+          onDeleteSelected={onDeleteSelected}
+          onDuplicateSelected={onDuplicateSelected}
+        />
+      )
+    }
+    if (box) {
+      return (
         <BoxPanel
           box={box}
           onChangeBox={onChangeBox}
@@ -41,14 +49,43 @@ export default function BoxInspector({
           onBringToFront={onBringToFront}
           onSendToBack={onSendToBack}
         />
-      ) : (
-        <SheetPanel
-          template={template}
-          onChangeTemplate={onChangeTemplate}
-          onToggleTwoSided={onToggleTwoSided}
-        />
-      )}
+      )
+    }
+    return (
+      <SheetPanel
+        template={template}
+        onChangeTemplate={onChangeTemplate}
+        onToggleTwoSided={onToggleTwoSided}
+      />
+    )
+  }
+
+  return (
+    <aside className="inspector">
+      <button type="button" className="inspector__add" onClick={onAddBox}>
+        + Add box{isMultiPage ? ` to ${sideLabel}` : ''}
+      </button>
+      {renderPanel()}
     </aside>
+  )
+}
+
+function MultiPanel({ count, onDeleteSelected, onDuplicateSelected }) {
+  return (
+    <>
+      <h2>{count} boxes selected</h2>
+      <p className="hint">
+        Drag to move them all together. Arrow keys nudge by 8 px (Shift = 32 px).
+      </p>
+      <div className="inspector__box-actions">
+        <button type="button" onClick={onDuplicateSelected} title="Duplicate all (Ctrl+D)">
+          ⧉ Duplicate all
+        </button>
+        <button type="button" onClick={onDeleteSelected} title="Delete all">
+          × Delete all
+        </button>
+      </div>
+    </>
   )
 }
 

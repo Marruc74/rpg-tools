@@ -196,6 +196,34 @@
   background-size: 8px 8px;
 }
 
+.canvas-marquee {
+  position: absolute;
+  border: 1px dashed #c97a4a;
+  background: rgba(201, 122, 74, 0.12);
+  pointer-events: none;
+  z-index: 5;
+}
+
+.canvas-guide--v {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  width: 0;
+  border-left: 1px dashed #c97a4a;
+  pointer-events: none;
+  z-index: 4;
+}
+
+.canvas-guide--h {
+  position: absolute;
+  left: 0;
+  right: 0;
+  height: 0;
+  border-top: 1px dashed #c97a4a;
+  pointer-events: none;
+  z-index: 4;
+}
+
 /* ---------- Box on the canvas ---------- */
 .canvas-box {
   position: absolute;
