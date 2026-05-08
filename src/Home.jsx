@@ -11,6 +11,21 @@ const tools = [
     name: 'Journal Sheet',
     description: 'Design a printable journal page with the sections and subsections you want — characters, NPCs, places, rumours, and more. Export the blank form to PDF and bring fresh copies to every session.',
   },
+  {
+    to: '/dice',
+    name: 'Dice',
+    description: 'Roll any expression — 2d6+3, 1d20kh1 (advantage), 4d6dl1 (ability scores). Save your common rolls as named presets and keep a running history.',
+  },
+  {
+    to: '/initiative',
+    name: 'Initiative',
+    description: 'Track combat order, HP, and round count. Roll initiative for new combatants with a tap, advance turns, and resume mid-combat across reloads.',
+  },
+  {
+    to: '/tables',
+    name: 'Random Tables',
+    description: 'Build weighted random tables for NPC quirks, loot, encounters, anything. Roll once, see the result, keep a history. Great for prep and improv at the table.',
+  },
 ]
 
 export default function Home() {
