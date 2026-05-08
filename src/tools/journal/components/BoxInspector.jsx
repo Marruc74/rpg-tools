@@ -2,8 +2,6 @@ import {
   GRID_PX,
   MIN_W,
   MIN_H,
-  PAGE_W,
-  PAGE_H,
   MAX_TRACKER_COUNT,
   snap,
   clamp,
@@ -14,6 +12,7 @@ export default function BoxInspector({
   box,
   selectionCount,
   template,
+  pageDims,
   activePageIndex,
   onAddBox,
   onChangeBox,
@@ -22,12 +21,16 @@ export default function BoxInspector({
   onDuplicateBox,
   onBringToFront,
   onSendToBack,
-  onToggleTwoSided,
+  onAddPage,
+  onRemovePage,
   onDeleteSelected,
   onDuplicateSelected,
 }) {
   const isMultiPage = template.pages.length > 1
-  const sideLabel = activePageIndex === 0 ? 'front' : 'back'
+  const pageLabel =
+    template.pages.length === 2
+      ? activePageIndex === 0 ? 'front' : 'back'
+      : `page ${activePageIndex + 1}`
 
   const renderPanel = () => {
     if (selectionCount > 1) {
@@ -43,6 +46,7 @@ export default function BoxInspector({
       return (
         <BoxPanel
           box={box}
+          pageDims={pageDims}
           onChangeBox={onChangeBox}
           onDeleteBox={onDeleteBox}
           onDuplicateBox={onDuplicateBox}
@@ -54,8 +58,10 @@ export default function BoxInspector({
     return (
       <SheetPanel
         template={template}
+        activePageIndex={activePageIndex}
         onChangeTemplate={onChangeTemplate}
-        onToggleTwoSided={onToggleTwoSided}
+        onAddPage={onAddPage}
+        onRemovePage={onRemovePage}
       />
     )
   }
@@ -63,7 +69,7 @@ export default function BoxInspector({
   return (
     <aside className="inspector">
       <button type="button" className="inspector__add" onClick={onAddBox}>
-        + Add box{isMultiPage ? ` to ${sideLabel}` : ''}
+        + Add box{isMultiPage ? ` to ${pageLabel}` : ''}
       </button>
       {renderPanel()}
     </aside>
@@ -89,7 +95,8 @@ function MultiPanel({ count, onDeleteSelected, onDuplicateSelected }) {
   )
 }
 
-function SheetPanel({ template, onChangeTemplate, onToggleTwoSided }) {
+function SheetPanel({ template, activePageIndex, onChangeTemplate, onAddPage, onRemovePage }) {
+  const pageCount = template.pages.length
   return (
     <>
       <h2>Sheet</h2>
@@ -111,23 +118,63 @@ function SheetPanel({ template, onChangeTemplate, onToggleTwoSided }) {
           placeholder="e.g. Curse of Strahd"
         />
       </label>
-      <label className="inspector__checkbox">
-        <input
-          type="checkbox"
-          checked={template.pages.length > 1}
-          onChange={(e) => onToggleTwoSided(e.target.checked)}
-        />
-        <span>Two-sided sheet</span>
-      </label>
+
+      <div className="inspector__grid">
+        <label className="field">
+          <span>Page size</span>
+          <select
+            value={template.pageSize}
+            onChange={(e) => onChangeTemplate({ pageSize: e.target.value })}
+          >
+            <option value="a4">A4</option>
+            <option value="letter">Letter</option>
+            <option value="legal">Legal</option>
+          </select>
+        </label>
+        <label className="field">
+          <span>Orientation</span>
+          <select
+            value={template.orientation}
+            onChange={(e) => onChangeTemplate({ orientation: e.target.value })}
+          >
+            <option value="portrait">Portrait</option>
+            <option value="landscape">Landscape</option>
+          </select>
+        </label>
+      </div>
+
+      <div className="inspector__pages">
+        <div className="inspector__pages-head">
+          <span>Pages ({pageCount})</span>
+          {pageCount < 8 && (
+            <button type="button" className="link" onClick={onAddPage}>
+              + Add page
+            </button>
+          )}
+        </div>
+        {pageCount > 1 && (
+          <button
+            type="button"
+            className="inspector__remove-page"
+            onClick={() => onRemovePage(activePageIndex)}
+            title={`Remove page ${activePageIndex + 1}`}
+          >
+            × Remove this page (page {activePageIndex + 1})
+          </button>
+        )}
+      </div>
+
       <p className="hint">
         Click a box to edit its title and size. Add box drops a new one into
-        empty space on the active side.
+        empty space on the active page.
       </p>
     </>
   )
 }
 
-function BoxPanel({ box, onChangeBox, onDeleteBox, onDuplicateBox, onBringToFront, onSendToBack }) {
+function BoxPanel({ box, pageDims, onChangeBox, onDeleteBox, onDuplicateBox, onBringToFront, onSendToBack }) {
+  const PAGE_W = pageDims.w
+  const PAGE_H = pageDims.h
   const update = (patch) => onChangeBox(box.id, patch)
   const setNumber = (key, value, min, max) => {
     const n = Number(value)

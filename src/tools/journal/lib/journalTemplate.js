@@ -7,11 +7,40 @@ import { v4 as uuid } from 'uuid'
 export const LIBRARY_KEY = 'journal:library'
 export const LIBRARY_VERSION = 4
 
-export const PAGE_W = 840
-export const PAGE_H = 1188
+const PX_PER_MM = 4
+
+// Page sizes in mm (portrait shape).
+export const PAGE_SIZES_MM = {
+  a4:     { w: 210, h: 297 },
+  letter: { w: 216, h: 279 },
+  legal:  { w: 216, h: 356 },
+}
+
+// Backward-compat constants (default A4 portrait pixel dims).
+export const PAGE_W = PAGE_SIZES_MM.a4.w * PX_PER_MM
+export const PAGE_H = PAGE_SIZES_MM.a4.h * PX_PER_MM
+
 export const GRID_PX = 8
 export const MIN_W = 96
 export const MIN_H = 56
+
+export function getPageDims(pageSize = 'a4', orientation = 'portrait') {
+  const base = PAGE_SIZES_MM[pageSize] ?? PAGE_SIZES_MM.a4
+  const w_mm = orientation === 'landscape' ? base.h : base.w
+  const h_mm = orientation === 'landscape' ? base.w : base.h
+  return {
+    w: w_mm * PX_PER_MM,
+    h: h_mm * PX_PER_MM,
+    pageSize,
+    orientation,
+    w_mm,
+    h_mm,
+  }
+}
+
+export function getTemplatePageDims(template) {
+  return getPageDims(template?.pageSize, template?.orientation)
+}
 
 export function snap(value) {
   return Math.round(value / GRID_PX) * GRID_PX
@@ -69,6 +98,8 @@ export function newTemplate(overrides = {}) {
     name: 'New template',
     title: 'Session Notes',
     game: '',
+    pageSize: 'a4',
+    orientation: 'portrait',
     pages: [newPage(defaultFrontBoxes())],
     ...overrides,
     id: overrides.id ?? uuid(),
@@ -118,7 +149,7 @@ function normalizeTemplate(t) {
   // Forward-migrate v3 (top-level boxes) into pages[0].
   let pages
   if (Array.isArray(t.pages) && t.pages.length > 0) {
-    pages = t.pages.slice(0, 2).map(normalizePage)
+    pages = t.pages.slice(0, 8).map(normalizePage)
   } else if (Array.isArray(t.boxes)) {
     pages = [normalizePage({ boxes: t.boxes })]
   } else {
@@ -129,6 +160,8 @@ function normalizeTemplate(t) {
     name: typeof t.name === 'string' && t.name ? t.name : 'Template',
     title: typeof t.title === 'string' ? t.title : 'Session Notes',
     game: typeof t.game === 'string' ? t.game : '',
+    pageSize: PAGE_SIZES_MM[t.pageSize] ? t.pageSize : 'a4',
+    orientation: t.orientation === 'landscape' ? 'landscape' : 'portrait',
     pages,
   }
 }

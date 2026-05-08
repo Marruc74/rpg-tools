@@ -1,6 +1,4 @@
 import {
-  PAGE_W,
-  PAGE_H,
   MIN_W,
   MIN_H,
   snap,
@@ -17,6 +15,8 @@ const HANDLES = ['nw', 'n', 'ne', 'e', 'se', 's', 'sw', 'w']
 export default function Box({
   box,
   scale,
+  pageW,
+  pageH,
   isSelected,
   onSelect,
   onChange,
@@ -24,6 +24,8 @@ export default function Box({
   onMoveDelta,
   onMoveEnd,
 }) {
+  const PAGE_W = pageW
+  const PAGE_H = pageH
   const beginMove = (e) => {
     if (e.button !== undefined && e.button !== 0) return
     e.stopPropagation()

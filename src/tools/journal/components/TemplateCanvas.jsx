@@ -1,6 +1,5 @@
-import { useEffect, useRef, useState } from 'react'
+import { useEffect, useState } from 'react'
 import Box from './Box.jsx'
-import { PAGE_W, PAGE_H } from '../lib/journalTemplate.js'
 
 function intersect(box, m) {
   return (
@@ -13,6 +12,7 @@ function intersect(box, m) {
 
 export default function TemplateCanvas({
   template,
+  pageDims,
   activePageIndex,
   onChangeActivePage,
   selectedBoxIds,
@@ -24,6 +24,8 @@ export default function TemplateCanvas({
   onMoveEnd,
   guides,
 }) {
+  const PAGE_W = pageDims.w
+  const PAGE_H = pageDims.h
   const [scale, setScale] = useState(0.55)
   const [containerEl, setContainerEl] = useState(null)
   const [marquee, setMarquee] = useState(null)
@@ -39,7 +41,7 @@ export default function TemplateCanvas({
     const obs = new ResizeObserver(measure)
     obs.observe(containerEl)
     return () => obs.disconnect()
-  }, [containerEl])
+  }, [containerEl, PAGE_W])
 
   const activePage = template.pages[activePageIndex] ?? template.pages[0]
   const boxes = activePage?.boxes ?? []
@@ -95,15 +97,21 @@ export default function TemplateCanvas({
           <h2>{template.title || 'Untitled sheet'}</h2>
           {isMultiPage && (
             <div className="canvas-area__tabs">
-              {template.pages.map((_, i) => (
-                <button
-                  key={i}
-                  className={i === activePageIndex ? 'is-active' : ''}
-                  onClick={() => onChangeActivePage(i)}
-                >
-                  {i === 0 ? 'Front' : 'Back'}
-                </button>
-              ))}
+              {template.pages.map((_, i) => {
+                const label =
+                  template.pages.length === 2
+                    ? i === 0 ? 'Front' : 'Back'
+                    : `Page ${i + 1}`
+                return (
+                  <button
+                    key={i}
+                    className={i === activePageIndex ? 'is-active' : ''}
+                    onClick={() => onChangeActivePage(i)}
+                  >
+                    {label}
+                  </button>
+                )
+              })}
             </div>
           )}
         </div>
@@ -134,6 +142,8 @@ export default function TemplateCanvas({
               key={box.id}
               box={box}
               scale={scale}
+              pageW={PAGE_W}
+              pageH={PAGE_H}
               isSelected={selectedBoxIds.has(box.id)}
               onSelect={(additive) => onSelectBox(box.id, additive)}
               onChange={(patch) => onChangeBox(box.id, patch)}

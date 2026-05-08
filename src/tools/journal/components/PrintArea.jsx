@@ -1,13 +1,11 @@
-import { PAGE_W, PAGE_H } from '../lib/journalTemplate.js'
+import { getTemplatePageDims } from '../lib/journalTemplate.js'
 
 const PRINT_ROOT_ID = 'journal-template-sheet'
 export { PRINT_ROOT_ID }
 
-// Off-screen, full-size A4 rendering of every page in the active
-// template. The PDF exporter walks the children by data attribute and
-// rasterizes each in turn.
 export default function PrintArea({ template }) {
   if (!template) return null
+  const { w, h } = getTemplatePageDims(template)
   return (
     <div
       aria-hidden="true"
@@ -24,7 +22,7 @@ export default function PrintArea({ template }) {
           key={page.id}
           className="print-page"
           data-print-page={i}
-          style={{ width: PAGE_W, height: PAGE_H, position: 'relative', background: '#fff' }}
+          style={{ width: w, height: h, position: 'relative', background: '#fff' }}
         >
           {i === 0 && (template.title || template.game) && (
             <div className="page-titleband">

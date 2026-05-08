@@ -325,17 +325,36 @@
 
 .inspector__box-actions button:hover { background: #f5edd6; }
 
-.inspector__checkbox {
+.inspector__pages {
   display: flex;
-  align-items: center;
-  gap: 8px;
-  font-size: 13px;
-  color: #5a4a2c;
-  cursor: pointer;
-  padding: 4px 0;
+  flex-direction: column;
+  gap: 6px;
+  border-top: 1px solid #f0e8d2;
+  padding-top: 10px;
 }
 
-.inspector__checkbox input { cursor: pointer; }
+.inspector__pages-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  font-size: 11px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: #5a4a2c;
+}
+
+.inspector__remove-page {
+  padding: 6px 10px;
+  border: 1px solid #c97a4a;
+  border-radius: 4px;
+  background: #fff;
+  color: #c97a4a;
+  font-size: 12px;
+  cursor: pointer;
+}
+
+.inspector__remove-page:hover { background: #fbe4d6; }
 
 .inspector .field {
   display: flex;

@@ -17,8 +17,7 @@ import {
   downloadTemplateJson,
   downloadLibraryJson,
   readJsonFile,
-  PAGE_W,
-  PAGE_H,
+  getTemplatePageDims,
   GRID_PX,
   snap,
   clamp,
@@ -96,6 +95,9 @@ export default function JournalPage() {
 
   const activePage = activeTemplate?.pages[activePageIndex] ?? activeTemplate?.pages[0]
   const boxes = activePage?.boxes ?? []
+  const pageDims = getTemplatePageDims(activeTemplate)
+  const PAGE_W = pageDims.w
+  const PAGE_H = pageDims.h
   const selectedBoxes = boxes.filter((b) => selectedBoxIds.has(b.id))
   // Inspector's Box panel only makes sense with one selection.
   const primarySelectedBox = selectedBoxes.length === 1 ? selectedBoxes[0] : null
@@ -194,22 +196,23 @@ export default function JournalPage() {
     })
   }
 
-  const handleToggleTwoSided = (twoSided) => {
+  const handleAddPage = () => {
     if (!activeTemplate) return
-    if (twoSided) {
-      if (activeTemplate.pages.length >= 2) return
-      updateActiveTemplate({
-        pages: [...activeTemplate.pages, newPage()],
-      })
-    } else {
-      if (activeTemplate.pages.length <= 1) return
-      const back = activeTemplate.pages[1]
-      if (back.boxes.length > 0) {
-        if (!confirm('Remove the back side and all of its boxes?')) return
-      }
-      updateActiveTemplate({ pages: [activeTemplate.pages[0]] })
-      setActivePageIndex(0)
+    if (activeTemplate.pages.length >= 8) return
+    updateActiveTemplate({ pages: [...activeTemplate.pages, newPage()] })
+    setActivePageIndex(activeTemplate.pages.length)
+  }
+
+  const handleRemovePage = (index) => {
+    if (!activeTemplate) return
+    if (activeTemplate.pages.length <= 1) return
+    const page = activeTemplate.pages[index]
+    if (page.boxes.length > 0) {
+      if (!confirm(`Remove this page and all of its ${page.boxes.length} box(es)?`)) return
     }
+    const next = activeTemplate.pages.filter((_, i) => i !== index)
+    updateActiveTemplate({ pages: next })
+    if (activePageIndex >= next.length) setActivePageIndex(next.length - 1)
   }
 
   /* ---------- box management ---------- */
@@ -442,7 +445,7 @@ export default function JournalPage() {
   /* ---------- export / import ---------- */
   const handlePrintPdf = async () => {
     if (!activeTemplate) return
-    await exportTemplatePdf(activeTemplate.name)
+    await exportTemplatePdf(activeTemplate)
   }
 
   const handleExportTemplate = () => {
@@ -529,6 +532,7 @@ export default function JournalPage() {
           <>
             <TemplateCanvas
               template={activeTemplate}
+              pageDims={pageDims}
               activePageIndex={activePageIndex}
               onChangeActivePage={(i) => {
                 setActivePageIndex(i)
@@ -547,6 +551,7 @@ export default function JournalPage() {
               box={primarySelectedBox}
               selectionCount={selectedBoxIds.size}
               template={activeTemplate}
+              pageDims={pageDims}
               activePageIndex={activePageIndex}
               onAddBox={handleAddBox}
               onChangeBox={handleChangeBox}
@@ -555,7 +560,8 @@ export default function JournalPage() {
               onDuplicateBox={handleDuplicateBox}
               onBringToFront={handleBringToFront}
               onSendToBack={handleSendToBack}
-              onToggleTwoSided={handleToggleTwoSided}
+              onAddPage={handleAddPage}
+              onRemovePage={handleRemovePage}
               onDeleteSelected={handleDeleteSelected}
               onDuplicateSelected={handleDuplicateSelected}
             />
