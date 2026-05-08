@@ -18,6 +18,8 @@ export default function TableEditor({ table, lastResult, onChange, onRoll }) {
     0,
   )
 
+  const hasResult = lastResult && lastResult.tableId === table.id
+
   return (
     <section className="table-editor">
       <header className="table-editor__head">
@@ -33,6 +35,17 @@ export default function TableEditor({ table, lastResult, onChange, onRoll }) {
         </button>
       </header>
 
+      <div className={`table-editor__result${hasResult ? '' : ' is-empty'}`}>
+        <span className="table-editor__result-label">Last roll</span>
+        {hasResult ? (
+          <span className="table-editor__result-text">{lastResult.text}</span>
+        ) : (
+          <span className="table-editor__result-placeholder">
+            Roll the table — the result appears here.
+          </span>
+        )}
+      </div>
+
       <textarea
         className="table-editor__description"
         value={table.description}
@@ -40,13 +53,6 @@ export default function TableEditor({ table, lastResult, onChange, onRoll }) {
         rows={2}
         placeholder="Optional description (what is this table for?)"
       />
-
-      {lastResult && lastResult.tableId === table.id && (
-        <div className="table-editor__result">
-          <span className="table-editor__result-label">Last roll:</span>
-          <span className="table-editor__result-text">{lastResult.text}</span>
-        </div>
-      )}
 
       <div className="entries">
         <div className="entries__head">
