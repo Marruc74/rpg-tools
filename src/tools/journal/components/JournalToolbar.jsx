@@ -1,31 +1,39 @@
 import { useRef } from 'react'
 
 export default function JournalToolbar({
+  onAddBox,
   onPrintPdf,
   onExportTemplate,
-  onImportTemplate,
-  onResetDefaults,
+  onExportLibrary,
+  onImportJson,
 }) {
   const fileInputRef = useRef(null)
   const handleImportClick = () => fileInputRef.current?.click()
   const handleFile = async (e) => {
     const file = e.target.files?.[0]
     if (!file) return
-    await onImportTemplate(file)
+    await onImportJson(file)
     e.target.value = ''
   }
 
   return (
     <div className="toolbar">
-      <button onClick={onPrintPdf} title="Generate a printable PDF of the blank template">
+      <button onClick={onAddBox} title="Add a new box to the active template">
+        + Add box
+      </button>
+      <span className="toolbar__sep" />
+      <button onClick={onPrintPdf} title="Generate a printable PDF of the active template">
         Print PDF
       </button>
       <span className="toolbar__sep" />
-      <button onClick={onExportTemplate} title="Save the template structure as JSON">
+      <button onClick={onExportTemplate} title="Export the active template as JSON">
         Export template
       </button>
-      <button onClick={handleImportClick} title="Replace the current template with one from a JSON file">
-        Import template
+      <button onClick={onExportLibrary} title="Export the entire library as JSON">
+        Export library
+      </button>
+      <button onClick={handleImportClick} title="Import a template or library JSON">
+        Import…
       </button>
       <input
         ref={fileInputRef}
@@ -34,17 +42,6 @@ export default function JournalToolbar({
         onChange={handleFile}
         style={{ display: 'none' }}
       />
-      <span className="toolbar__sep" />
-      <button
-        onClick={() => {
-          if (confirm('Reset to the default sections? Your current template will be replaced.')) {
-            onResetDefaults()
-          }
-        }}
-        title="Restore the default set of sections"
-      >
-        Reset to defaults
-      </button>
     </div>
   )
 }

@@ -1,79 +1,115 @@
 import { v4 as uuid } from 'uuid'
-import { SECTION_TYPES, getSectionType } from './sectionTypes.js'
 
-export const TEMPLATE_KEY = 'journal:template'
-export const TEMPLATE_VERSION = 2
+// Library stores N templates; each template lays boxes out by absolute
+// pixel position on a virtual A4 page (840 × 1188 px logical). Grid
+// snap rounds positions to GRID_PX. Min box size enforces usability.
 
-const DEFAULT_TITLE = 'Session Notes'
+export const LIBRARY_KEY = 'journal:library'
+export const LIBRARY_VERSION = 3
 
-// Approximates the minimalist single-page layout: header info row, a
-// big notes block, then half-width side boxes.
-const DEFAULT_SECTION_IDS = [
-  'session',
-  'date',
-  'notes',
-  'places',
-  'initiative',
-  'npcs',
-  'items',
-  'combat',
-]
+export const PAGE_W = 840
+export const PAGE_H = 1188
+export const GRID_PX = 8
+export const MIN_W = 96
+export const MIN_H = 56
 
-export function newSubsection(sub = {}) {
+export function snap(value) {
+  return Math.round(value / GRID_PX) * GRID_PX
+}
+
+export function clamp(value, min, max) {
+  return Math.max(min, Math.min(max, value))
+}
+
+function newBoxAt(overrides = {}) {
   return {
     id: uuid(),
-    label: sub.label ?? '',
-    lines: Math.max(1, Math.min(20, sub.lines ?? 4)),
+    title: 'Untitled',
+    x: snap(overrides.x ?? 24),
+    y: snap(overrides.y ?? 24),
+    w: snap(overrides.w ?? 240),
+    h: snap(overrides.h ?? 160),
+    ...overrides,
+    id: overrides.id ?? uuid(),
   }
 }
 
-export function newSection(typeId) {
-  const type = getSectionType(typeId) ?? SECTION_TYPES[SECTION_TYPES.length - 1]
+export function newBox(overrides = {}) {
+  return newBoxAt(overrides)
+}
+
+// A starter template that lays out a "session notes"-like sheet so a
+// new user has something to drag around immediately.
+function defaultBoxes() {
+  return [
+    newBox({ title: 'Session #',     x: 24,  y: 80,  w: 240, h: 64 }),
+    newBox({ title: 'Date',          x: 280, y: 80,  w: 240, h: 64 }),
+    newBox({ title: 'Campaign',      x: 536, y: 80,  w: 280, h: 64 }),
+    newBox({ title: 'Notes',         x: 24,  y: 160, w: 792, h: 360 }),
+    newBox({ title: 'Locations',     x: 24,  y: 536, w: 384, h: 200 }),
+    newBox({ title: 'Initiative',    x: 424, y: 536, w: 392, h: 200 }),
+    newBox({ title: 'NPCs',          x: 24,  y: 752, w: 384, h: 240 }),
+    newBox({ title: 'Loot',          x: 424, y: 752, w: 392, h: 120 }),
+    newBox({ title: 'Encounters',    x: 424, y: 888, w: 392, h: 104 }),
+  ]
+}
+
+export function newTemplate(overrides = {}) {
   return {
     id: uuid(),
-    label: type.label,
-    span: type.span ?? 'full',
-    repeat: type.repeat ?? 1,
-    subsections: type.subsections.map(newSubsection),
+    name: 'New template',
+    title: 'Session Notes',
+    game: '',
+    boxes: defaultBoxes(),
+    ...overrides,
+    id: overrides.id ?? uuid(),
   }
 }
 
-export function emptyTemplate() {
+export function emptyLibrary() {
+  const t = newTemplate({ name: 'Default template' })
   return {
-    version: TEMPLATE_VERSION,
-    title: DEFAULT_TITLE,
-    sections: DEFAULT_SECTION_IDS.map(newSection),
+    version: LIBRARY_VERSION,
+    templates: [t],
+    activeTemplateId: t.id,
   }
 }
 
-export const defaultTemplate = emptyTemplate
+export const defaultLibrary = emptyLibrary
 
-function normalizeSection(s) {
+function normalizeBox(b) {
+  const x = snap(clamp(Number(b.x) || 0, 0, PAGE_W - MIN_W))
+  const y = snap(clamp(Number(b.y) || 0, 0, PAGE_H - MIN_H))
+  const w = snap(clamp(Number(b.w) || MIN_W, MIN_W, PAGE_W - x))
+  const h = snap(clamp(Number(b.h) || MIN_H, MIN_H, PAGE_H - y))
   return {
-    id: s.id ?? uuid(),
-    label: s.label ?? '',
-    span: s.span === 'half' ? 'half' : 'full',
-    repeat: Math.max(1, Math.min(20, Number(s.repeat) || 1)),
-    subsections: Array.isArray(s.subsections) && s.subsections.length > 0
-      ? s.subsections.map((sub) => ({
-          id: sub.id ?? uuid(),
-          label: sub.label ?? '',
-          lines: Math.max(1, Math.min(20, Number(sub.lines) || 4)),
-        }))
-      : [{ id: uuid(), label: '', lines: 4 }],
+    id: b.id ?? uuid(),
+    title: typeof b.title === 'string' ? b.title : '',
+    x, y, w, h,
   }
 }
 
-export function migrateTemplate(value) {
-  if (!value || typeof value !== 'object') return emptyTemplate()
-  if (Array.isArray(value.sections)) {
-    return {
-      version: TEMPLATE_VERSION,
-      title: typeof value.title === 'string' ? value.title : DEFAULT_TITLE,
-      sections: value.sections.map(normalizeSection),
-    }
+function normalizeTemplate(t) {
+  return {
+    id: t.id ?? uuid(),
+    name: typeof t.name === 'string' && t.name ? t.name : 'Template',
+    title: typeof t.title === 'string' ? t.title : 'Session Notes',
+    game: typeof t.game === 'string' ? t.game : '',
+    boxes: Array.isArray(t.boxes) ? t.boxes.map(normalizeBox) : [],
   }
-  return emptyTemplate()
+}
+
+export function migrateLibrary(value) {
+  if (!value || typeof value !== 'object') return emptyLibrary()
+  if (value.version === LIBRARY_VERSION && Array.isArray(value.templates)) {
+    const templates = value.templates.map(normalizeTemplate)
+    const activeTemplateId =
+      templates.find((t) => t.id === value.activeTemplateId)?.id ?? templates[0]?.id
+    return { version: LIBRARY_VERSION, templates, activeTemplateId }
+  }
+  // Older shapes (v1 sections, v2 sections+span+repeat) are discarded —
+  // the user explicitly said data doesn't need to be saved.
+  return emptyLibrary()
 }
 
 function safeFilename(name) {
@@ -96,9 +132,13 @@ function triggerDownload(payload, filename) {
 
 export function downloadTemplateJson(template) {
   triggerDownload(
-    { kind: 'journalTemplate', version: TEMPLATE_VERSION, template },
-    `${safeFilename(template.title)}.json`,
+    { kind: 'journalTemplate', version: LIBRARY_VERSION, template },
+    `${safeFilename(template.name)}.template.json`,
   )
+}
+
+export function downloadLibraryJson(library) {
+  triggerDownload(library, 'journal-library.json')
 }
 
 export function readJsonFile(file) {
@@ -112,14 +152,14 @@ export function readJsonFile(file) {
           return
         }
         if (parsed.kind === 'journalTemplate' && parsed.template) {
-          resolve(migrateTemplate(parsed.template))
+          resolve({ kind: 'template', template: normalizeTemplate(parsed.template) })
           return
         }
-        if (Array.isArray(parsed.sections)) {
-          resolve(migrateTemplate(parsed))
+        if (Array.isArray(parsed.templates)) {
+          resolve({ kind: 'library', library: migrateLibrary(parsed) })
           return
         }
-        reject(new Error('File does not look like a journal template.'))
+        reject(new Error('File does not look like a journal template or library.'))
       } catch (err) {
         reject(err)
       }
