@@ -1,0 +1,267 @@
+/* Poker card 63 x 88 mm displayed at 4 px/mm (252 x 352 px). */
+:root {
+  --card-w: 252px;
+  --card-h: 352px;
+  --card-radius: 14px;
+}
+
+.card-face {
+  width: var(--card-w);
+  height: var(--card-h);
+  border-radius: var(--card-radius);
+  background-color: #fdfaf3;
+  background-image:
+    radial-gradient(ellipse at 20% 0%, rgba(255, 255, 255, 0.45), transparent 55%),
+    radial-gradient(ellipse at 80% 100%, rgba(0, 0, 0, 0.07), transparent 55%);
+  color: #1d1a16;
+  border: 1px solid #b39966;
+  box-shadow:
+    0 1px 1px rgba(0, 0, 0, 0.05),
+    0 4px 12px rgba(60, 40, 10, 0.22),
+    inset 0 0 0 1px color-mix(in srgb, currentColor 8%, transparent);
+  padding: 14px 14px 22px;
+  box-sizing: border-box;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  font-family: 'Georgia', 'Times New Roman', serif;
+  overflow: hidden;
+  position: relative;
+}
+
+/* Inner decorative frame (drawn just inside the outer border). */
+.card-face::before {
+  content: '';
+  position: absolute;
+  inset: 4px;
+  border: 1px solid color-mix(in srgb, currentColor 22%, transparent);
+  border-radius: calc(var(--card-radius) - 4px);
+  pointer-events: none;
+}
+
+.card-face[data-category='Item']  { border-color: #8a6a2c; }
+.card-face[data-category='Spell'] { border-color: #5a4a8a; background-color: #f3eefa; }
+.card-face[data-category='Rule']  { border-color: #2c5a8a; background-color: #eef5fa; }
+.card-face[data-category='NPC']   { border-color: #7a2c2c; background-color: #fbf1ee; }
+
+/* ---------- Title ---------- */
+.card-face__title {
+  font-size: 18px;
+  font-weight: 700;
+  text-align: center;
+  margin: 0;
+  padding: 2px 0 10px;
+  line-height: 1.15;
+  word-break: break-word;
+  letter-spacing: 0.01em;
+  position: relative;
+  font-variant: small-caps;
+}
+
+/* Soft gradient underline that fades at the edges. */
+.card-face__title::after {
+  content: '';
+  position: absolute;
+  left: 12%;
+  right: 12%;
+  bottom: 2px;
+  height: 1px;
+  background: linear-gradient(
+    to right,
+    transparent,
+    color-mix(in srgb, currentColor 45%, transparent) 20%,
+    color-mix(in srgb, currentColor 45%, transparent) 80%,
+    transparent
+  );
+}
+
+/* ---------- Image ---------- */
+.card-face__image {
+  width: 100%;
+  height: calc(var(--card-h) * 0.36);
+  object-fit: cover;
+  border-radius: 6px;
+  background: #e9e2d0;
+  flex-shrink: 0;
+  box-shadow:
+    0 1px 3px rgba(0, 0, 0, 0.18),
+    inset 0 0 0 1px rgba(0, 0, 0, 0.12);
+}
+
+.card-face[data-orientation='landscape'] .card-face__image,
+.card-face[data-orientation='landscape'] .card-face__image-placeholder {
+  height: calc(var(--card-h) * 0.5);
+}
+
+.card-face__image-placeholder {
+  width: 100%;
+  height: calc(var(--card-h) * 0.36);
+  border-radius: 6px;
+  background:
+    repeating-linear-gradient(
+      45deg,
+      color-mix(in srgb, currentColor 6%, transparent),
+      color-mix(in srgb, currentColor 6%, transparent) 6px,
+      color-mix(in srgb, currentColor 12%, transparent) 6px,
+      color-mix(in srgb, currentColor 12%, transparent) 12px
+    );
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 11px;
+  font-style: italic;
+  flex-shrink: 0;
+  opacity: 0.7;
+  box-shadow: inset 0 0 0 1px color-mix(in srgb, currentColor 18%, transparent);
+}
+
+/* ---------- Body ---------- */
+.card-face__body {
+  font-size: 12px;
+  line-height: 1.4;
+  flex: 1 1 auto;
+  overflow: hidden;
+  margin: 0;
+}
+
+.card-face__body > :first-child::first-letter {
+  font-size: 1.4em;
+  font-weight: 700;
+  line-height: 1;
+}
+
+.card-face__body p,
+.card-face__body ul,
+.card-face__body ol,
+.card-face__body blockquote,
+.card-face__body pre {
+  margin: 0 0 4px 0;
+}
+
+.card-face__body p:last-child,
+.card-face__body ul:last-child,
+.card-face__body ol:last-child,
+.card-face__body blockquote:last-child,
+.card-face__body pre:last-child {
+  margin-bottom: 0;
+}
+
+.card-face__body ul,
+.card-face__body ol {
+  padding-left: 18px;
+}
+
+.card-face__body li { margin-bottom: 1px; }
+
+.card-face__body h1,
+.card-face__body h2,
+.card-face__body h3,
+.card-face__body h4 {
+  font-size: 13px;
+  font-weight: 700;
+  margin: 4px 0 2px 0;
+  line-height: 1.2;
+  font-variant: small-caps;
+  letter-spacing: 0.02em;
+}
+
+.card-face__body strong { font-weight: 700; }
+.card-face__body em { font-style: italic; }
+
+.card-face__body code {
+  font-family: 'Consolas', 'Menlo', monospace;
+  font-size: 11px;
+  background: color-mix(in srgb, currentColor 10%, transparent);
+  padding: 0 3px;
+  border-radius: 3px;
+}
+
+.card-face__body pre {
+  font-family: 'Consolas', 'Menlo', monospace;
+  font-size: 10px;
+  background: color-mix(in srgb, currentColor 10%, transparent);
+  padding: 4px 6px;
+  border-radius: 3px;
+  overflow: hidden;
+  white-space: pre-wrap;
+}
+
+.card-face__body pre code {
+  background: none;
+  padding: 0;
+}
+
+.card-face__body blockquote {
+  border-left: 2px solid color-mix(in srgb, currentColor 40%, transparent);
+  padding: 1px 0 1px 8px;
+  opacity: 0.88;
+  font-style: italic;
+}
+
+.card-face__body hr {
+  border: none;
+  border-top: 1px solid color-mix(in srgb, currentColor 22%, transparent);
+  margin: 4px 0;
+}
+
+.card-face__body a {
+  color: #5a4a8a;
+  text-decoration: underline;
+}
+
+/* ---------- Stats panel ---------- */
+.card-face__stats {
+  display: grid;
+  grid-template-columns: auto 1fr;
+  gap: 3px 10px;
+  font-size: 11px;
+  padding: 7px 10px 6px;
+  margin: 0;
+  flex-shrink: 0;
+  background: color-mix(in srgb, currentColor 5%, transparent);
+  border-radius: 6px;
+  box-shadow: inset 0 0 0 1px color-mix(in srgb, currentColor 14%, transparent);
+}
+
+.card-face__stats dt {
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  font-size: 10px;
+  align-self: center;
+}
+
+.card-face__stats dt::before {
+  content: '◆';
+  display: inline-block;
+  margin-right: 5px;
+  font-size: 0.7em;
+  opacity: 0.55;
+  vertical-align: 1px;
+}
+
+.card-face__stats dd {
+  margin: 0;
+  text-align: right;
+  font-weight: 600;
+  align-self: center;
+}
+
+/* ---------- Footer labels ---------- */
+.card-face__category,
+.card-face__game {
+  position: absolute;
+  bottom: 5px;
+  font-size: 9px;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  opacity: 0.6;
+  max-width: 42%;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  font-weight: 600;
+}
+
+.card-face__category { right: 12px; text-align: right; }
+.card-face__game     { left: 12px;  text-align: left; }

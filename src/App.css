@@ -1,0 +1,144 @@
+* { box-sizing: border-box; }
+
+html, body, #root {
+  margin: 0;
+  padding: 0;
+  height: 100%;
+  font-family: system-ui, -apple-system, 'Segoe UI', sans-serif;
+  background: #f4f1ea;
+  color: #1d1a16;
+}
+
+button {
+  font: inherit;
+  cursor: pointer;
+}
+
+input, select, textarea {
+  font: inherit;
+  color: inherit;
+}
+
+.shell {
+  display: flex;
+  flex-direction: column;
+  height: 100vh;
+}
+
+.shell__header {
+  display: flex;
+  align-items: center;
+  gap: 24px;
+  padding: 10px 20px;
+  border-bottom: 1px solid #c9b893;
+  background: #5a4a2c;
+  color: #f4f1ea;
+  flex-shrink: 0;
+}
+
+.shell__brand {
+  font-family: 'Georgia', serif;
+  font-size: 18px;
+  font-weight: 700;
+  letter-spacing: 0.02em;
+  color: #f4f1ea;
+  text-decoration: none;
+}
+
+.shell__nav {
+  display: flex;
+  gap: 16px;
+  font-size: 14px;
+}
+
+.shell__nav a {
+  color: #ece4d0;
+  text-decoration: none;
+  padding: 4px 8px;
+  border-radius: 4px;
+}
+
+.shell__nav a:hover {
+  background: rgba(255, 255, 255, 0.08);
+}
+
+.shell__nav a.active {
+  background: rgba(255, 255, 255, 0.18);
+  color: #fff;
+}
+
+.shell__main {
+  flex: 1 1 auto;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+  overflow: auto;
+}
+
+/* Tool pages mounted inside the shell get viewport-relative height
+   from the shell, not the window, so card-maker's `.app { height: 100vh }`
+   would overflow. Constrain it to its parent. */
+.shell__main > .app {
+  height: 100%;
+}
+
+.home {
+  max-width: 880px;
+  margin: 0 auto;
+  padding: 48px 24px;
+}
+
+.home__title {
+  margin: 0 0 8px;
+  font-family: 'Georgia', serif;
+  font-size: 32px;
+  color: #5a4a2c;
+}
+
+.home__lede {
+  margin: 0 0 32px;
+  color: #6b6357;
+  font-size: 15px;
+}
+
+.home__grid {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+  gap: 16px;
+}
+
+.home__tile {
+  background: #fff;
+  border: 1px solid #d8cfb8;
+  border-radius: 8px;
+  transition: border-color 0.15s ease, transform 0.15s ease;
+}
+
+.home__tile:hover {
+  border-color: #5a4a2c;
+  transform: translateY(-2px);
+}
+
+.home__tile-link {
+  display: block;
+  padding: 20px;
+  color: inherit;
+  text-decoration: none;
+}
+
+.home__tile-link h2 {
+  margin: 0 0 8px;
+  font-family: 'Georgia', serif;
+  font-size: 18px;
+  color: #5a4a2c;
+}
+
+.home__tile-link p {
+  margin: 0;
+  font-size: 13px;
+  line-height: 1.5;
+  color: #4a443a;
+}

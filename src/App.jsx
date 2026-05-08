@@ -1,0 +1,30 @@
+import { Link, NavLink, Outlet, Route, Routes } from 'react-router-dom'
+import Home from './Home.jsx'
+import CardMakerPage from './tools/card-maker/CardMakerPage.jsx'
+
+export default function App() {
+  return (
+    <Routes>
+      <Route element={<Shell />}>
+        <Route index element={<Home />} />
+        <Route path="card-maker" element={<CardMakerPage />} />
+      </Route>
+    </Routes>
+  )
+}
+
+function Shell() {
+  return (
+    <div className="shell">
+      <header className="shell__header">
+        <Link to="/" className="shell__brand">RPG Tools</Link>
+        <nav className="shell__nav">
+          <NavLink to="/card-maker">Card-Maker</NavLink>
+        </nav>
+      </header>
+      <main className="shell__main">
+        <Outlet />
+      </main>
+    </div>
+  )
+}
