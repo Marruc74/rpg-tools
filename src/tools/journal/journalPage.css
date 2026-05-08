@@ -284,27 +284,6 @@
   font-family: 'Helvetica Neue', 'Arial', sans-serif;
   color: #1a1a1a;
   box-sizing: border-box;
-  padding: 24px;
-}
-
-.print-page__head {
-  margin: 0 0 16px;
-}
-
-.print-page__title {
-  margin: 0;
-  font-size: 22px;
-  font-weight: 800;
-  letter-spacing: 0.04em;
-  text-transform: uppercase;
-}
-
-.print-page__game {
-  font-size: 12px;
-  letter-spacing: 0.2em;
-  text-transform: uppercase;
-  color: #555;
-  margin-top: 2px;
 }
 
 .print-box {
@@ -322,6 +301,34 @@
   letter-spacing: 0.08em;
   text-transform: uppercase;
   color: #1a1a1a;
+}
+
+/* Shared title band used by both the canvas page and the print page */
+.page-titleband {
+  position: absolute;
+  top: 24px;
+  left: 24px;
+  right: 24px;
+  pointer-events: none;
+}
+
+.page-titleband__title {
+  font-family: 'Helvetica Neue', 'Arial', sans-serif;
+  font-size: 22px;
+  font-weight: 800;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: #1a1a1a;
+  line-height: 1.05;
+}
+
+.page-titleband__game {
+  font-family: 'Helvetica Neue', 'Arial', sans-serif;
+  font-size: 12px;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  color: #555;
+  margin-top: 2px;
 }
 
 /* ---------- Empty state ---------- */

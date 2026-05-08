@@ -65,6 +65,12 @@ export default function TemplateCanvas({
             if (e.target === e.currentTarget) onSelectBox(null)
           }}
         >
+          {(template.title || template.game) && (
+            <div className="page-titleband">
+              {template.title && <div className="page-titleband__title">{template.title}</div>}
+              {template.game && <div className="page-titleband__game">{template.game}</div>}
+            </div>
+          )}
           {template.boxes.map((box) => (
             <Box
               key={box.id}

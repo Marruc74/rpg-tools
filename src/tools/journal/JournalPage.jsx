@@ -116,14 +116,16 @@ export default function JournalPage() {
 
   const handleAddBox = () => {
     if (!activeTemplate) return
-    // Place the new box at a slight offset from the existing top-left.
-    const offset = activeTemplate.boxes.length * 16
+    // Place new boxes at the top-left of the page, offset slightly per
+    // additional add so they stack visibly rather than overlapping the
+    // existing default boxes (which start at y = 80).
+    const stagger = (activeTemplate.boxes.length % 6) * 16
     const box = newBox({
       title: 'New box',
-      x: 24 + (offset % 200),
-      y: 24 + (offset % 200),
+      x: 16 + stagger,
+      y: 16 + stagger,
       w: 240,
-      h: 160,
+      h: 144,
     })
     updateBoxes([...activeTemplate.boxes, box])
     setSelectedBoxId(box.id)
