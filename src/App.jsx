@@ -5,6 +5,7 @@ import JournalPage from './tools/journal/JournalPage.jsx'
 import DicePage from './tools/dice/DicePage.jsx'
 import InitiativePage from './tools/initiative/InitiativePage.jsx'
 import TablesPage from './tools/tables/TablesPage.jsx'
+import NpcGeneratorPage from './tools/npc-generator/NpcGeneratorPage.jsx'
 
 export default function App() {
   return (
@@ -16,6 +17,7 @@ export default function App() {
         <Route path="dice" element={<DicePage />} />
         <Route path="initiative" element={<InitiativePage />} />
         <Route path="tables" element={<TablesPage />} />
+        <Route path="npc-generator" element={<NpcGeneratorPage />} />
       </Route>
     </Routes>
   )
@@ -32,6 +34,7 @@ function Shell() {
           <NavLink to="/dice">Dice</NavLink>
           <NavLink to="/initiative">Initiative</NavLink>
           <NavLink to="/tables">Tables</NavLink>
+          <NavLink to="/npc-generator">NPC Generator</NavLink>
         </nav>
       </header>
       <main className="shell__main">

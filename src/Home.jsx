@@ -26,6 +26,11 @@ const tools = [
     name: 'Random Tables',
     description: 'Build weighted random tables for NPC quirks, loot, encounters, anything. Roll once, see the result, keep a history. Great for prep and improv at the table.',
   },
+  {
+    to: '/npc-generator',
+    name: 'NPC Generator',
+    description: 'Roll a quick NPC — name, profession, appearance, and a quirk — pulled from your random tables. Save the keepers, send a favourite straight to Card-Maker.',
+  },
 ]
 
 export default function Home() {
