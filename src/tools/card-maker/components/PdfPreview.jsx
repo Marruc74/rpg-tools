@@ -9,9 +9,9 @@ const PX_PER_MM = 4
 // same layout math as the real exporter; only the pixel scaling for screen
 // display is added on top.
 export default function PdfPreview({ cards, sizeId, options, onClose }) {
-  const { sides = 'both', pageSize = 'a4', scale = 1 } = options
+  const { sides = 'both', pageSize = 'a4', scale = 1, gap = 0 } = options
   const cardSize = getCardSize(sizeId)
-  const layout = computePdfLayout(cardSize, pageSize, scale)
+  const layout = computePdfLayout(cardSize, pageSize, scale, gap)
   const dim = getCardSizePx(sizeId)
 
   const px = PREVIEW_SCALE * PX_PER_MM
@@ -60,8 +60,8 @@ export default function PdfPreview({ cards, sizeId, options, onClose }) {
                 ? layout.cols - 1 - (i % layout.cols)
                 : i % layout.cols
               const row = Math.floor(i / layout.cols)
-              const left = (layout.marginX + col * layout.cardW) * px
-              const top = (layout.marginY + row * layout.cardH) * px
+              const left = (layout.marginX + col * layout.cellW) * px
+              const top = (layout.marginY + row * layout.cellH) * px
               const cellW = layout.cardW * px
               const cellH = layout.cardH * px
               // The CardFace renders at its natural pixel dim (dim.w/dim.h).

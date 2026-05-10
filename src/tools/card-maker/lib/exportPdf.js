@@ -11,7 +11,7 @@ export const PAGE_SIZES = {
 
 const MARGIN_MIN = 8 // mm — minimum margin around grid
 
-function computeLayout(cardSize, pageSizeId = 'a4', scale = 1) {
+function computeLayout(cardSize, pageSizeId = 'a4', scale = 1, gapX = 0, gapY = 0) {
   const page = PAGE_SIZES[pageSizeId] ?? PAGE_SIZES.a4
   const cardW = cardSize.w * scale
   const cardH = cardSize.h * scale
@@ -20,11 +20,14 @@ function computeLayout(cardSize, pageSizeId = 'a4', scale = 1) {
   const pageW = isLandscape ? page.h : page.w
   const pageH = isLandscape ? page.w : page.h
 
-  const cols = Math.max(1, Math.floor((pageW - 2 * MARGIN_MIN) / cardW))
-  const rows = Math.max(1, Math.floor((pageH - 2 * MARGIN_MIN) / cardH))
+  // N cards plus (N-1) gaps must fit in the available space.
+  const availW = pageW - 2 * MARGIN_MIN
+  const availH = pageH - 2 * MARGIN_MIN
+  const cols = Math.max(1, Math.floor((availW + gapX) / (cardW + gapX)))
+  const rows = Math.max(1, Math.floor((availH + gapY) / (cardH + gapY)))
 
-  const gridW = cols * cardW
-  const gridH = rows * cardH
+  const gridW = cols * cardW + (cols - 1) * gapX
+  const gridH = rows * cardH + (rows - 1) * gapY
   const marginX = (pageW - gridW) / 2
   const marginY = (pageH - gridH) / 2
 
@@ -41,6 +44,10 @@ function computeLayout(cardSize, pageSizeId = 'a4', scale = 1) {
     orientation: isLandscape ? 'landscape' : 'portrait',
     cardW,
     cardH,
+    gapX,
+    gapY,
+    cellW: cardW + gapX, // step from one card's left edge to the next
+    cellH: cardH + gapY,
   }
 }
 
@@ -52,19 +59,32 @@ function drawCutMarks(pdf, layout) {
   pdf.setLineWidth(0.1)
   pdf.setDrawColor(180)
   const tick = 3
-  for (let c = 0; c <= layout.cols; c++) {
-    const x = layout.marginX + c * layout.cardW
+
+  // Tick at every card edge (left + right of each column, top + bottom of
+  // each row). For gap=0 the inner pairs coincide and behaviour matches the
+  // original single-line-per-grid layout.
+  const xs = []
+  for (let c = 0; c < layout.cols; c++) {
+    const left = layout.marginX + c * layout.cellW
+    xs.push(left, left + layout.cardW)
+  }
+  const ys = []
+  for (let r = 0; r < layout.rows; r++) {
+    const top = layout.marginY + r * layout.cellH
+    ys.push(top, top + layout.cardH)
+  }
+
+  for (const x of xs) {
     pdf.line(x, layout.marginY - tick, x, layout.marginY)
     pdf.line(x, layout.marginY + layout.gridH, x, layout.marginY + layout.gridH + tick)
   }
-  for (let r = 0; r <= layout.rows; r++) {
-    const y = layout.marginY + r * layout.cardH
+  for (const y of ys) {
     pdf.line(layout.marginX - tick, y, layout.marginX, y)
     pdf.line(layout.marginX + layout.gridW, y, layout.marginX + layout.gridW + tick, y)
   }
 }
 
-async function placeFaces(pdf, cards, layout, side, mirror) {
+async function placeFaces(pdf, cards, layout, side, mirror, offsetX = 0, offsetY = 0) {
   const pageCount = Math.ceil(cards.length / layout.perPage)
   for (let page = 0; page < pageCount; page++) {
     if (page > 0) pdf.addPage([layout.pageW, layout.pageH], layout.orientation)
@@ -82,23 +102,37 @@ async function placeFaces(pdf, cards, layout, side, mirror) {
       // Mirror back columns so duplex printing aligns front/back.
       const col = mirror ? layout.cols - 1 - (i % layout.cols) : i % layout.cols
       const row = Math.floor(i / layout.cols)
-      const x = layout.marginX + col * layout.cardW
-      const y = layout.marginY + row * layout.cardH
+      const x = layout.marginX + col * layout.cellW + offsetX
+      const y = layout.marginY + row * layout.cellH + offsetY
 
       pdf.addImage(dataUrl, 'PNG', x, y, layout.cardW, layout.cardH)
     }
   }
 }
 
-// options: { sides?: 'both'|'front'|'back', pageSize?: 'a4'|'letter'|'legal', scale?: number }
+// options: {
+//   sides?: 'both'|'front'|'back',
+//   pageSize?: 'a4'|'letter'|'legal',
+//   scale?: number,
+//   gap?: number,          // mm of whitespace between cards (both axes)
+//   backOffsetX?: number,  // mm; positive = right, applied to backs only
+//   backOffsetY?: number,  // mm; positive = down,  applied to backs only
+// }
 export async function exportLibraryPdf(cards, sizeId, options = {}) {
-  const { sides = 'both', pageSize = 'a4', scale = 1 } = options
+  const {
+    sides = 'both',
+    pageSize = 'a4',
+    scale = 1,
+    gap = 0,
+    backOffsetX = 0,
+    backOffsetY = 0,
+  } = options
   if (cards.length === 0) {
     alert('No cards to export.')
     return
   }
   const cardSize = getCardSize(sizeId)
-  const layout = computeLayout(cardSize, pageSize, scale)
+  const layout = computeLayout(cardSize, pageSize, scale, gap, gap)
 
   if (layout.cols === 0 || layout.rows === 0) {
     alert('Card is too large for this page size at the chosen scale.')
@@ -118,7 +152,10 @@ export async function exportLibraryPdf(cards, sizeId, options = {}) {
     if (sides === 'both') {
       pdf.addPage([layout.pageW, layout.pageH], layout.orientation)
     }
-    await placeFaces(pdf, cards, layout, 'back', sides === 'both')
+    await placeFaces(
+      pdf, cards, layout, 'back', sides === 'both',
+      backOffsetX, backOffsetY,
+    )
   }
 
   const suffix = sides === 'both' ? '' : `-${sides}`
@@ -126,6 +163,6 @@ export async function exportLibraryPdf(cards, sizeId, options = {}) {
 }
 
 // Exposed for the PDF preview UI. Pure layout math, no side effects.
-export function computePdfLayout(cardSize, pageSizeId, scale) {
-  return computeLayout(cardSize, pageSizeId, scale)
+export function computePdfLayout(cardSize, pageSizeId, scale, gap = 0) {
+  return computeLayout(cardSize, pageSizeId, scale, gap, gap)
 }

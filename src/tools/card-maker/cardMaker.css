@@ -195,6 +195,41 @@ input, select, textarea {
   opacity: 0.4;
 }
 
+.toolbar__back-offset,
+.toolbar__gap {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 12px;
+  color: #5a4a2c;
+}
+
+.toolbar__back-offset-label,
+.toolbar__gap-label {
+  font-style: italic;
+}
+
+.toolbar__back-offset-input,
+.toolbar__gap-input {
+  width: 56px;
+  padding: 4px 6px;
+  border: 1px solid #b39966;
+  border-radius: 4px;
+  background: #fdfaf3;
+  font-size: 12px;
+  text-align: right;
+}
+
+.toolbar__back-offset-input:disabled,
+.toolbar__gap-input:disabled {
+  opacity: 0.4;
+}
+
+.toolbar__back-offset-unit,
+.toolbar__gap-unit {
+  color: #7a6a4a;
+}
+
 /* ---------- Card list ---------- */
 .card-list {
   display: flex;

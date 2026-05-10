@@ -1,4 +1,15 @@
-import { useRef, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
+
+// Per-printer duplex calibration. Saved separately from the library since
+// it's a property of the user's printer, not their cards.
+const BACK_OFFSET_X_KEY = 'cardmaker:backOffsetX'
+const BACK_OFFSET_Y_KEY = 'cardmaker:backOffsetY'
+const GAP_KEY = 'cardmaker:gap'
+
+function loadNumber(key, fallback) {
+  const raw = parseFloat(typeof window === 'undefined' ? '' : window.localStorage.getItem(key))
+  return Number.isFinite(raw) ? raw : fallback
+}
 
 export default function Toolbar({
   onExportPng,
@@ -22,16 +33,35 @@ export default function Toolbar({
   const [pdfSides, setPdfSides] = useState('both')
   const [pdfPageSize, setPdfPageSize] = useState('a4')
   const [pdfScale, setPdfScale] = useState(1)
+  const [backOffsetX, setBackOffsetX] = useState(() => loadNumber(BACK_OFFSET_X_KEY, 0))
+  const [backOffsetY, setBackOffsetY] = useState(() => loadNumber(BACK_OFFSET_Y_KEY, 0))
+  const [gap, setGap] = useState(() => loadNumber(GAP_KEY, 2))
+
+  useEffect(() => {
+    window.localStorage.setItem(BACK_OFFSET_X_KEY, String(backOffsetX))
+  }, [backOffsetX])
+  useEffect(() => {
+    window.localStorage.setItem(BACK_OFFSET_Y_KEY, String(backOffsetY))
+  }, [backOffsetY])
+  useEffect(() => {
+    window.localStorage.setItem(GAP_KEY, String(gap))
+  }, [gap])
 
   // Bubble PDF settings up so the preview panel can mirror them.
   const updateOption = (patch) => {
     if (patch.sides !== undefined) setPdfSides(patch.sides)
     if (patch.pageSize !== undefined) setPdfPageSize(patch.pageSize)
     if (patch.scale !== undefined) setPdfScale(patch.scale)
+    if (patch.backOffsetX !== undefined) setBackOffsetX(patch.backOffsetX)
+    if (patch.backOffsetY !== undefined) setBackOffsetY(patch.backOffsetY)
+    if (patch.gap !== undefined) setGap(patch.gap)
     onPdfOptionsChange?.({
       sides: patch.sides ?? pdfSides,
       pageSize: patch.pageSize ?? pdfPageSize,
       scale: patch.scale ?? pdfScale,
+      gap: patch.gap ?? gap,
+      backOffsetX: patch.backOffsetX ?? backOffsetX,
+      backOffsetY: patch.backOffsetY ?? backOffsetY,
     })
   }
   const fileInputRef = useRef(null)
@@ -58,7 +88,14 @@ export default function Toolbar({
         Export PNG (this card)
       </button>
       <button
-        onClick={() => onExportPdf({ sides: pdfSides, pageSize: pdfPageSize, scale: pdfScale })}
+        onClick={() => onExportPdf({
+          sides: pdfSides,
+          pageSize: pdfPageSize,
+          scale: pdfScale,
+          gap,
+          backOffsetX,
+          backOffsetY,
+        })}
         disabled={cardCount === 0}
       >
         Export PDF ({cardCount})
@@ -97,6 +134,56 @@ export default function Toolbar({
         <option value="1.5">150%</option>
         <option value="2">200%</option>
       </select>
+      <span
+        className="toolbar__gap"
+        title="Whitespace between cards (mm). Makes cutting easier. 0 packs cards edge-to-edge."
+      >
+        <span className="toolbar__gap-label">Gap:</span>
+        <input
+          type="number"
+          className="toolbar__gap-input"
+          value={gap}
+          step="0.5"
+          min="0"
+          max="20"
+          onChange={(e) => updateOption({ gap: Math.max(0, Number(e.target.value) || 0) })}
+          disabled={cardCount === 0}
+          aria-label="Gap between cards in millimetres"
+        />
+        <span className="toolbar__gap-unit">mm</span>
+      </span>
+      {pdfSides === 'both' && (
+        <span
+          className="toolbar__back-offset"
+          title="Per-printer duplex calibration. Positive X shifts backs right; positive Y shifts backs down. Saved across sessions."
+        >
+          <span className="toolbar__back-offset-label">Back nudge:</span>
+          <input
+            type="number"
+            className="toolbar__back-offset-input"
+            value={backOffsetX}
+            step="0.5"
+            min="-10"
+            max="10"
+            onChange={(e) => updateOption({ backOffsetX: Number(e.target.value) || 0 })}
+            disabled={cardCount === 0}
+            aria-label="Back side X offset in millimetres"
+          />
+          <span className="toolbar__back-offset-unit">×</span>
+          <input
+            type="number"
+            className="toolbar__back-offset-input"
+            value={backOffsetY}
+            step="0.5"
+            min="-10"
+            max="10"
+            onChange={(e) => updateOption({ backOffsetY: Number(e.target.value) || 0 })}
+            disabled={cardCount === 0}
+            aria-label="Back side Y offset in millimetres"
+          />
+          <span className="toolbar__back-offset-unit">mm</span>
+        </span>
+      )}
       {onTogglePdfPreview && (
         <button
           onClick={onTogglePdfPreview}
