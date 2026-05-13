@@ -1,10 +1,13 @@
 import { useState } from 'react'
+import { v4 as uuid } from 'uuid'
 import {
   GRID_PX,
   MIN_W,
   MIN_H,
   MAX_TRACKER_COUNT,
   MAX_GRID_DIM,
+  MAX_TABLE_COLS,
+  MAX_TABLE_ROWS,
   CONTENT_KINDS,
   snap,
   clamp,
@@ -201,6 +204,7 @@ function ContentRow({ item, canMoveUp, canMoveDown, onChange, onRemove, onMoveUp
     lines: 'Lines',
     numbered: 'Numbered',
     grid: 'Grid',
+    table: 'Table',
   }
   return (
     <div className="content-row">
@@ -241,6 +245,8 @@ function ContentRow({ item, canMoveUp, canMoveDown, onChange, onRemove, onMoveUp
               />
             </label>
           </div>
+        ) : item.kind === 'table' ? (
+          <TableEditor item={item} onChange={onChange} />
         ) : (
           <label className="content-row__count">
             <span>Count</span>
@@ -262,6 +268,114 @@ function ContentRow({ item, canMoveUp, canMoveDown, onChange, onRemove, onMoveUp
           </label>
         )}
       </div>
+    </div>
+  )
+}
+
+function TableEditor({ item, onChange }) {
+  const columns = item.columns ?? []
+  const updateColumn = (id, patch) =>
+    onChange({ columns: columns.map((c) => (c.id === id ? { ...c, ...patch } : c)) })
+  const removeColumn = (id) => {
+    if (columns.length <= 1) return
+    onChange({ columns: columns.filter((c) => c.id !== id) })
+  }
+  const addColumn = () => {
+    if (columns.length >= MAX_TABLE_COLS) return
+    onChange({
+      columns: [
+        ...columns,
+        { id: uuid(), title: `Column ${columns.length + 1}`, width: 0 },
+      ],
+    })
+  }
+  const moveColumn = (idx, delta) => {
+    const target = idx + delta
+    if (target < 0 || target >= columns.length) return
+    const next = columns.slice()
+    const [moved] = next.splice(idx, 1)
+    next.splice(target, 0, moved)
+    onChange({ columns: next })
+  }
+  return (
+    <div className="content-row__table">
+      <div className="content-row__table-cols">
+        <span className="content-row__table-head">Columns (width % — 0 = auto)</span>
+        {columns.map((c, i) => (
+          <div key={c.id} className="content-row__table-col">
+            <input
+              type="text"
+              value={c.title}
+              onChange={(e) => updateColumn(c.id, { title: e.target.value })}
+              placeholder={`Column ${i + 1}`}
+            />
+            <input
+              type="number"
+              min="0"
+              max="100"
+              value={c.width ?? 0}
+              onChange={(e) =>
+                updateColumn(c.id, {
+                  width: clamp(Math.round(Number(e.target.value) || 0), 0, 100),
+                })
+              }
+              className="content-row__table-width"
+              title="Column width (%) — 0 = auto"
+              aria-label="Column width percent"
+            />
+            <button
+              type="button"
+              className="icon-button"
+              onClick={() => moveColumn(i, -1)}
+              disabled={i === 0}
+              title="Move left"
+              aria-label="Move left"
+            >
+              ↑
+            </button>
+            <button
+              type="button"
+              className="icon-button"
+              onClick={() => moveColumn(i, 1)}
+              disabled={i === columns.length - 1}
+              title="Move right"
+              aria-label="Move right"
+            >
+              ↓
+            </button>
+            <button
+              type="button"
+              className="icon-button"
+              onClick={() => removeColumn(c.id)}
+              disabled={columns.length <= 1}
+              title="Remove column"
+              aria-label="Remove column"
+            >
+              ×
+            </button>
+          </div>
+        ))}
+        <button
+          type="button"
+          className="content-row__table-add"
+          onClick={addColumn}
+          disabled={columns.length >= MAX_TABLE_COLS}
+        >
+          + Add column
+        </button>
+      </div>
+      <label className="content-row__count">
+        <span>Rows</span>
+        <input
+          type="number"
+          min="1"
+          max={MAX_TABLE_ROWS}
+          value={item.rows}
+          onChange={(e) =>
+            onChange({ rows: clamp(Number(e.target.value) || 1, 1, MAX_TABLE_ROWS) })
+          }
+        />
+      </label>
     </div>
   )
 }

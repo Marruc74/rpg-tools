@@ -684,6 +684,64 @@
   font-size: 13px;
 }
 
+.content-row__table {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.content-row__table-cols {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.content-row__table-head {
+  font-size: 10px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: #5a4a2c;
+}
+
+.content-row__table-col {
+  display: flex;
+  align-items: center;
+  gap: 2px;
+}
+
+.content-row__table-col input[type='text'] {
+  flex: 1 1 auto;
+  min-width: 0;
+  padding: 4px 8px;
+  border: 1px solid #d0c19a;
+  border-radius: 4px;
+  font-size: 12px;
+}
+
+.content-row__table-width {
+  flex-shrink: 0;
+  width: 44px;
+  padding: 4px 6px;
+  border: 1px solid #d0c19a;
+  border-radius: 4px;
+  font-size: 12px;
+  text-align: right;
+}
+
+.content-row__table-add {
+  align-self: flex-start;
+  padding: 4px 10px;
+  border: 1px solid #b39966;
+  border-radius: 4px;
+  background: #fdfaf3;
+  font-size: 11px;
+  color: #5a4a2c;
+  cursor: pointer;
+}
+
+.content-row__table-add:disabled { opacity: 0.4; cursor: not-allowed; }
+
 /* ---------- Print area (off-screen, full A4) ---------- */
 .print-page {
   font-family: 'Helvetica Neue', 'Arial', sans-serif;
@@ -857,6 +915,51 @@
   flex-direction: column;
 }
 
+/* Table (columns with headers + writable rows) */
+.bc-table-wrap {
+  display: flex;
+  flex-direction: column;
+}
+
+.bc-table__label {
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: #1a1a1a;
+  margin-bottom: 4px;
+}
+
+.bc-table {
+  display: grid;
+  border: 1px solid #1a1a1a;
+  width: 100%;
+}
+
+.bc-table__head {
+  border-right: 1px solid #1a1a1a;
+  border-bottom: 1px solid #1a1a1a;
+  padding: 4px 6px;
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  color: #1a1a1a;
+  background: rgba(0, 0, 0, 0.05);
+  box-sizing: border-box;
+  min-height: 22px;
+}
+
+.bc-table__cell {
+  border-right: 1px solid #1a1a1a;
+  border-bottom: 1px solid #1a1a1a;
+  min-height: 22px;
+  box-sizing: border-box;
+}
+
+.bc-table > .bc-table__head:last-child,
+.bc-table > .bc-table__cell:last-child { border-right: none; }
+
 /* ============================================================
    Theme: parchment
    Applied via [data-theme='parchment'] on the canvas page or print
@@ -911,7 +1014,8 @@
 [data-theme='parchment'] .bc-tracker__label,
 [data-theme='parchment'] .bc-lines__label,
 [data-theme='parchment'] .bc-numbered__label,
-[data-theme='parchment'] .bc-grid__label {
+[data-theme='parchment'] .bc-grid__label,
+[data-theme='parchment'] .bc-table__label {
   color: #5a4a2c;
   font-variant: small-caps;
   letter-spacing: 0.06em;
@@ -936,6 +1040,23 @@
 }
 
 [data-theme='parchment'] .bc-grid__cell {
+  border-right-color: #5a4a2c;
+  border-bottom-color: #5a4a2c;
+}
+
+[data-theme='parchment'] .bc-table {
+  border-color: #5a4a2c;
+}
+
+[data-theme='parchment'] .bc-table__head {
+  background: #ece4d0;
+  color: #5a4a2c;
+  font-variant: small-caps;
+  border-right-color: #5a4a2c;
+  border-bottom-color: #5a4a2c;
+}
+
+[data-theme='parchment'] .bc-table__cell {
   border-right-color: #5a4a2c;
   border-bottom-color: #5a4a2c;
 }

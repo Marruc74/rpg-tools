@@ -64,6 +64,30 @@ function Grid({ item }) {
   )
 }
 
+function Table({ item }) {
+  const cols = item.columns?.length ? item.columns : [{ id: 'c0', title: '', width: 0 }]
+  const template = cols
+    .map((c) => (c.width > 0 ? `${c.width}%` : '1fr'))
+    .join(' ')
+  return (
+    <div className="bc-table-wrap">
+      {item.label && <div className="bc-table__label">{item.label}</div>}
+      <div className="bc-table" style={{ gridTemplateColumns: template }}>
+        {cols.map((c) => (
+          <div key={`h-${c.id}`} className="bc-table__head">
+            {c.title}
+          </div>
+        ))}
+        {Array.from({ length: item.rows }).map((_, r) =>
+          cols.map((c) => (
+            <div key={`r${r}-${c.id}`} className="bc-table__cell" />
+          )),
+        )}
+      </div>
+    </div>
+  )
+}
+
 export default function BoxContent({ items }) {
   if (!items || items.length === 0) return null
   return (
@@ -78,6 +102,8 @@ export default function BoxContent({ items }) {
             return <Numbered key={item.id} item={item} />
           case 'grid':
             return <Grid key={item.id} item={item} />
+          case 'table':
+            return <Table key={item.id} item={item} />
           default:
             return null
         }

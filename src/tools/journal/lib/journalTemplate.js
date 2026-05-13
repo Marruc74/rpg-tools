@@ -71,13 +71,29 @@ export function newBox(overrides = {}) {
 
 export const MAX_TRACKER_COUNT = 60
 export const MAX_GRID_DIM = 30
+export const MAX_TABLE_COLS = 8
+export const MAX_TABLE_ROWS = 30
 
 export const CONTENT_KINDS = [
   { id: 'tracker',  label: 'Tracker (checkboxes)' },
   { id: 'lines',    label: 'Lined writing space' },
   { id: 'numbered', label: 'Numbered list' },
   { id: 'grid',     label: 'Grid' },
+  { id: 'table',    label: 'Table (columns with headers)' },
 ]
+
+function normalizeColumnWidth(value) {
+  const n = Number(value)
+  if (!Number.isFinite(n) || n <= 0) return 0
+  return clamp(Math.round(n), 0, 100)
+}
+
+function defaultTableColumns() {
+  return [
+    { id: uuid(), title: 'Name', width: 0 },
+    { id: uuid(), title: 'Notes', width: 0 },
+  ]
+}
 
 export function newContentItem(kind, overrides = {}) {
   switch (kind) {
@@ -110,6 +126,24 @@ export function newContentItem(kind, overrides = {}) {
         cols: clamp(Number(overrides.cols) || 6, 1, MAX_GRID_DIM),
         rows: clamp(Number(overrides.rows) || 4, 1, MAX_GRID_DIM),
       }
+    case 'table': {
+      const cols = Array.isArray(overrides.columns) && overrides.columns.length > 0
+        ? overrides.columns
+            .slice(0, MAX_TABLE_COLS)
+            .map((c) => ({
+              id: c.id ?? uuid(),
+              title: typeof c.title === 'string' ? c.title : '',
+              width: normalizeColumnWidth(c.width),
+            }))
+        : defaultTableColumns()
+      return {
+        id: uuid(),
+        kind: 'table',
+        label: typeof overrides.label === 'string' ? overrides.label : '',
+        columns: cols,
+        rows: clamp(Number(overrides.rows) || 4, 1, MAX_TABLE_ROWS),
+      }
+    }
     default:
       return null
   }
@@ -185,6 +219,24 @@ function normalizeContentItem(c) {
         cols: clamp(Number(c.cols) || 1, 1, MAX_GRID_DIM),
         rows: clamp(Number(c.rows) || 1, 1, MAX_GRID_DIM),
       }
+    case 'table': {
+      const columns = Array.isArray(c.columns)
+        ? c.columns
+            .slice(0, MAX_TABLE_COLS)
+            .map((col) => ({
+              id: col?.id ?? uuid(),
+              title: typeof col?.title === 'string' ? col.title : '',
+              width: normalizeColumnWidth(col?.width),
+            }))
+        : defaultTableColumns()
+      return {
+        id,
+        kind: 'table',
+        label,
+        columns: columns.length > 0 ? columns : defaultTableColumns(),
+        rows: clamp(Number(c.rows) || 1, 1, MAX_TABLE_ROWS),
+      }
+    }
     default:
       return null
   }
