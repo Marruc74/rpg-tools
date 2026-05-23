@@ -73,24 +73,20 @@ const CardFace = forwardRef(function CardFace(
         )
       )}
 
-      {!hideImage && (
-        side.image ? (
-          <img
-            className="card-face__image"
-            data-fit={side.imageFit ?? 'cover'}
-            src={side.image}
-            alt=""
-            style={{
-              objectFit: side.imageFit ?? 'cover',
-              ...(side.focus &&
-                (side.imageFit ?? 'cover') === 'cover' && {
-                  objectPosition: `${(side.focus.x ?? 0.5) * 100}% ${(side.focus.y ?? 0.5) * 100}%`,
-                }),
-            }}
-          />
-        ) : (
-          <div className="card-face__image-placeholder">no image</div>
-        )
+      {!hideImage && side.image && (
+        <img
+          className="card-face__image"
+          data-fit={side.imageFit ?? 'cover'}
+          src={side.image}
+          alt=""
+          style={{
+            objectFit: side.imageFit ?? 'cover',
+            ...(side.focus &&
+              (side.imageFit ?? 'cover') === 'cover' && {
+                objectPosition: `${(side.focus.x ?? 0.5) * 100}% ${(side.focus.y ?? 0.5) * 100}%`,
+              }),
+          }}
+        />
       )}
 
       {side.body && (
