@@ -1,7 +1,9 @@
+import { useEffect, useMemo, useState } from 'react'
+import SideEditor from './SideEditor.jsx'
 import StyleFields from './StyleFields.jsx'
-import { DEFAULT_STYLE } from '../lib/newCard.js'
+import { DEFAULT_STYLE, emptySide } from '../lib/newCard.js'
 import { CARD_SIZES, DEFAULT_SIZE_ID, isCustomSize } from '../lib/cardSizes.js'
-import { DEFAULT_CATEGORIES } from '../lib/library.js'
+import { BACK_MODES, DEFAULT_CATEGORIES } from '../lib/library.js'
 
 export default function CollectionList({
   collections,
@@ -14,6 +16,8 @@ export default function CollectionList({
   onUpdateStyle,
   onUpdateSize,
   onUpdateCategories,
+  onUpdateBackMode,
+  onUpdateSharedBack,
 }) {
   const active = collections.find((c) => c.id === activeId) ?? collections[0]
 
@@ -98,9 +102,96 @@ export default function CollectionList({
             categories={active.categories ?? DEFAULT_CATEGORIES}
             onChange={(next) => onUpdateCategories(active.id, next)}
           />
+          <BackModeField
+            backMode={active.backMode ?? BACK_MODES.PER_CARD}
+            onChange={(next) => onUpdateBackMode(active.id, next)}
+          />
         </fieldset>
       )}
+
+      {active && (active.backMode ?? BACK_MODES.PER_CARD) === BACK_MODES.SHARED && (
+        <SharedBackPanel
+          collection={active}
+          onUpdate={(category, side) => onUpdateSharedBack(active.id, category, side)}
+        />
+      )}
     </aside>
+  )
+}
+
+function SharedBackPanel({ collection, onUpdate }) {
+  const categories = useMemo(() => {
+    const base =
+      Array.isArray(collection.categories) && collection.categories.length > 0
+        ? collection.categories
+        : DEFAULT_CATEGORIES
+    // Surface any orphaned categories (defined in sharedBacks but removed
+    // from the collection's category list) so the user can still see/edit
+    // them.
+    const fromBacks = Object.keys(collection.sharedBacks ?? {})
+    const seen = new Set(base)
+    const extras = fromBacks.filter((c) => !seen.has(c))
+    return [...base, ...extras]
+  }, [collection.categories, collection.sharedBacks])
+
+  const [selected, setSelected] = useState(categories[0] ?? '')
+
+  // If the selected category disappears (renamed/deleted), fall back to the
+  // first available one so the editor doesn't get stuck on a stale name.
+  useEffect(() => {
+    if (!categories.includes(selected)) {
+      setSelected(categories[0] ?? '')
+    }
+  }, [categories, selected])
+
+  const side = collection.sharedBacks?.[selected] ?? emptySide()
+
+  return (
+    <fieldset
+      className="collection-list__style collection-list__shared-back"
+      onClick={(e) => e.stopPropagation()}
+    >
+      <legend>Shared back</legend>
+      <p className="hint">
+        Pick a category and design the back used by every card with that category in{' '}
+        <strong>{collection.name || 'this collection'}</strong>.
+      </p>
+      <label className="field shared-back__category">
+        <span>Category</span>
+        <select value={selected} onChange={(e) => setSelected(e.target.value)}>
+          {categories.length === 0 && <option value="">(no categories)</option>}
+          {categories.map((cat) => (
+            <option key={cat} value={cat}>
+              {cat}
+              {collection.sharedBacks?.[cat] ? ' ✓' : ''}
+            </option>
+          ))}
+        </select>
+      </label>
+      {selected ? (
+        <SideEditor
+          side={side}
+          onChange={(next) => onUpdate(selected, next)}
+        />
+      ) : (
+        <p className="hint">Add a category above to create a shared back for it.</p>
+      )}
+    </fieldset>
+  )
+}
+
+function BackModeField({ backMode, onChange }) {
+  return (
+    <label className="field field--inline" onClick={(e) => e.stopPropagation()}>
+      <span>Card back</span>
+      <select
+        value={backMode}
+        onChange={(e) => onChange(e.target.value)}
+      >
+        <option value={BACK_MODES.PER_CARD}>Per-card</option>
+        <option value={BACK_MODES.SHARED}>Shared</option>
+      </select>
+    </label>
   )
 }
 

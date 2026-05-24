@@ -3,9 +3,14 @@ import { DEFAULT_STYLE } from './newCard.js'
 import { DEFAULT_SIZE_ID } from './cardSizes.js'
 
 export const LIBRARY_KEY = 'cardmaker:library'
-export const LIBRARY_VERSION = 5
+export const LIBRARY_VERSION = 7
 
 export const DEFAULT_CATEGORIES = ['Item', 'Spell', 'Rule', 'NPC', 'Other']
+
+export const BACK_MODES = {
+  PER_CARD: 'per-card',
+  SHARED: 'shared',
+}
 
 export function newCollection(overrides = {}) {
   return {
@@ -14,9 +19,21 @@ export function newCollection(overrides = {}) {
     size: DEFAULT_SIZE_ID,
     style: { ...DEFAULT_STYLE },
     categories: [...DEFAULT_CATEGORIES],
+    backMode: BACK_MODES.PER_CARD,
+    sharedBacks: {},
     cards: [],
     ...overrides,
   }
+}
+
+// True if a side carries any user-authored content.
+function sideHasContent(side) {
+  if (!side || typeof side !== 'object') return false
+  if (side.title && side.title.trim()) return true
+  if (side.image) return true
+  if (side.body && side.body.trim()) return true
+  if (Array.isArray(side.stats) && side.stats.some((s) => s.label || s.value)) return true
+  return false
 }
 
 export function emptyLibrary() {
@@ -53,8 +70,29 @@ export function migrateLibrary(library) {
         Array.isArray(rest.categories) && rest.categories.length > 0
           ? rest.categories
           : [...DEFAULT_CATEGORIES],
+      backMode:
+        rest.backMode === BACK_MODES.SHARED
+          ? BACK_MODES.SHARED
+          : BACK_MODES.PER_CARD,
+      sharedBacks: normalizeSharedBacks(rest),
       cards: rest.cards ?? [],
     }
+  }
+
+  // Bring the previous single sharedBack forward by attaching it to the
+  // first available category, so users who set one up under v6 don't
+  // silently lose it when categories now own their own backs.
+  function normalizeSharedBacks(rest) {
+    if (rest.sharedBacks && typeof rest.sharedBacks === 'object') {
+      return rest.sharedBacks
+    }
+    if (sideHasContent(rest.sharedBack)) {
+      const cats = Array.isArray(rest.categories) && rest.categories.length > 0
+        ? rest.categories
+        : DEFAULT_CATEGORIES
+      return { [cats[0]]: rest.sharedBack }
+    }
+    return {}
   }
 
   // v2/v3 → v4: collections array exists; ensure each has a style and that

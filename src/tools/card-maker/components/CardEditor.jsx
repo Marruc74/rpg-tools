@@ -1,11 +1,18 @@
-import { useMemo, useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import SideEditor from './SideEditor.jsx'
 import StyleFields from './StyleFields.jsx'
 import { DEFAULT_STYLE } from '../lib/newCard.js'
-import { DEFAULT_CATEGORIES } from '../lib/library.js'
+import { BACK_MODES, DEFAULT_CATEGORIES } from '../lib/library.js'
 
-export default function CardEditor({ card, collectionStyle, categories, onChange }) {
+export default function CardEditor({ card, collectionStyle, categories, backMode, onChange }) {
   const [activeSide, setActiveSide] = useState('front')
+  const sharedBack = backMode === BACK_MODES.SHARED
+
+  // If the collection switches to shared backs while the user is on the
+  // back tab, snap back to the front so they don't see a disabled tab.
+  useEffect(() => {
+    if (sharedBack && activeSide === 'back') setActiveSide('front')
+  }, [sharedBack, activeSide])
 
   const style = card.style ?? collectionStyle ?? DEFAULT_STYLE
   const locked = !!card.locked
@@ -78,13 +85,21 @@ export default function CardEditor({ card, collectionStyle, categories, onChange
         >
           Front
         </button>
-        <button
-          className={activeSide === 'back' ? 'is-active' : ''}
-          onClick={() => setActiveSide('back')}
-        >
-          Back
-        </button>
+        {!sharedBack && (
+          <button
+            className={activeSide === 'back' ? 'is-active' : ''}
+            onClick={() => setActiveSide('back')}
+          >
+            Back
+          </button>
+        )}
       </div>
+
+      {sharedBack && (
+        <p className="hint">
+          Back is shared across this collection — edit it in the collection panel on the left.
+        </p>
+      )}
 
       <SideEditor
         side={card[activeSide]}

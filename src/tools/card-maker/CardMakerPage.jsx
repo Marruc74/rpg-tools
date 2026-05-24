@@ -198,6 +198,17 @@ export default function CardMakerPage() {
   const handleUpdateCollectionCategories = (id, categories) =>
     updateCollection(id, { categories })
 
+  const handleUpdateCollectionBackMode = (id, backMode) =>
+    updateCollection(id, { backMode })
+
+  const handleUpdateCollectionSharedBack = (id, category, side) => {
+    const col = collections.find((c) => c.id === id)
+    if (!col || !category) return
+    updateCollection(id, {
+      sharedBacks: { ...(col.sharedBacks ?? {}), [category]: side },
+    })
+  }
+
   /* ---------- card helpers (operate on active collection) ---------- */
   const updateCard = (next) => {
     updateActiveCollection({
@@ -391,6 +402,8 @@ export default function CardMakerPage() {
           onUpdateStyle={handleUpdateCollectionStyle}
           onUpdateSize={handleUpdateCollectionSize}
           onUpdateCategories={handleUpdateCollectionCategories}
+          onUpdateBackMode={handleUpdateCollectionBackMode}
+          onUpdateSharedBack={handleUpdateCollectionSharedBack}
         />
 
         <CardList
@@ -412,12 +425,15 @@ export default function CardMakerPage() {
               card={selected}
               collectionStyle={activeCollection?.style}
               categories={activeCollection?.categories}
+              backMode={activeCollection?.backMode}
               onChange={updateCard}
             />
             <CardPreview
               card={selected}
               gameName={activeCollection?.name ?? ''}
               sizeId={activeCollection?.size}
+              backMode={activeCollection?.backMode}
+              sharedBacks={activeCollection?.sharedBacks}
               frontRef={frontRef}
               backRef={backRef}
             />
@@ -436,6 +452,8 @@ export default function CardMakerPage() {
         <PdfPreview
           cards={cards}
           sizeId={activeCollection?.size}
+          backMode={activeCollection?.backMode}
+          sharedBacks={activeCollection?.sharedBacks}
           options={pdfOptions}
           onClose={() => setPdfPreviewOpen(false)}
         />
@@ -455,6 +473,8 @@ export default function CardMakerPage() {
         cards={cards}
         gameName={activeCollection?.name ?? ''}
         sizeId={activeCollection?.size}
+        backMode={activeCollection?.backMode}
+        sharedBacks={activeCollection?.sharedBacks}
         onOverflowChange={handleOverflowChange}
       />
     </div>

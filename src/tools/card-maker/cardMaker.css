@@ -1003,6 +1003,17 @@ input, select, textarea {
   gap: 8px;
 }
 
+.collection-list__shared-back {
+  max-height: 40vh;
+  overflow-y: auto;
+}
+
+.shared-back__category select {
+  width: 100%;
+  font-size: 12px;
+  padding: 4px 6px;
+}
+
 .custom-size-row .field--inline input {
   width: 60px;
   padding: 2px 4px;

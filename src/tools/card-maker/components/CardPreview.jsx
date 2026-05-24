@@ -1,6 +1,21 @@
 import CardFace from './CardFace.jsx'
+import { emptySide } from '../lib/newCard.js'
+import { BACK_MODES } from '../lib/library.js'
 
-export default function CardPreview({ card, gameName, sizeId, frontRef, backRef }) {
+export default function CardPreview({
+  card,
+  gameName,
+  sizeId,
+  backMode,
+  sharedBacks,
+  frontRef,
+  backRef,
+}) {
+  const isShared = backMode === BACK_MODES.SHARED
+  const backSide = isShared
+    ? (sharedBacks?.[card.category] ?? emptySide())
+    : card.back
+
   return (
     <section className="card-preview">
       <h2>Preview</h2>
@@ -17,16 +32,18 @@ export default function CardPreview({ card, gameName, sizeId, frontRef, backRef 
           />
         </div>
         <div>
-          <div className="card-preview__label">Back</div>
+          <div className="card-preview__label">
+            Back{isShared ? ` (shared · ${card.category || 'no category'})` : ''}
+          </div>
           <CardFace
             ref={backRef}
-            side={card.back}
+            side={backSide}
             category={card.category}
             style={card.style}
             gameName={gameName}
             sizeId={sizeId}
-            hideImage
-            hideTitle
+            hideImage={!isShared}
+            hideTitle={!isShared}
           />
         </div>
       </div>

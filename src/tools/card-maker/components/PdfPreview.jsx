@@ -1,6 +1,8 @@
 import CardFace from './CardFace.jsx'
 import { computePdfLayout } from '../lib/exportPdf.js'
 import { getCardSize, getCardSizePx } from '../lib/cardSizes.js'
+import { emptySide } from '../lib/newCard.js'
+import { BACK_MODES } from '../lib/library.js'
 
 const PREVIEW_SCALE = 0.4
 const PX_PER_MM = 4
@@ -8,7 +10,8 @@ const PX_PER_MM = 4
 // Renders a small visual mock of how the PDF will be laid out. Uses the
 // same layout math as the real exporter; only the pixel scaling for screen
 // display is added on top.
-export default function PdfPreview({ cards, sizeId, options, onClose }) {
+export default function PdfPreview({ cards, sizeId, backMode, sharedBacks, options, onClose }) {
+  const isShared = backMode === BACK_MODES.SHARED
   const { sides = 'both', pageSize = 'a4', scale = 1, gap = 0 } = options
   const cardSize = getCardSize(sizeId)
   const layout = computePdfLayout(cardSize, pageSize, scale, gap)
@@ -82,12 +85,18 @@ export default function PdfPreview({ cards, sizeId, options, onClose }) {
                     }}
                   >
                     <CardFace
-                      side={page.side === 'front' ? card.front : card.back}
+                      side={
+                        page.side === 'front'
+                          ? card.front
+                          : isShared
+                            ? (sharedBacks?.[card.category] ?? emptySide())
+                            : card.back
+                      }
                       category={card.category}
                       style={card.style}
                       sizeId={sizeId}
-                      hideImage={page.side === 'back'}
-                      hideTitle={page.side === 'back'}
+                      hideImage={page.side === 'back' && !isShared}
+                      hideTitle={page.side === 'back' && !isShared}
                     />
                   </div>
                 </div>
