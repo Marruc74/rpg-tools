@@ -270,6 +270,12 @@ export default function CardMakerPage() {
         ...options,
         onProgress: (done, total) => setExportProgress({ done, total }),
       })
+    } catch (err) {
+      console.error('[card-maker] PDF export crashed:', err)
+      alert(
+        `PDF export failed: ${err?.message || err}\n\n` +
+          `See the browser console (F12) for the full error.`,
+      )
     } finally {
       setExportProgress(null)
     }
