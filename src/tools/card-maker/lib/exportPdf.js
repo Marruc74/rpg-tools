@@ -84,18 +84,16 @@ function drawCutMarks(pdf, layout) {
   }
 }
 
-async function placeFaces(pdf, cards, layout, side, mirror, offsetX = 0, offsetY = 0) {
-  const pageCount = Math.ceil(cards.length / layout.perPage)
-  for (let page = 0; page < pageCount; page++) {
-    if (page > 0) pdf.addPage([layout.pageW, layout.pageH], layout.orientation)
-    drawCutMarks(pdf, layout)
+// Lay out a single sheet's worth of cards. The caller owns page breaks so
+// front/back sheets can be interleaved. onFace() is invoked once per card so
+// the UI can report progress.
+async function placePage(pdf, slice, layout, side, mirror, offsetX = 0, offsetY = 0, onFace) {
+  drawCutMarks(pdf, layout)
 
-    const slice = cards.slice(page * layout.perPage, page * layout.perPage + layout.perPage)
-    for (let i = 0; i < slice.length; i++) {
-      const card = slice[i]
-      const node = findFace(card.id, side)
-      if (!node) continue
-
+  for (let i = 0; i < slice.length; i++) {
+    const card = slice[i]
+    const node = findFace(card.id, side)
+    if (node) {
       const canvas = await nodeToCanvas(node)
       const dataUrl = canvas.toDataURL('image/png')
 
@@ -107,6 +105,7 @@ async function placeFaces(pdf, cards, layout, side, mirror, offsetX = 0, offsetY
 
       pdf.addImage(dataUrl, 'PNG', x, y, layout.cardW, layout.cardH)
     }
+    onFace?.()
   }
 }
 
@@ -126,6 +125,7 @@ export async function exportLibraryPdf(cards, sizeId, options = {}) {
     gap = 0,
     backOffsetX = 0,
     backOffsetY = 0,
+    onProgress,
   } = options
   if (cards.length === 0) {
     alert('No cards to export.')
@@ -145,17 +145,36 @@ export async function exportLibraryPdf(cards, sizeId, options = {}) {
     orientation: layout.orientation,
   })
 
-  if (sides === 'front' || sides === 'both') {
-    await placeFaces(pdf, cards, layout, 'front', false)
+  // First page already exists from the jsPDF constructor; every page after
+  // that needs an explicit addPage().
+  let firstSheet = true
+  const newSheet = () => {
+    if (firstSheet) firstSheet = false
+    else pdf.addPage([layout.pageW, layout.pageH], layout.orientation)
   }
-  if (sides === 'back' || sides === 'both') {
-    if (sides === 'both') {
-      pdf.addPage([layout.pageW, layout.pageH], layout.orientation)
+
+  const pageCount = Math.ceil(cards.length / layout.perPage)
+  const doFront = sides === 'front' || sides === 'both'
+  const doBack = sides === 'back' || sides === 'both'
+
+  const total = cards.length * ((doFront ? 1 : 0) + (doBack ? 1 : 0))
+  let done = 0
+  const onFace = () => onProgress?.(++done, total)
+  onProgress?.(0, total)
+
+  // Interleave per sheet: front of sheet N, then back of sheet N. This is the
+  // natural order for duplex printing and for manual flip-and-reprint.
+  for (let page = 0; page < pageCount; page++) {
+    const slice = cards.slice(page * layout.perPage, (page + 1) * layout.perPage)
+
+    if (doFront) {
+      newSheet()
+      await placePage(pdf, slice, layout, 'front', false, 0, 0, onFace)
     }
-    await placeFaces(
-      pdf, cards, layout, 'back', sides === 'both',
-      backOffsetX, backOffsetY,
-    )
+    if (doBack) {
+      newSheet()
+      await placePage(pdf, slice, layout, 'back', sides === 'both', backOffsetX, backOffsetY, onFace)
+    }
   }
 
   const suffix = sides === 'both' ? '' : `-${sides}`

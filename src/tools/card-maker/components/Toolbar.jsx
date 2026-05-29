@@ -29,7 +29,9 @@ export default function Toolbar({
   hasSelection,
   hasCollection,
   cardCount,
+  exportProgress,
 }) {
+  const isExporting = exportProgress != null
   const [pdfSides, setPdfSides] = useState('both')
   const [pdfPageSize, setPdfPageSize] = useState('a4')
   const [pdfScale, setPdfScale] = useState(1)
@@ -96,9 +98,19 @@ export default function Toolbar({
           backOffsetX,
           backOffsetY,
         })}
-        disabled={cardCount === 0}
+        disabled={cardCount === 0 || isExporting}
+        aria-busy={isExporting}
       >
-        Export PDF ({cardCount})
+        {isExporting ? (
+          <>
+            <span className="toolbar__spinner" aria-hidden="true" />
+            {exportProgress.total
+              ? `Exporting… ${exportProgress.done}/${exportProgress.total}`
+              : 'Exporting…'}
+          </>
+        ) : (
+          `Export PDF (${cardCount})`
+        )}
       </button>
       <select
         className="toolbar__select"

@@ -26,15 +26,16 @@ export default function PdfPreview({ cards, sizeId, backMode, sharedBacks, optio
       : sides === 'back' ? ['back']
       : ['front']
 
-  // Build a flat list of pages: { side, cards[], mirror }
+  // Build a flat list of pages: { side, cards[], mirror }. Interleaved per
+  // sheet (front of sheet N, then back of sheet N) to match the exporter.
   const pages = []
-  for (const side of sideKeys) {
-    const mirror = side === 'back' && sides === 'both'
-    for (let i = 0; i < cards.length; i += layout.perPage) {
+  for (let i = 0; i < cards.length; i += layout.perPage) {
+    const slice = cards.slice(i, i + layout.perPage)
+    for (const side of sideKeys) {
       pages.push({
         side,
-        mirror,
-        slice: cards.slice(i, i + layout.perPage),
+        mirror: side === 'back' && sides === 'both',
+        slice,
       })
     }
   }

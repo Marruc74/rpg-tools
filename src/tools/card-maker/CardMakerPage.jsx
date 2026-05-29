@@ -37,6 +37,8 @@ export default function CardMakerPage() {
   const backup = useBackupNudge()
 
   const [pdfPreviewOpen, setPdfPreviewOpen] = useState(false)
+  // null when idle; { done, total } while a PDF export is running.
+  const [exportProgress, setExportProgress] = useState(null)
   const [pdfOptions, setPdfOptions] = useState({
     sides: 'both',
     pageSize: 'a4',
@@ -262,7 +264,15 @@ export default function CardMakerPage() {
 
   const handleExportPdf = async (options = {}) => {
     if (cards.length === 0) return
-    await exportLibraryPdf(cards, activeCollection?.size, options)
+    setExportProgress({ done: 0, total: 0 })
+    try {
+      await exportLibraryPdf(cards, activeCollection?.size, {
+        ...options,
+        onProgress: (done, total) => setExportProgress({ done, total }),
+      })
+    } finally {
+      setExportProgress(null)
+    }
   }
 
   const handleExportLibraryJson = () => {
@@ -387,6 +397,7 @@ export default function CardMakerPage() {
           hasSelection={!!selected}
           hasCollection={!!activeCollection}
           cardCount={cards.length}
+          exportProgress={exportProgress}
         />
       </header>
 

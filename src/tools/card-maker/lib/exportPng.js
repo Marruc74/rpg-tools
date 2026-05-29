@@ -2,10 +2,34 @@ import { toCanvas } from 'html-to-image'
 
 const SCALE = 3
 
+// Wait until every <img> inside the node has actually decoded. html-to-image
+// snapshots synchronously, so capturing before images are ready is the main
+// cause of intermittently blank/partial cards. onerror also resolves so a
+// single broken image can never hang the whole export.
+async function waitForImages(node) {
+  const imgs = Array.from(node.querySelectorAll('img'))
+  await Promise.all(
+    imgs.map((img) => {
+      if (img.complete && img.naturalWidth > 0) {
+        return img.decode().catch(() => {})
+      }
+      return new Promise((resolve) => {
+        img.addEventListener('load', resolve, { once: true })
+        img.addEventListener('error', resolve, { once: true })
+      })
+    }),
+  )
+}
+
 export async function nodeToCanvas(node) {
+  // Fonts + images must be loaded before rasterizing. Both promises are
+  // effectively free once resolved, so awaiting per-card is cheap.
+  if (document.fonts?.ready) await document.fonts.ready
+  await waitForImages(node)
+  // No cacheBust: it forces a fresh network fetch of every image/font on
+  // every capture, which made multi-card PDF export slow and unreliable.
   return toCanvas(node, {
     pixelRatio: SCALE,
-    cacheBust: true,
   })
 }
 
