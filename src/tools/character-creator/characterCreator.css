@@ -272,7 +272,151 @@
 .cc-sheet-inv { columns: 2; font-size: 13px; color: #3a352c; }
 .cc-sheet-inv li { line-height: 1.5; }
 
+/* ── System switcher + sub-bar (host) ─────────────────── */
+.cc-system-switch { display: flex; gap: 4px; background: #efe9da; border: 1px solid #d8cfb8; border-radius: 8px; padding: 3px; }
+.cc-system-switch__btn { background: none; border: none; border-radius: 6px; padding: 7px 14px; font-size: 13px; font-weight: 600; color: #6b6357; }
+.cc-system-switch__btn:hover { background: rgba(90, 74, 44, 0.07); }
+.cc-system-switch__btn.is-active { background: #fff; color: #5a4a2c; box-shadow: 0 1px 2px rgba(90, 74, 44, 0.15); }
+.cc__subbar { display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: 8px 24px; border-bottom: 1px solid #e3dcc8; background: #f4f0e6; flex-shrink: 0; }
+.cc__subbar .cc__sub { margin: 0; }
+
+/* ── Roll bars / option rows ──────────────────────────── */
+.cc-roll-bar { display: flex; align-items: center; gap: 12px; flex-wrap: wrap; margin-bottom: 16px; }
+.cc-roll-bar .cc-note { margin: 0; }
+.cc-three { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; margin-bottom: 16px; }
+.cc-tiers--wrap { gap: 8px; }
+.cc-inline { display: flex; gap: 6px; align-items: center; }
+.cc-inline input { flex: 1; }
+
+/* ── Career level list ────────────────────────────────── */
+.cc-career-levels { display: flex; flex-direction: column; gap: 2px; margin-bottom: 8px; }
+.cc-career-level { font-size: 12px; color: #6b6357; }
+.cc-career-level em { font-family: ui-monospace, monospace; font-style: normal; color: #8a6d3b; }
+.cc-career-level.is-first { color: #5a4a2c; font-weight: 600; }
+
+/* ── Characteristics grid ─────────────────────────────── */
+.cc-char-grid { max-width: 560px; display: flex; flex-direction: column; gap: 2px; }
+.cc-char-grid__head, .cc-char-row { display: grid; grid-template-columns: 1fr 70px 60px 60px 56px; gap: 8px; align-items: center; }
+.cc-char-grid__head { font-size: 11px; text-transform: uppercase; letter-spacing: 0.04em; color: #6b6357; padding: 0 4px 4px; }
+.cc-char-grid__head span:not(:first-child) { text-align: center; }
+.cc-char-row { background: #fff; border: 1px solid #e3dcc8; border-radius: 6px; padding: 6px 4px 6px 10px; }
+.cc-char-row__name { font-size: 13px; color: #3a352c; }
+.cc-char-row__name em { font-family: ui-monospace, monospace; font-style: normal; color: #8a6d3b; font-size: 11px; }
+.cc-char-row__base { width: 100%; border: 1px solid #c9b893; border-radius: 5px; padding: 4px; text-align: center; font-size: 13px; }
+.cc-char-row__mod { text-align: center; font-size: 12px; color: #8a6d3b; font-family: ui-monospace, monospace; }
+.cc-char-row__total { text-align: center; font-weight: 700; color: #5a4a2c; }
+.cc-char-row__bonus { text-align: center; color: #5a7d4a; font-weight: 700; }
+
+/* ── Subheads + pills ─────────────────────────────────── */
+.cc-subhead { display: flex; align-items: center; gap: 10px; margin: 22px 0 10px; }
+.cc-pill { font-size: 12px; font-weight: 600; color: #8a6d3b; background: #f0e9d6; padding: 2px 8px; border-radius: 10px; }
+.cc-pill.is-ok { background: #e3ecd9; color: #3d5a2c; }
+
+/* ── Skill rows + segmented controls ──────────────────── */
+.cc-skill-list { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 6px; }
+.cc-skill-row { display: flex; align-items: center; gap: 8px; background: #fff; border: 1px solid #e3dcc8; border-radius: 6px; padding: 5px 8px 5px 12px; }
+.cc-skill-row__name { flex: 1; font-size: 13px; color: #3a352c; }
+.cc-skill-row__num { width: 54px; border: 1px solid #c9b893; border-radius: 5px; padding: 4px; text-align: center; font-size: 13px; }
+.cc-talent-input { border: 1px solid #c9b893; border-radius: 5px; padding: 5px 8px; }
+.cc-seg { display: inline-flex; border: 1px solid #c9b893; border-radius: 6px; overflow: hidden; }
+.cc-seg--wrap { flex-wrap: wrap; border: none; gap: 6px; }
+.cc-seg button { background: #fff; border: none; padding: 5px 10px; font-size: 12px; color: #5a4a2c; border-left: 1px solid #e3dcc8; }
+.cc-seg--wrap button { border: 1px solid #c9b893; border-radius: 6px; }
+.cc-seg button:first-child { border-left: none; }
+.cc-seg button:hover:not(:disabled) { background: #f0e9d6; }
+.cc-seg button.is-on { background: #5a4a2c; color: #fff; }
+.cc-seg button:disabled { opacity: 0.3; cursor: not-allowed; }
+
+/* ── Talents ──────────────────────────────────────────── */
+.cc-talents { display: flex; flex-direction: column; gap: 14px; }
+.cc-talent-block { background: #fbf7ec; border: 1px solid #e3dcc8; border-radius: 8px; padding: 10px 12px; }
+.cc-talent-block__label { display: block; font-size: 11px; text-transform: uppercase; letter-spacing: 0.04em; color: #8a6d3b; margin-bottom: 6px; }
+.cc-talent-block p { margin: 0; font-size: 13px; color: #3a352c; }
+.cc-talent-block .cc-skill-row { margin-top: 6px; }
+
+/* ── Fate / Resilience ────────────────────────────────── */
+.cc-fr { display: flex; gap: 16px; flex-wrap: wrap; }
+.cc-fr__item { background: #fff; border: 1px solid #d8cfb8; border-radius: 8px; padding: 12px 18px; display: flex; flex-direction: column; gap: 6px; align-items: flex-start; }
+.cc-fr__item > span:first-child { font-size: 12px; font-weight: 600; color: #5a4a2c; }
+.cc-fr__item .cc-stepper strong { font-size: 22px; color: #5a4a2c; font-family: 'Georgia', serif; min-width: 28px; text-align: center; }
+.cc-fr__item .cc-note { margin: 0; }
+
+/* ── Trapping inputs ──────────────────────────────────── */
+.cc-inv { display: flex; flex-direction: column; gap: 6px; max-width: 560px; }
+.cc-inv-row { display: flex; gap: 6px; }
+.cc-inv-row input { flex: 1; border: 1px solid #c9b893; border-radius: 5px; padding: 6px 10px; font-size: 13px; }
+
+/* ── Detail textarea + XP readout ─────────────────────── */
+.cc-textarea-label { display: flex; flex-direction: column; gap: 4px; font-size: 12px; font-weight: 600; color: #5a4a2c; margin-top: 16px; }
+.cc-textarea-label textarea { border: 1px solid #c9b893; border-radius: 6px; padding: 8px 10px; resize: vertical; font-family: inherit; }
+.cc-xp { display: flex; justify-content: space-between; align-items: baseline; background: #fff; border: 1px solid #d8cfb8; border-radius: 8px; padding: 10px 14px; }
+.cc-xp span { font-size: 12px; color: #6b6357; }
+.cc-xp strong { font-size: 22px; color: #5a4a2c; font-family: 'Georgia', serif; }
+.cc-tag-list { list-style: none; margin: 0; padding: 0; display: flex; flex-wrap: wrap; gap: 6px; }
+.cc-tag-list li { font-size: 12px; background: #efe9da; border-radius: 12px; padding: 3px 10px; color: #3a352c; }
+
+/* ── Saved-character roster bar ───────────────────────── */
+.cc-roster { position: relative; }
+.cc-roster__actions { display: flex; align-items: center; gap: 6px; }
+.cc-btn--ghost.is-on { background: #5a4a2c; color: #f4f1ea; }
+.cc-roster__dirty { color: #c47a2e; font-size: 16px; line-height: 1; }
+.cc-roster__list, .cc-roster__empty {
+  position: absolute; right: 0; top: calc(100% + 6px); z-index: 30;
+  width: 320px; max-height: 360px; overflow: auto; list-style: none; margin: 0; padding: 6px;
+  background: #fff; border: 1px solid #c9b893; border-radius: 8px; box-shadow: 0 6px 18px rgba(60, 50, 30, 0.18);
+}
+.cc-roster__empty { padding: 14px; font-size: 13px; color: #6b6357; }
+.cc-roster__item { display: flex; align-items: center; gap: 4px; padding: 4px; border-radius: 6px; }
+.cc-roster__item:hover { background: #f4f0e6; }
+.cc-roster__item.is-loaded { background: #efe9da; }
+.cc-roster__load { flex: 1; text-align: left; background: none; border: none; display: flex; flex-direction: column; gap: 1px; padding: 4px 6px; color: inherit; }
+.cc-roster__name { font-size: 13px; font-weight: 600; color: #5a4a2c; }
+.cc-roster__summary { font-size: 11px; color: #6b6357; }
+.cc-roster__rename { width: 130px; border: 1px solid #c9b893; border-radius: 5px; padding: 4px 6px; font-size: 13px; }
+.cc-roster__edit { background: none; border: none; color: #8a6d3b; font-size: 13px; padding: 2px 6px; }
+.cc-roster__edit:hover { color: #5a4a2c; }
+
+/* ── Advancement: XP board + advance rows ─────────────── */
+.cc-xp.is-over strong { color: #b3402f; }
+.cc-xp--sub { padding: 4px 14px; }
+.cc-xp--sub span { font-size: 11px; color: #6b6357; }
+.cc-xp-board { display: flex; flex-wrap: wrap; gap: 10px; margin-bottom: 8px; }
+.cc-xp-board > div { background: #fff; border: 1px solid #d8cfb8; border-radius: 8px; padding: 8px 14px; display: flex; flex-direction: column; gap: 2px; min-width: 92px; }
+.cc-xp-board span { font-size: 11px; color: #6b6357; }
+.cc-xp-board strong { font-size: 20px; color: #5a4a2c; font-family: 'Georgia', serif; }
+.cc-xp-board__add input { width: 90px; border: 1px solid #c9b893; border-radius: 5px; padding: 4px 6px; font-size: 16px; }
+.cc-xp-board__avail strong { color: #3d5a2c; }
+.cc-xp-board__avail.is-over strong { color: #b3402f; }
+
+.cc-adv-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(330px, 1fr)); gap: 4px; margin-bottom: 8px; }
+.cc-adv-row { display: grid; grid-template-columns: 1fr 42px 40px 64px auto; align-items: center; gap: 8px; background: #fff; border: 1px solid #e3dcc8; border-radius: 6px; padding: 4px 8px 4px 12px; }
+.cc-adv-row__name { font-size: 13px; color: #3a352c; }
+.cc-adv-row__name em { font-family: ui-monospace, monospace; font-style: normal; color: #8a6d3b; font-size: 11px; }
+.cc-adv-row__val { text-align: center; font-weight: 700; color: #5a4a2c; }
+.cc-adv-row__bought { text-align: center; font-size: 12px; color: #5a7d4a; font-weight: 600; }
+.cc-adv-row__cost { text-align: right; font-size: 11px; color: #8a6d3b; font-family: ui-monospace, monospace; }
+
+.cc-buy-talent { display: flex; gap: 6px; margin-bottom: 8px; }
+.cc-buy-talent input { border: 1px solid #c9b893; border-radius: 6px; padding: 6px 10px; font-size: 13px; min-width: 220px; }
+.cc-bought-list { list-style: none; margin: 0 0 8px; padding: 0; display: flex; flex-wrap: wrap; gap: 6px; }
+.cc-bought-list li { display: inline-flex; align-items: center; gap: 4px; background: #efe9da; border-radius: 12px; padding: 2px 4px 2px 10px; font-size: 12px; color: #3a352c; }
+.cc-x2 { font-size: 10px; font-weight: 700; color: #b3402f; background: #f6dcd7; border-radius: 4px; padding: 0 4px; margin-left: 4px; }
+
+/* ── Status / career-level completion ─────────────────── */
+.cc-subhead .cc-pill { font-weight: 600; }
+.cc-status { background: #fbf7ec; border: 1px solid #e3dcc8; border-radius: 8px; padding: 10px 14px; margin-bottom: 8px; }
+.cc-status .cc-note { margin-top: 0; }
+.cc-status .cc-roll-bar { margin: 10px 0 0; }
+.cc-checklist { list-style: none; margin: 8px 0; padding: 0; display: flex; flex-direction: column; gap: 3px; }
+.cc-checklist li { font-size: 13px; color: #6b6357; }
+.cc-checklist li.is-ok { color: #3d5a2c; font-weight: 600; }
+.cc-change-career { display: flex; gap: 8px; align-items: flex-end; flex-wrap: wrap; margin-top: 12px; padding-top: 10px; border-top: 1px dashed #e3dcc8; }
+.cc-change-career label { display: flex; flex-direction: column; gap: 4px; font-size: 12px; font-weight: 600; color: #5a4a2c; }
+.cc-change-career select { border: 1px solid #c9b893; border-radius: 6px; padding: 7px 10px; background: #fff; min-width: 240px; font-size: 13px; }
+
 @media (max-width: 720px) {
   .cc__main { grid-template-columns: 1fr; }
   .cc-skills-grid, .cc-sheet__cols, .cc-eq-grid { grid-template-columns: 1fr; }
+  .cc-skill-list, .cc-adv-grid { grid-template-columns: 1fr; }
+  .cc-roster__list, .cc-roster__empty { width: 280px; }
 }

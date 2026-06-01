@@ -37,7 +37,7 @@ function Shell() {
           <NavLink to="/initiative">Initiative</NavLink>
           <NavLink to="/tables">Tables</NavLink>
           <NavLink to="/npc-generator">NPC Generator</NavLink>
-          <NavLink to="/character-creator">Rollperson (DoD)</NavLink>
+          <NavLink to="/character-creator">Character Creator</NavLink>
         </nav>
       </header>
       <main className="shell__main">

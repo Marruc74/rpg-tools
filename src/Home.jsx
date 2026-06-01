@@ -33,8 +33,8 @@ const tools = [
   },
   {
     to: '/character-creator',
-    name: 'Rollperson (Drakar och Demoner)',
-    description: 'Build a full Drakar och Demoner character with the 125-background-point system: race, profession, grundegenskaper, skills, derived stats and starting gear. Tracks your BP/EP budgets and exports a finished rollformulär.',
+    name: 'Character Creator',
+    description: 'Build a full tabletop character in your choice of game system. Drakar och Demoner uses the 125-background-point system (race, yrke, grundegenskaper, skills, gear). Warhammer Fantasy Roleplay 4e walks the nine creation steps — species, career, characteristics, skills & talents, trappings — rolling or choosing, with starting XP. Exports a finished sheet.',
   },
 ]
 
