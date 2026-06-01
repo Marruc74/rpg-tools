@@ -31,6 +31,11 @@ const tools = [
     name: 'NPC Generator',
     description: 'Roll a quick NPC — name, profession, appearance, and a quirk — pulled from your random tables. Save the keepers, send a favourite straight to Card-Maker.',
   },
+  {
+    to: '/character-creator',
+    name: 'Rollperson (Drakar och Demoner)',
+    description: 'Build a full Drakar och Demoner character with the 125-background-point system: race, profession, grundegenskaper, skills, derived stats and starting gear. Tracks your BP/EP budgets and exports a finished rollformulär.',
+  },
 ]
 
 export default function Home() {

@@ -6,6 +6,7 @@ import DicePage from './tools/dice/DicePage.jsx'
 import InitiativePage from './tools/initiative/InitiativePage.jsx'
 import TablesPage from './tools/tables/TablesPage.jsx'
 import NpcGeneratorPage from './tools/npc-generator/NpcGeneratorPage.jsx'
+import CharacterCreatorPage from './tools/character-creator/CharacterCreatorPage.jsx'
 
 export default function App() {
   return (
@@ -18,6 +19,7 @@ export default function App() {
         <Route path="initiative" element={<InitiativePage />} />
         <Route path="tables" element={<TablesPage />} />
         <Route path="npc-generator" element={<NpcGeneratorPage />} />
+        <Route path="character-creator" element={<CharacterCreatorPage />} />
       </Route>
     </Routes>
   )
@@ -35,6 +37,7 @@ function Shell() {
           <NavLink to="/initiative">Initiative</NavLink>
           <NavLink to="/tables">Tables</NavLink>
           <NavLink to="/npc-generator">NPC Generator</NavLink>
+          <NavLink to="/character-creator">Rollperson (DoD)</NavLink>
         </nav>
       </header>
       <main className="shell__main">
