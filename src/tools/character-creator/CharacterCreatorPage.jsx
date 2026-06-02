@@ -1,4 +1,4 @@
-import { useMemo, useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import { v4 as uuid } from 'uuid'
 import './characterCreator.css'
 import { useIndexedDBState } from '../../shared/hooks/useIndexedDBState.js'
@@ -7,11 +7,23 @@ import RosterBar from './components/RosterBar.jsx'
 
 const SYSTEM_KEY = 'character-creator-system'
 const clone = (x) => JSON.parse(JSON.stringify(x))
+const CHARACTER_KIND = 'rpg-tools-character'
+const safeFile = (s) => ((s || 'character').replace(/[^\w\-åäöÅÄÖ]+/g, '_').replace(/^_+|_+$/g, '').slice(0, 60) || 'character')
+
+function downloadJSON(filename, obj) {
+  const blob = new Blob([JSON.stringify(obj, null, 2)], { type: 'application/json' })
+  const url = URL.createObjectURL(blob)
+  const a = document.createElement('a')
+  a.href = url
+  a.download = filename
+  a.click()
+  setTimeout(() => URL.revokeObjectURL(url), 1000)
+}
 
 // Per-system creator: owns the character state for one game system and renders
 // the step wizard. Mounted with key={system.id} so switching systems re-runs
 // useIndexedDBState cleanly against that system's own storage key.
-function SystemRunner({ system }) {
+function SystemRunner({ system, pendingImport, onConsumePending, onCrossImport }) {
   const [state, setState, ready] = useIndexedDBState(
     system.storageKey, system.emptyState(), system.migrateState,
   )
@@ -21,6 +33,31 @@ function SystemRunner({ system }) {
   const [loadedId, setLoadedId] = useState(null)
   const [stepIdx, setStepIdx] = useState(0)
   const derived = useMemo(() => system.deriveCharacter(state), [system, state])
+
+  // Import a parsed payload into THIS system (state already known to match).
+  const importHere = (payload) => {
+    const st = system.migrateState(clone(payload.state))
+    const id = uuid()
+    setRoster((rs) => [{
+      id,
+      name: payload.name || (system.getName(st) || '').trim() || 'Imported',
+      summary: payload.summary || system.getSummary(st, system.deriveCharacter(st)),
+      savedAt: Date.now(),
+      state: clone(st),
+    }, ...rs])
+    setState(st)
+    setLoadedId(id)
+    setStepIdx(0)
+  }
+
+  // Cross-system import: once this runner mounts for the target system, apply it.
+  useEffect(() => {
+    if (!ready || !rosterReady || !pendingImport) return
+    if (pendingImport.system !== system.id) return
+    importHere(pendingImport)
+    onConsumePending()
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [ready, rosterReady, pendingImport])
 
   if (!ready || !rosterReady) {
     return <main className="cc__main"><p className="hint">Laddar…</p></main>
@@ -76,6 +113,45 @@ function SystemRunner({ system }) {
     if (id === loadedId) setLoadedId(null)
   }
 
+  // ── JSON export / import ──────────────────────────────────────────────────
+  const charPayload = (st) => ({
+    kind: CHARACTER_KIND,
+    system: system.id,
+    systemName: system.name,
+    version: 1,
+    exportedAt: new Date().toISOString(),
+    name: (system.getName(st) || '').trim() || 'Unnamed',
+    summary: system.getSummary(st, system.deriveCharacter(st)),
+    state: clone(st),
+  })
+  const handleExport = () => {
+    const p = charPayload(state)
+    downloadJSON(`${safeFile(p.name)}.${system.id}.json`, p)
+  }
+  const handleExportItem = (id) => {
+    const item = roster.find((r) => r.id === id)
+    if (!item) return
+    const p = charPayload(item.state)
+    downloadJSON(`${safeFile(item.name || p.name)}.${system.id}.json`, p)
+  }
+  // Validate + route a payload (possibly to another system's tab).
+  const handleImport = (payload) => {
+    if (!payload || payload.kind !== CHARACTER_KIND || !payload.state || !payload.system) {
+      alert('That file is not a valid character export.')
+      return
+    }
+    if (!systemById(payload.system) || payload.system !== systemById(payload.system).id) {
+      alert(`Unknown game system "${payload.system}" in that file.`)
+      return
+    }
+    if (payload.system !== system.id) {
+      onCrossImport(payload) // switch tabs, then import there
+      return
+    }
+    if (dirty && !confirm('Importing will replace the current unsaved character. Continue?')) return
+    importHere(payload)
+  }
+
   return (
     <>
       <div className="cc__subbar">
@@ -84,6 +160,7 @@ function SystemRunner({ system }) {
           roster={roster} loadedId={loadedId} dirty={dirty}
           onSave={handleSave} onSaveCopy={handleSaveCopy} onNew={handleNew}
           onLoad={handleLoad} onRename={handleRename} onDelete={handleDelete}
+          onExport={handleExport} onExportItem={handleExportItem} onImport={handleImport}
         />
       </div>
 
@@ -126,7 +203,15 @@ function SystemRunner({ system }) {
 
 export default function CharacterCreatorPage() {
   const [systemId, setSystemId, ready] = useIndexedDBState(SYSTEM_KEY, 'dod')
+  const [pendingImport, setPendingImport] = useState(null)
   const system = systemById(systemId)
+
+  // A character imported for another system: switch to its tab, then the target
+  // SystemRunner applies it on mount.
+  const handleCrossImport = (payload) => {
+    setPendingImport(payload)
+    setSystemId(payload.system)
+  }
 
   return (
     <div className="cc">
@@ -148,7 +233,15 @@ export default function CharacterCreatorPage() {
         </div>
       </header>
 
-      {ready && <SystemRunner key={system.id} system={system} />}
+      {ready && (
+        <SystemRunner
+          key={system.id}
+          system={system}
+          pendingImport={pendingImport}
+          onConsumePending={() => setPendingImport(null)}
+          onCrossImport={handleCrossImport}
+        />
+      )}
     </div>
   )
 }

@@ -1,8 +1,8 @@
-import { useState } from 'react'
+import { useRef, useState } from 'react'
 
 // Generic saved-character bar shown in the creator's sub-bar. Works for any
 // game system: the host passes already-computed name/summary strings per entry.
-function RosterRow({ item, isLoaded, onLoad, onRename, onDelete }) {
+function RosterRow({ item, isLoaded, onLoad, onRename, onDelete, onExport }) {
   const [editing, setEditing] = useState(false)
   const [draft, setDraft] = useState(item.name)
 
@@ -30,6 +30,7 @@ function RosterRow({ item, isLoaded, onLoad, onRename, onDelete }) {
       ) : (
         <button type="button" className="cc-roster__edit" title="Rename" onClick={() => { setDraft(item.name); setEditing(true) }}>✎</button>
       )}
+      <button type="button" className="cc-roster__edit" title="Export to JSON" onClick={() => onExport(item.id)}>⬇</button>
       <button
         type="button" className="cc-x" title="Delete"
         onClick={() => { if (confirm(`Delete ${item.name || 'this character'}?`)) onDelete(item.id) }}
@@ -41,8 +42,22 @@ function RosterRow({ item, isLoaded, onLoad, onRename, onDelete }) {
 export default function RosterBar({
   roster, loadedId, dirty,
   onSave, onSaveCopy, onNew, onLoad, onRename, onDelete,
+  onExport, onExportItem, onImport,
 }) {
   const [open, setOpen] = useState(false)
+  const fileRef = useRef(null)
+
+  const onFile = async (e) => {
+    const file = e.target.files?.[0]
+    e.target.value = '' // allow re-importing the same file
+    if (!file) return
+    try {
+      const data = JSON.parse(await file.text())
+      onImport(data)
+    } catch {
+      alert('Could not read that file — is it valid character JSON?')
+    }
+  }
 
   return (
     <div className="cc-roster">
@@ -54,6 +69,9 @@ export default function RosterBar({
           <button className="cc-btn cc-btn--sm cc-btn--ghost" onClick={onSaveCopy} title="Save as a new copy">Save copy</button>
         )}
         <button className="cc-btn cc-btn--sm cc-btn--ghost" onClick={onNew} title="Start a new character">＋ New</button>
+        <button className="cc-btn cc-btn--sm cc-btn--ghost" onClick={onExport} title="Export the current character to a JSON file">⬇ Export</button>
+        <button className="cc-btn cc-btn--sm cc-btn--ghost" onClick={() => fileRef.current?.click()} title="Import a character from a JSON file">⬆ Import</button>
+        <input ref={fileRef} type="file" accept=".json,application/json" hidden onChange={onFile} />
         <button
           className={`cc-btn cc-btn--sm cc-btn--ghost ${open ? 'is-on' : ''}`}
           onClick={() => setOpen((o) => !o)}
@@ -76,6 +94,7 @@ export default function RosterBar({
                 onLoad={(id) => { onLoad(id); setOpen(false) }}
                 onRename={onRename}
                 onDelete={onDelete}
+                onExport={onExportItem}
               />
             ))}
           </ul>
