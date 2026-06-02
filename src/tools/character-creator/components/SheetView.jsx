@@ -102,6 +102,8 @@ export default function SheetView({ state, derived }) {
                 <tr><th>Svärdshand</th><td>{state.svardshandRoll ? svardshand(state.svardshandRoll.total + state.svardshandBP) : '—'}</td></tr>
                 {state.synRoll && <tr><th>Syn</th><td>{synBonus >= 0 ? `+${synBonus}` : synBonus}</td></tr>}
                 {state.horselRoll && <tr><th>Hörsel</th><td>{horselBonus >= 0 ? `+${horselBonus}` : horselBonus}</td></tr>}
+                {(state.familjar || '').trim() && <tr><th>Familjar</th><td>{state.familjar}</td></tr>}
+                {state.vildMagi > 0 && <tr><th>Vild magi</th><td>{state.vildMagi} förmåga{state.vildMagi > 1 ? 'r' : ''}</td></tr>}
               </tbody>
             </table>
           </div>
@@ -146,6 +148,7 @@ export default function SheetView({ state, derived }) {
                     <li key={sp.id} className={sp.overCap ? 'is-over' : ''}>
                       <span className="cc-sheet-spell__niva">{sp.niva}</span> {sp.namn}
                       {sp.flags.length > 0 && ` (${sp.flags.join(', ')})`}
+                      {sp.disciplin && <em className="cc-sheet-spell__disc"> {sp.disciplin}</em>}
                       {' — '}{sp.rackvidd} · {sp.varaktighet}
                     </li>
                   ))}

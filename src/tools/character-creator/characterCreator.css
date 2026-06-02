@@ -446,10 +446,99 @@
 .cc-sheet-spells ul { margin: 0 0 4px; padding-left: 18px; }
 .cc-sheet-spell__niva { font-family: ui-monospace, monospace; font-weight: 700; color: #8a6d3b; }
 .cc-sheet-spells li.is-over { color: #8a2e1e; }
+.cc-sheet-spell__disc { font-style: normal; font-size: 10px; color: #8a6d3b; }
+/* Underskolor & MH-källmärkning */
+.cc-magic-disc { margin-top: 8px; padding-left: 8px; border-left: 2px solid #e3dcc8; }
+.cc-magic-disc h5 { margin: 0 0 4px; font-size: 12px; color: #6b5a3a; display: flex; align-items: baseline; gap: 8px; }
+.cc-spec-btn { margin-left: auto; border: 1px solid #c9b893; background: #fff; color: #8a6d3b; border-radius: 10px; padding: 1px 8px; font-size: 10px; cursor: pointer; }
+.cc-spec-btn.is-on { background: #f0e9d6; color: #5a4a2c; border-color: #a8946b; font-weight: 600; }
+.cc-src-badge--xs { font-size: 8px; padding: 0 3px; margin-left: 4px; vertical-align: middle; }
+.cc-magic-regnote { margin: 2px 0 8px; font-size: 11px; line-height: 1.4; padding: 5px 8px; background: #f6f0e2; border-left: 3px solid #c9b893; border-radius: 0 4px 4px 0; }
+.cc-namebtn { margin-top: 5px; border: 1px solid #c9b893; background: #f6f0e2; color: #6b5a33; border-radius: 6px; padding: 3px 9px; font-size: 11px; cursor: pointer; }
+.cc-namebtn:hover { background: #efe6cf; }
+.cc-vildmagi { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; margin-bottom: 10px; }
+.cc-familjar { display: flex; flex-direction: column; gap: 4px; }
+.cc-familjar input { border: 1px solid #c9b893; border-radius: 5px; padding: 6px 10px; font-size: 13px; max-width: 320px; }
 
 @media (max-width: 720px) {
   .cc__main { grid-template-columns: 1fr; }
   .cc-skills-grid, .cc-sheet__cols, .cc-eq-grid, .cc-magic-grid { grid-template-columns: 1fr; }
   .cc-skill-list, .cc-adv-grid { grid-template-columns: 1fr; }
   .cc-roster__list, .cc-roster__empty { width: 280px; }
+  .cc-attr-grid, .cc-sg-grid { grid-template-columns: 1fr 1fr; }
+}
+
+/* ── Paranoia (the Fifth Edition) ─────────────────────────────────────────── */
+.cc-stepper input { width: 44px; text-align: center; border: 1px solid #c9b893; border-radius: 6px; padding: 3px; font-weight: 700; }
+.cc-stepper--sm { gap: 4px; }
+input.is-bad { border-color: #c0392b; background: #fdeceb; }
+.cc-genmode { margin: 4px 0 16px; }
+
+.cc-pdq-name { display: flex; align-items: center; gap: 12px; flex-wrap: wrap; margin: 8px 0; padding: 10px 14px; background: #1d2230; border-radius: 8px; }
+.cc-pdq-name__label { font-size: 11px; letter-spacing: 1px; text-transform: uppercase; color: #8fa0c0; }
+.cc-pdq-name__value { font-family: 'Courier New', monospace; font-size: 22px; font-weight: 700; color: #ffd23f; letter-spacing: 1px; }
+
+.cc-attr-grid { grid-template-columns: repeat(4, 1fr); }
+.cc-attr-card { display: flex; flex-direction: column; gap: 6px; cursor: default; }
+.cc-attr-val { font-size: 20px; font-weight: 800; color: #c0392b; }
+.cc-attr-card .cc-card__desc { font-size: 11px; }
+
+.cc-sg-grid { grid-template-columns: repeat(4, 1fr); }
+.cc-sg-card { min-height: 64px; align-items: center; justify-content: center; text-align: center; }
+.cc-sg-train { margin-top: 18px; border-top: 1px solid #e3dcc8; padding-top: 14px; }
+.cc-sg-rolls { list-style: none; margin: 8px 0 0; padding: 0; display: flex; flex-direction: column; gap: 6px; }
+.cc-sg-slot { display: flex; align-items: flex-start; gap: 8px; }
+.cc-sg-slot > .cc-sg-roll { flex: 1; }
+.cc-sg-reroll { flex: none; margin-top: 5px; }
+.cc-sg-roll { display: flex; align-items: flex-start; gap: 10px; padding: 6px 10px; background: #f6f0e2; border-radius: 6px; }
+.cc-sg-roll.is-special { background: #fde7d2; border-left: 3px solid #d35400; }
+.cc-sg-roll__die { width: 26px; height: 26px; flex: none; display: inline-flex; align-items: center; justify-content: center; border-radius: 50%; background: #c0392b; color: #fff; font-weight: 700; font-size: 13px; }
+.cc-sg-roll__txt { flex: 1; font-size: 13px; padding-top: 3px; }
+.cc-sg-roll__note { color: #8a7c5a; }
+.cc-sg-rolls--nested { margin: 6px 0 0; padding-left: 8px; border-left: 2px dashed #d3b88a; gap: 4px; }
+.cc-sg-rolls--nested .cc-sg-roll { background: #fff5e6; padding: 4px 8px; }
+.cc-sg-rolls--nested .cc-sg-roll__die { width: 22px; height: 22px; font-size: 12px; background: #d35400; }
+
+.cc-skill-breakdown { font-size: 11px; color: #8a7c5a; margin-left: auto; padding: 0 8px; white-space: nowrap; }
+.cc-rank-n { min-width: 18px; text-align: center; font-weight: 700; }
+.cc-treason { background: #c0392b !important; color: #fff !important; }
+.cc-check { display: flex; align-items: center; gap: 8px; font-size: 13px; margin-top: 8px; }
+.cc-inline-num { display: flex; align-items: center; gap: 8px; font-size: 13px; margin-top: 8px; }
+.cc-inline-num input { width: 54px; border: 1px solid #c9b893; border-radius: 6px; padding: 4px 6px; }
+
+.cc-clearance-badge { display: inline-block; padding: 1px 8px; border-radius: 4px; color: #fff; font-weight: 700; font-size: 12px; }
+.cc-base-note { color: #8a7c5a; font-size: 11px; font-weight: 400; }
+.cc-empty { color: #8a7c5a; font-style: italic; }
+.cc-sheet--paranoia .cc-sheet__game { color: #c0392b; }
+.cc-sheet-notes { width: 100%; min-height: 70px; border: 1px solid #c9b893; border-radius: 6px; padding: 8px; font-family: inherit; font-size: 13px; resize: vertical; box-sizing: border-box; }
+
+/* ── Twilight: 2000 ──────────────────────────────────────────────────────── */
+.cc-t2k-arch-grid { grid-template-columns: repeat(3, 1fr); }
+.cc-t2k-arch { display: flex; flex-direction: column; gap: 6px; text-align: left; }
+.cc-t2k-arch .cc-card__mod { background: #ece4cf; }
+.cc-t2k-identity { margin-top: 18px; }
+.cc-t2k-rank { display: inline-flex; gap: 6px; align-items: center; }
+.cc-t2k-rank select { flex: 1; }
+.cc-attr-card.is-key { border-color: #6b7d3a; box-shadow: 0 0 0 1px #6b7d3a inset; }
+.cc-rank-letter { min-width: 26px; text-align: center; font-weight: 800; font-size: 18px; color: #5a6a2c; }
+.cc-t2k-derived { display: flex; gap: 12px; flex-wrap: wrap; margin-top: 8px; }
+.cc-t2k-track { font-weight: 700; margin-right: 10px; }
+.cc-t2k-track.is-ok { color: #2a7d3b; }
+.cc-t2k-track.is-fail { color: #b06a1a; }
+.cc-t2k-star { color: #6b7d3a; margin-right: 4px; }
+.cc-t2k-lvl { margin-left: auto; border: 1px solid #c9b893; border-radius: 6px; padding: 2px 4px; font-size: 12px; }
+.cc-t2k-reco { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; margin: 6px 0 14px; }
+.cc-t2k-reco__label { font-size: 13px; color: #6b6357; }
+.cc-chip { border: 1px solid #c9b893; background: #f6f0e2; color: #5a4a2c; border-radius: 14px; padding: 4px 12px; font-size: 13px; cursor: pointer; }
+.cc-chip.is-on { background: #6b7d3a; color: #fff; border-color: #57692c; font-weight: 600; }
+.cc-t2k-allspec { display: flex; flex-direction: column; gap: 4px; max-width: 360px; font-size: 13px; }
+.cc-t2k-allspec select { border: 1px solid #c9b893; border-radius: 6px; padding: 6px 8px; }
+.cc-t2k-nerve { margin-top: 18px; }
+.cc-t2k-profile { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; margin-bottom: 8px; }
+.cc-t2k-field { display: flex; flex-direction: column; gap: 4px; font-size: 13px; font-weight: 600; color: #4a4234; }
+.cc-t2k-field textarea, .cc-t2k-field input { border: 1px solid #c9b893; border-radius: 6px; padding: 7px 9px; font-family: inherit; font-size: 13px; font-weight: 400; resize: vertical; box-sizing: border-box; }
+.cc-sheet--t2k .cc-sheet__game { color: #6b7d3a; }
+@media (max-width: 720px) {
+  .cc-t2k-arch-grid { grid-template-columns: 1fr; }
+  .cc-t2k-profile { grid-template-columns: 1fr; }
 }

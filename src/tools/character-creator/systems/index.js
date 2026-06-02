@@ -3,6 +3,8 @@
 // IndexedDB key, so switching systems preserves each character independently.
 import dod from './dod.jsx'
 import wfrp from './wfrp.jsx'
+import paranoia from './paranoia.jsx'
+import t2k from './t2k.jsx'
 
-export const SYSTEMS = [dod, wfrp]
+export const SYSTEMS = [dod, wfrp, paranoia, t2k]
 export const systemById = (id) => SYSTEMS.find((s) => s.id === id) || SYSTEMS[0]

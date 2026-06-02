@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { epRaiseCost, SPELLS, MAGIC_SCHOOLS, MAGIC_FLAG_NAMES, spellLearnCost } from '../lib/dodData.js'
+import { epRaiseCost, SPELLS, MAGIC_DISCIPLINES, MAGIC_FLAG_NAMES, spellLearnCost } from '../lib/dodData.js'
 import { availableYrkesSkills } from '../lib/characterLibrary.js'
 
 export default function SkillsStep({ state, update, derived }) {
@@ -165,15 +165,49 @@ function MagicSection({ state, update, derived, avail }) {
     update({ spells: [...next] })
   }
 
-  // Visningsordning: Allmänna besvärjelser först, sedan kända skolor i tur.
-  const blocks = []
-  if (magic.capable) blocks.push({ id: 'allman', namn: 'Allmänna besvärjelser', fv: magic.allmanFv })
-  for (const s of magic.schools) blocks.push({ id: s.id, namn: s.namn, fv: s.fv })
+  const knownMainIds = new Set(magic.schools.map((s) => s.id))
+  const isSpecialised = (namn) => magic.specialiseringar.some((s) => s.namn === namn)
+  // Specialisering: högst en underskola per huvudskola.
+  const toggleSpecial = (disc) => {
+    const others = (state.specialiseringar || []).filter((n) => {
+      const d = MAGIC_DISCIPLINES.find((x) => x.namn === n)
+      return !d || d.skola !== disc.skola
+    })
+    update({ specialiseringar: isSpecialised(disc.namn) ? others : [...others, disc.namn] })
+  }
 
-  // Fallback: lärda besvärjelser vars skola inte längre är känd (t.ex. om
-  // magiskolan tagits bort) — visas så de kan avmarkeras i stället för att fastna.
-  const shownIds = new Set(blocks.flatMap((b) => SPELLS.filter((sp) => sp.skola === b.id).map((sp) => sp.id)))
+  // Visade besvärjelser: Allmänna (om magiker) + allt i kända huvudskolor
+  // (huvudskolan omfattar sina underskolor).
+  const shownIds = new Set(SPELLS.filter((sp) =>
+    (sp.skola === 'allman' && magic.capable) || knownMainIds.has(sp.skola),
+  ).map((sp) => sp.id))
   const orphanSpells = SPELLS.filter((sp) => chosen.has(sp.id) && !shownIds.has(sp.id))
+
+  // En besvärjelse-rad. effFv = det FV som gäller (halverat för underskolor).
+  const renderSpell = (sp, effFv) => {
+    const picked = chosen.has(sp.id)
+    const cost = spellLearnCost(sp.niva)
+    const locked = sp.niva > (effFv ?? 0)
+    const tooPricey = !picked && cost > derived.epRemaining
+    const disabled = !picked && (locked || tooPricey)
+    return (
+      <li key={sp.id} className={`cc-pick cc-spell ${picked ? 'is-picked' : ''} ${locked ? 'is-locked' : ''}`} title={sp.desc}>
+        <label className="cc-pick__row">
+          <input type="checkbox" checked={picked} disabled={disabled} onChange={() => toggle(sp.id)} />
+          <span className="cc-spell__niva" title="Skolvärde">{sp.niva}</span>
+          <span className="cc-pick__name">
+            {sp.namn}
+            {sp.flags.map((f) => <em key={f} className="cc-spell__flag" title={MAGIC_FLAG_NAMES[f]}>{f}</em>)}
+            {sp.source === 'MH' && <span className="cc-src-badge cc-src-badge--xs">MH</span>}
+            {sp.register && <span className="cc-src-badge cc-src-badge--xs" title="Registerbesvärjelse — beskrivs i källboken">reg</span>}
+            {sp.minimagi && <span className="cc-src-badge cc-src-badge--xs" title="Minimagi">M</span>}
+          </span>
+          <span className="cc-spell__cost">{locked ? `kräv FV ${sp.niva}` : `${cost} EP`}</span>
+        </label>
+        <span className="cc-pick__note">{sp.rackvidd} · {sp.varaktighet} — {sp.desc}</span>
+      </li>
+    )
+  }
 
   return (
     <div className="cc-magic">
@@ -188,41 +222,48 @@ function MagicSection({ state, update, derived, avail }) {
       ) : (
         <p className="cc-step__lede">
           Du kan lära besvärjelser vars skolvärde inte överstiger ditt FV i skolan.
-          Varje besvärjelse kostar EP efter sitt skolvärde. Flaggor:
+          Underskolor (t.ex. Djurhamn, Eldmagi) ingår i sin huvudskola — gratis upp
+          till FV {magic.freeDiscFv}; specialisera dig på en underskola per huvudskola
+          för att nå högre. Varje besvärjelse kostar EP efter sitt skolvärde. Flaggor:
           {' '}<em>F</em> = Fysisk, <em>K</em> = Kvick, <em>R</em> = Ritual.
         </p>
       )}
 
       <div className="cc-magic-grid">
-        {blocks.map((b) => {
-          const spells = SPELLS.filter((sp) => sp.skola === b.id)
-          if (!spells.length) return null
+        {magic.capable && (
+          <div className="cc-magic-school">
+            <h4>Allmänna besvärjelser <span className="cc-magic-fv">FV {magic.allmanFv}</span></h4>
+            <ul className="cc-pick-list">{SPELLS.filter((sp) => sp.skola === 'allman').map((sp) => renderSpell(sp, magic.allmanFv))}</ul>
+          </div>
+        )}
+        {magic.schools.map((b) => {
+          const mainSpells = SPELLS.filter((sp) => sp.skola === b.id && !sp.disciplin)
+          const disciplines = MAGIC_DISCIPLINES.filter((d) => d.skola === b.id)
           return (
             <div key={b.id} className="cc-magic-school">
               <h4>{b.namn} <span className="cc-magic-fv">FV {b.fv}</span></h4>
-              <ul className="cc-pick-list">
-                {spells.map((sp) => {
-                  const picked = chosen.has(sp.id)
-                  const cost = spellLearnCost(sp.niva)
-                  const locked = sp.niva > (b.fv ?? 0)
-                  const tooPricey = !picked && cost > derived.epRemaining
-                  const disabled = !picked && (locked || tooPricey)
-                  return (
-                    <li key={sp.id} className={`cc-pick cc-spell ${picked ? 'is-picked' : ''} ${locked ? 'is-locked' : ''}`} title={sp.desc}>
-                      <label className="cc-pick__row">
-                        <input type="checkbox" checked={picked} disabled={disabled} onChange={() => toggle(sp.id)} />
-                        <span className="cc-spell__niva" title="Skolvärde">{sp.niva}</span>
-                        <span className="cc-pick__name">
-                          {sp.namn}
-                          {sp.flags.map((f) => <em key={f} className="cc-spell__flag" title={MAGIC_FLAG_NAMES[f]}>{f}</em>)}
-                        </span>
-                        <span className="cc-spell__cost">{locked ? `kräv FV ${sp.niva}` : `${cost} EP`}</span>
-                      </label>
-                      <span className="cc-pick__note">{sp.rackvidd} · {sp.varaktighet} — {sp.desc}</span>
-                    </li>
-                  )
-                })}
-              </ul>
+              {b.register && (
+                <p className="cc-note cc-magic-regnote">Specialskola ur Magikerns Handboks register (s. 91–93). Besvärjelserna beskrivs i <strong>{b.sourceBook}</strong>; namnen är OCR-tolkade och kan innehålla fel.</p>
+              )}
+              {mainSpells.length > 0 && (
+                <ul className="cc-pick-list">{mainSpells.map((sp) => renderSpell(sp, b.fv))}</ul>
+              )}
+              {disciplines.map((d) => {
+                const discSpells = SPELLS.filter((sp) => sp.disciplin === d.namn)
+                if (!discSpells.length) return null
+                const spec = isSpecialised(d.namn)
+                const cap = spec ? b.fv : Math.min(b.fv, magic.freeDiscFv)
+                return (
+                  <div key={d.namn} className="cc-magic-disc">
+                    <h5>
+                      <span className="cc-magic-disc__namn">{d.namn}</span>
+                      <span className="cc-magic-fv" title={spec ? 'Specialiserad underskola — full huvudskole-FV' : `Underskola — gratis upp till FV ${magic.freeDiscFv}`}>FV {cap}</span>
+                      <button type="button" className={`cc-spec-btn ${spec ? 'is-on' : ''}`} onClick={() => toggleSpecial(d)} title="Specialisera dig på denna underskola (högst en per huvudskola)">{spec ? '★ specialiserad' : '☆ specialisera'}</button>
+                    </h5>
+                    <ul className="cc-pick-list">{discSpells.map((sp) => renderSpell(sp, cap))}</ul>
+                  </div>
+                )
+              })}
             </div>
           )
         })}

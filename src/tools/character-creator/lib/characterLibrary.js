@@ -6,8 +6,9 @@ import {
   RACES, PROFESSIONS, PRIMARY_SKILLS, SECONDARY_SKILLS,
   bcFromAttr, bodyLocationKP, skadebonus, forflyttning,
   socialStand, startkapital, AGE_CATEGORIES, epRaiseCost,
-  POWER_TIERS, TIER_EP, TIER_MAXFV, synHorsel,
-  MAGIC_SCHOOLS, SPELLS, spellById, spellLearnCost,
+  POWER_TIERS, TIER_EP, TIER_MAXFV, ALV_TIER_EP, ALV_TIER_MAXFV, synHorsel,
+  MAGIC_SCHOOLS, MAGIC_DISCIPLINES, SPELLS, spellById, spellLearnCost,
+  vildMagiCost, FAMILJAR_BP,
 } from './dodData.js'
 
 export const CHARACTER_KEY = 'dod-character-creator'
@@ -37,6 +38,9 @@ export function emptyState() {
     yrkesSkills: [], // [{ key, skillId, label }]
     fvBoost: {}, // { key: extraPointsBoughtWithEP }
     spells: [], // [spellId] — lärda besvärjelser (kostar EP, se spellLearnCost)
+    vildMagi: 0, // antal vilda förmågor (Magikerns Handbok); 0 = ingen vild magi
+    familjar: '', // bunden familjar (typ/namn); kostar FAMILJAR_BP om ifylld
+    specialiseringar: [], // [underskolanamn] — specialiserade underskolor (en per huvudskola)
     utseende: '',
     bakgrund: '',
     inventory: [], // [{ id, namn, typ, stat, pris, qty }]
@@ -50,6 +54,7 @@ export function migrateState(stored) {
     base: { ...emptyState().base, ...(stored.base || {}) },
     inventory: Array.isArray(stored.inventory) ? stored.inventory : [],
     spells: Array.isArray(stored.spells) ? stored.spells : [],
+    specialiseringar: Array.isArray(stored.specialiseringar) ? stored.specialiseringar : [],
   }
 }
 
@@ -59,10 +64,6 @@ export const profById = (id) => PROFESSIONS.find((p) => p.id === id) || null
 const primaryById = (id) => PRIMARY_SKILLS.find((s) => s.id === id) || null
 const secondaryById = (id) => SECONDARY_SKILLS.find((s) => s.id === id) || null
 export const skillById = (id) => primaryById(id) || secondaryById(id) || null
-const schoolByName = (label) => {
-  const norm = (label || '').trim().toLowerCase()
-  return MAGIC_SCHOOLS.find((s) => !s.general && s.namn.toLowerCase() === norm) || null
-}
 
 // Secondary skills a profession may choose as yrkesfärdigheter, with the
 // per-profession max count for group skills (språk, vapen, …).
@@ -106,8 +107,14 @@ export function deriveCharacter(state) {
   const prof = profById(state.yrkeId)
   const age = AGE_CATEGORIES.find((a) => a.id === state.alderId) || AGE_CATEGORIES[1]
   const tier = POWER_TIERS.find((t) => t.id === state.tier) || POWER_TIERS[0]
-  const epPool = (TIER_EP[tier.id] || TIER_EP.vanlig)[age.id]
-  const maxFV = (TIER_MAXFV[tier.id] || TIER_MAXFV.vanlig)[age.id]
+  // Alvsläkter använder fasta EP/Max-FV per kraftnivå (oberoende av ålder).
+  const isAlv = race?.source === 'alver'
+  const epPool = isAlv
+    ? (ALV_TIER_EP[tier.id] ?? ALV_TIER_EP.vanlig)
+    : (TIER_EP[tier.id] || TIER_EP.vanlig)[age.id]
+  const maxFV = isAlv
+    ? (ALV_TIER_MAXFV[tier.id] ?? ALV_TIER_MAXFV.vanlig)
+    : (TIER_MAXFV[tier.id] || TIER_MAXFV.vanlig)[age.id]
 
   // Syn & Hörsel (Krigarens Handbok) — bonus på vissa primära färdigheter.
   const synBonus = state.synRoll ? synHorsel(state.synRoll.total + (state.synBP || 0)).bonus : 0
@@ -208,33 +215,53 @@ export function deriveCharacter(state) {
   // ── Magi & besvärjelser ─────────────────────────────────────────────────
   // Kända magiskolor härleds ur de magiskole-yrkesfärdigheter rollpersonen valt
   // (etiketten = skolans namn). FV i skolan styr vilka besvärjelser som kan läras.
-  const knownSchools = []
+  // Magiskolorna är Animism, Elementarmagi och Mentalism. Underskolor (Djurhamn,
+  // Eldmagi, …) ingår i sin huvudskola: man behärskar dem gratis upp till FV 7,
+  // men kan specialisera sig på EN underskola per huvudskola för att nå högre.
+  const FREE_DISC_FV = 7
+  const knownMain = [] // [{ id, namn, fv }]
   for (const sk of skills) {
     if (sk.skillId !== 'magiskola') continue
-    const school = schoolByName(sk.label)
-    if (school && !knownSchools.some((k) => k.id === school.id)) {
-      knownSchools.push({ id: school.id, namn: school.namn, fv: sk.fv })
-    }
+    const main = MAGIC_SCHOOLS.find((s) => !s.general && s.namn.toLowerCase() === (sk.label || '').trim().toLowerCase())
+    if (main && !knownMain.some((k) => k.id === main.id)) knownMain.push({ id: main.id, namn: main.namn, fv: sk.fv, register: !!main.register, sourceBook: main.sourceBook || null })
   }
-  // Allmänna besvärjelser styrs av högsta magiskole-FV.
-  const allmanFv = knownSchools.length ? Math.max(...knownSchools.map((s) => s.fv)) : null
-  const schoolFv = (skolaId) =>
-    skolaId === 'allman' ? allmanFv : (knownSchools.find((s) => s.id === skolaId)?.fv ?? null)
+  const mainFv = (id) => knownMain.find((s) => s.id === id)?.fv ?? null
+  const allmanFv = knownMain.length ? Math.max(...knownMain.map((s) => s.fv)) : null
+  // Behåll bara specialiseringar i underskolor vars huvudskola är känd, högst en per huvudskola.
+  const specialiseringar = []
+  for (const namn of state.specialiseringar || []) {
+    const disc = MAGIC_DISCIPLINES.find((d) => d.namn === namn)
+    if (!disc || mainFv(disc.skola) == null) continue
+    if (specialiseringar.some((s) => s.skola === disc.skola)) continue
+    specialiseringar.push({ namn: disc.namn, skola: disc.skola })
+  }
+  const isSpecialised = (discNamn) => specialiseringar.some((s) => s.namn === discNamn)
+  // FV som styr en besvärjelse. Underskola: huvudskolans FV om specialiserad,
+  // annars min(huvudskolans FV, 7).
+  const spellGovFv = (sp) => {
+    if (sp.skola === 'allman') return allmanFv
+    const m = mainFv(sp.skola)
+    if (m == null) return null
+    if (!sp.disciplin) return m
+    return isSpecialised(sp.disciplin) ? m : Math.min(m, FREE_DISC_FV)
+  }
 
   const magicSpells = []
   let spellEp = 0
   for (const id of state.spells || []) {
     const sp = spellById(id)
     if (!sp) continue
-    const govFv = schoolFv(sp.skola)
+    const govFv = spellGovFv(sp)
     const cost = spellLearnCost(sp.niva)
     const overCap = govFv == null || sp.niva > govFv
     spellEp += cost
     magicSpells.push({ ...sp, govFv, cost, overCap })
   }
   const magic = {
-    capable: knownSchools.length > 0,
-    schools: knownSchools,
+    capable: knownMain.length > 0,
+    schools: knownMain,
+    specialiseringar,
+    freeDiscFv: FREE_DISC_FV,
     allmanFv,
     spells: magicSpells,
     spellEp,
@@ -250,6 +277,8 @@ export function deriveCharacter(state) {
   bpSpent += (state.socialBP || 0) + (state.kapitalBP || 0) + (state.svardshandBP || 0)
   bpSpent += (state.synBP || 0) + (state.horselBP || 0)
   for (const f of state.formagor) bpSpent += f.bp || 0
+  bpSpent += vildMagiCost(state.vildMagi || 0)
+  if ((state.familjar || '').trim()) bpSpent += FAMILJAR_BP
   const bpRemaining = tier.bp - bpSpent
 
   const epSpent = epCost.reduce((a, b) => a + b, 0) + spellEp
@@ -277,6 +306,8 @@ export function deriveCharacter(state) {
     baseKapital, slutKapital, kapitalTotal, skills,
     bpSpent, bpRemaining, epSpent, epRemaining,
     utrustningKostnad, silverKvar, magic,
+    isMagiker: !!(prof && (prof.magic || prof.source === 'mh')),
+    isAlv,
     kravFail, yrkesLimit, yrkesChosen, overFV, maxFV,
     valid:
       bpRemaining >= 0 && epRemaining >= 0 && kravFail.length === 0 &&

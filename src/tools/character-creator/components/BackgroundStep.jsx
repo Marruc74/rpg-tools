@@ -1,7 +1,8 @@
 import { useState } from 'react'
 import { v4 as uuid } from 'uuid'
 import {
-  AGE_CATEGORIES, AGE_BY_RACE, rollDice, lookupFormaga, svardshand, synHorsel,
+  AGE_CATEGORIES, AGE_BY_RACE, rollDice, lookupFormaga, lookupFormagaMagiker, lookupFormagaAlv,
+  svardshand, synHorsel, vildMagiCost, FAMILJAR_BP,
 } from '../lib/dodData.js'
 import { raceById } from '../lib/characterLibrary.js'
 
@@ -47,11 +48,14 @@ export default function BackgroundStep({ state, update, derived }) {
   const formageMax = derived.tier.formageRolls
   const formageFull = state.formagor.length >= formageMax
 
+  const lookup = derived.isAlv
+    ? (total) => lookupFormagaAlv(total, state.raceId)
+    : derived.isMagiker ? lookupFormagaMagiker : lookupFormaga
   const rollFormaga = (bp) => {
     const dice = rollDice(2, 20)
     const total = dice + bp
     update({
-      formagor: [...state.formagor, { id: uuid(), bp, dice, total, text: lookupFormaga(total) }],
+      formagor: [...state.formagor, { id: uuid(), bp, dice, total, text: lookup(total) }],
     })
   }
 
@@ -143,8 +147,8 @@ export default function BackgroundStep({ state, update, derived }) {
 
       {/* Särskilda förmågor */}
       <section className="cc-bg-sec">
-        <h3>Särskilda förmågor <span className="cc-count">{state.formagor.length} / {formageMax} slag</span></h3>
-        <p className="cc-note">Slå 2T20 och lägg till de BP du vill spendera. Din kraftnivå ger {formageMax} slag. Högre resultat ger bättre förmågor.</p>
+        <h3>Särskilda förmågor {derived.isAlv ? <span className="cc-src-badge">Alver</span> : derived.isMagiker && <span className="cc-src-badge">MH</span>} <span className="cc-count">{state.formagor.length} / {formageMax} slag</span></h3>
+        <p className="cc-note">Slå 2T20 och lägg till de BP du vill spendera. Din kraftnivå ger {formageMax} slag. Högre resultat ger bättre förmågor.{derived.isAlv ? ' Som alv slår du på Alvers förmågetabell — släktspecifika resultat ingår.' : derived.isMagiker ? ' Som magiker slår du på Magikerns Handboks förmågetabell.' : ''}</p>
         <FormagaRoller onRoll={rollFormaga} disabled={formageFull} />
         <ul className="cc-formaga-list">
           {state.formagor.map((f) => (
@@ -156,6 +160,30 @@ export default function BackgroundStep({ state, update, derived }) {
           ))}
         </ul>
       </section>
+
+      {/* Vild magi & familjar (Magikerns Handbok) */}
+      {derived.isMagiker && (
+        <section className="cc-bg-sec">
+          <h3>Vild magi & familjar <span className="cc-src-badge">MH</span></h3>
+          <div className="cc-vildmagi">
+            <span className="cc-roll__label">Vild magi</span>
+            <div className="cc-stepper cc-stepper--sm">
+              <button onClick={() => update({ vildMagi: Math.max(0, (state.vildMagi || 0) - 1) })} disabled={(state.vildMagi || 0) <= 0}>−</button>
+              <span>{state.vildMagi || 0}</span>
+              <button onClick={() => update({ vildMagi: Math.min(3, (state.vildMagi || 0) + 1) })} disabled={(state.vildMagi || 0) >= 3}>+</button>
+            </div>
+            <span className="cc-roll__hint">{(state.vildMagi || 0) > 0 ? `${(state.vildMagi || 0)} vild(a) förmåga(or) — ${vildMagiCost(state.vildMagi || 0)} BP` : 'Bär ingen vild magi (15 BP för första, +10 BP per ytterligare).'}</span>
+          </div>
+          <label className="cc-familjar">
+            <span className="cc-roll__label">Familjar ({FAMILJAR_BP} BP om ifylld)</span>
+            <input
+              value={state.familjar || ''}
+              placeholder="t.ex. Korp, Katt, Homunculus…"
+              onChange={(e) => update({ familjar: e.target.value })}
+            />
+          </label>
+        </section>
+      )}
 
       {/* Utseende & bakgrund */}
       <section className="cc-bg-sec">

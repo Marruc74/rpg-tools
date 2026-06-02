@@ -1,4 +1,4 @@
-import { RACES, ATTRS, POWER_TIERS } from '../lib/dodData.js'
+import { RACES, ATTRS, POWER_TIERS, randomAlvName } from '../lib/dodData.js'
 
 function fmtMod(n) {
   if (n > 0) return `+${n}`
@@ -7,6 +7,8 @@ function fmtMod(n) {
 }
 
 export default function RaceStep({ state, update }) {
+  const selRace = RACES.find((r) => r.id === state.raceId)
+  const showAlvName = selRace && (selRace.source === 'alver' || selRace.id === 'alv' || selRace.id === 'halvalv')
   return (
     <div className="cc-step">
       <h2>Grunduppgifter & ras</h2>
@@ -33,6 +35,9 @@ export default function RaceStep({ state, update }) {
       <div className="cc-identity">
         <label>Namn
           <input value={state.namn} onChange={(e) => update({ namn: e.target.value })} placeholder="Rollpersonens namn" />
+          {showAlvName && (
+            <button type="button" className="cc-namebtn" onClick={() => update({ namn: randomAlvName() })} title="Slumpa ett alviskt namn (Alver s. 34)">⚲ Alviskt namn</button>
+          )}
         </label>
         <label>Spelare
           <input value={state.spelare} onChange={(e) => update({ spelare: e.target.value })} placeholder="Ditt namn" />
@@ -52,7 +57,10 @@ export default function RaceStep({ state, update }) {
           return (
             <button key={r.id} className={`cc-card ${sel ? 'is-selected' : ''}`} onClick={() => update({ raceId: r.id })}>
               <div className="cc-card__head">
-                <span className="cc-card__name">{r.namn}</span>
+                <span className="cc-card__name">
+                  {r.namn}
+                  {r.source === 'alver' && <span className="cc-src-badge cc-src-badge--xs" title="Alvsläkt ur Alver (Äventyrsspel)">Alver</span>}
+                </span>
                 <span className="cc-card__cost">{r.cost} BP</span>
               </div>
               <div className="cc-card__mods">

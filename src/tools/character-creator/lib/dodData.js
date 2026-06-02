@@ -29,6 +29,12 @@ export const TIER_MAXFV = {
   extraordinar: { ung: 15, mogen: 17, medelalders: 19, gammal: 20 },
   hjalte: { ung: 17, mogen: 19, medelalders: 20, gammal: 20 },
 }
+// Alver (Äventyrsspel) använder fasta EP- och Max-FV-värden per kraftnivå,
+// oberoende av ålder (Alver s. 22). BP (125/150/175) och antal förmågeslag
+// (1/2/3) är desamma som POWER_TIERS ovan. Dessa tillämpas när en alvsläkt
+// (RACES[*].source === 'alver') är vald.
+export const ALV_TIER_EP = { vanlig: 150, extraordinar: 200, hjalte: 250 }
+export const ALV_TIER_MAXFV = { vanlig: 15, extraordinar: 17, hjalte: 19 }
 
 // The six bought grundegenskaper, in sheet order. STO is handled separately
 // (it is not bought from this cost table — see RACES[*].sto and STO_* below).
@@ -81,6 +87,65 @@ export const RACES = [
     lang: ['Alviska', 'Ett människospråk'],
     desc: 'Odödliga, visa och smidiga med kattögon och spetsiga öron. Ofta magiker eller utbygdsjägare. Sover bara var 20:e timme.',
   },
+  // ── Alvsläkter (Alver, Äventyrsspel) ──────────────────────────────────────
+  // De sex alvsläkterna med egna grundegenskapsmodifikationer (Alver s. 22).
+  // Mörkersyn/kattögon och alvernas övriga särdrag beskrivs i texten; de
+  // räcktabellsbundna syn-/hörselbonusarna är här satta till en representativ
+  // automatisk FV-bonus i linje med grundreglernas alv.
+  {
+    id: 'grottalv', namn: 'Grottalv', cost: 25, source: 'alver',
+    mod: { STY: -1, FYS: 1, SMI: 2, INT: 3, PSY: 1, KAR: 2 },
+    sto: { min: 7, max: 17, normal: 12 },
+    bonus: [{ skill: 'Upptäcka fara', fv: 4 }, { skill: 'Lyssna', fv: 4 }, { skill: 'Geologi', fv: 3 }],
+    social: 1,
+    lang: ['Alviska', 'Ett människospråk'],
+    desc: 'Alvsläkt som lämnat naturens skönhet för att leva djupt under bergen i hallar och smedjor upplysta av magiska eldar. Skarp mörkersyn, känsla för metall och sten. Besläktad med grå- och skogsalver.',
+  },
+  {
+    id: 'graalv', namn: 'Gråalv', cost: 25, source: 'alver',
+    mod: { STY: -1, FYS: 2, SMI: 1, INT: 3, PSY: 1, KAR: 2 },
+    sto: { min: 5, max: 15, normal: 10 },
+    bonus: [{ skill: 'Simma', fv: 6 }, { skill: 'Sjökunnighet', fv: 5 }, { skill: 'Navigera', fv: 4 }, { skill: 'Upptäcka fara', fv: 3 }],
+    social: 1,
+    lang: ['Alviska', 'Ett människospråk'],
+    desc: 'Havets alver som lever på väldiga skepp ute på de oändliga oceanerna. Kortare och mörkhyade, mästerliga sjöfarare och simmare. Blir lätt "sjösjuka" av att vistas på land.',
+  },
+  {
+    id: 'hogalv', namn: 'Högalv', cost: 65, source: 'alver',
+    mod: { STY: -2, FYS: -3, SMI: 0, INT: 10, PSY: 10, KAR: 2 },
+    sto: { min: 13, max: 23, normal: 18 },
+    bonus: [{ skill: 'Upptäcka fara', fv: 4 }, { skill: 'Lyssna', fv: 4 }],
+    social: 2,
+    lang: ['Alviska', 'Ett människospråk'],
+    desc: 'Uråldrig, tillbakadragen alvsläkt i fönsterlösa torn ute på ödsliga slätter. Enormt intelligenta och visa telepater och mästermagiker (behärskar minst två magiskolor). Egentligen inte avsedda som spelarrollpersoner — kräver SL:s tillåtelse.',
+  },
+  {
+    id: 'injir', namn: 'Injir', cost: 25, source: 'alver',
+    mod: { STY: 0, FYS: 1, SMI: 2, INT: 3, PSY: 0, KAR: 1 },
+    sto: { min: 7, max: 17, normal: 12 },
+    bonus: [{ skill: 'Rida', fv: 6 }, { skill: 'Upptäcka fara', fv: 4 }, { skill: 'Lyssna', fv: 4 }],
+    social: 1,
+    lang: ['Alviska', 'Ett människospråk'],
+    desc: 'Hästbröderna — en av de större alvsläkterna som lever med sina hästar på vidsträckta slätter och i djupa skogar. Legendariska ryttare och de mest krigiska alverna. Tål temperaturer från −40 °C till +90 °C utan men.',
+  },
+  {
+    id: 'morkeralv', namn: 'Mörkeralv', cost: 25, source: 'alver',
+    mod: { STY: 2, FYS: 0, SMI: 1, INT: 3, PSY: 3, KAR: -1 },
+    sto: { min: 7, max: 22, normal: 15 },
+    bonus: [{ skill: 'Upptäcka fara', fv: 4 }, { skill: 'Lyssna', fv: 4 }, { skill: 'Smyga', fv: 4 }],
+    social: 1,
+    lang: ['Alviska', 'Ett människospråk'],
+    desc: 'Grymma alver i borgar högt i bergen som förslavar människor, alver och dvärgar. Starkast av alverna, skarp mörkersyn, högmodiga och svekfulla. I strid grips de av blodtörst.',
+  },
+  {
+    id: 'skogsalv', namn: 'Skogsalv', cost: 30, source: 'alver',
+    mod: { STY: 0, FYS: 0, SMI: 3, INT: 3, PSY: 1, KAR: 2 },
+    sto: { min: 8, max: 18, normal: 13 },
+    bonus: [{ skill: 'Gömma sig', fv: 6 }, { skill: 'Kamouflage', fv: 6 }, { skill: 'Smyga', fv: 4 }, { skill: 'Spåra', fv: 3 }],
+    social: 0,
+    lang: ['Alviska', 'Ett människospråk'],
+    desc: 'Skogens alver (satari) som lever som jägare djupt i utbygdernas väldiga skogar och bygger sina boningar i trädkronorna. Grönskimrande hår och naturfärgade kläder — nästan omöjliga att upptäcka i skog. +5 i CL på Gömma sig och Kamouflage i skogsmiljö.',
+  },
   {
     id: 'anka', namn: 'Anka', cost: 0,
     mod: { STY: -4, FYS: 2, SMI: 2, INT: 0, PSY: 0, KAR: -3 },
@@ -132,6 +197,38 @@ export const RACES = [
 // krav: minsta tillåtna (rasmodifierade, åldersmodifierade) grundegenskapsvärde.
 // formaga: yrkesförmåga (text). yrkesCount: antal yrkesfärdigheter man väljer.
 // magic: får lära besvärjelser från start.
+// Magikerns grunduppsättning yrkesfärdigheter (motsvarar grundreglernas Magiker
+// plus de magikerfärdigheter alla magiker har enligt Magikerns Handbok). De nya
+// specialistyrkena nedan bygger sina pooler på denna lista + några extra.
+const MAGIKER_BASE_SKILLS = [
+  'alkemi', 'astrologi', 'djurhelning', 'djurtraning', 'drogkunskap', 'giftkunskap',
+  'kanna-magi', 'kunskap-demoner', 'kunskap-magi', 'kunskap-ododa', 'magisk-kanalisering',
+  'magiskola', 'rakning', 'sprakkunskap', 'zoologi', 'ortkunskap', 'geografi',
+  'kulturkannedom', 'simma', 'trastav', 'provsmaka', 'lasa-skriva-frammande',
+  'tala-frammande', 'forkladnad', 'tortyr',
+  // Nya magikerfärdigheter (Magikerns Handbok) som alla magiker kan välja:
+  'improviserad-magi', 'kunskap-alkemi', 'kunskap-spadom', 'magistudier', 'minimagi',
+  'pergament', 'memorera-besvarjelse',
+]
+const MAGIKER_GROUP_PICKS = { magiskola: 1, 'tala-frammande': 3, 'lasa-skriva-frammande': 3 }
+
+// Alvyrkenas möjliga yrkesfärdigheter (Alver s. 27–31). Bokens listor är här
+// anpassade till verktygets befintliga färdighets-id:n; de få färdigheter som
+// saknar motsvarighet (t.ex. Manövrera, Avvärja) är utelämnade.
+const ALV_WARRIOR_POOL = [
+  'vapenfardigheter', 'tala-frammande', 'anfall-bakifran', 'avvapna', 'dans', 'djurhelning',
+  'djurtraning', 'dolk', 'dra-vapen', 'forhora', 'geografi', 'giftkunskap', 'hantverk',
+  'hantera-fallor', 'kamouflage', 'knopar', 'kulturkannedom', 'orientering', 'simma',
+  'sla-medvetslos', 'slass-till-hast', 'strategi', 'stridskonster', 'taktik', 'teckensprak',
+  'tva-vapen', 'zoologi', 'ortkunskap', 'overlevnad',
+]
+const ALV_RANGER_POOL = [
+  'vapenfardigheter', 'tala-frammande', 'brottas-med-djur', 'djurhelning', 'djurtraning', 'dolk',
+  'drogkunskap', 'fly', 'geografi', 'geologi', 'giftkunskap', 'hantverk', 'hantera-fallor',
+  'kamouflage', 'knopar', 'kulturkannedom', 'orientering', 'simma', 'spa-vader', 'zoologi',
+  'ortkunskap', 'overlevnad',
+]
+
 export const PROFESSIONS = [
   {
     id: 'bard', namn: 'Bard', krav: { KAR: 14 }, yrkesCount: 12,
@@ -331,6 +428,139 @@ export const PROFESSIONS = [
     groupPicks: { vapenfardigheter: 1 },
     pool: ['vapenfardigheter', 'administration', 'dolk', 'dra-vapen', 'geografi', 'hantverk', 'hasardspel', 'knopar', 'kulturkannedom', 'lasdyrkning', 'muta', 'teckensprak', 'trastav', 'undre-varlden', 'kamouflage', 'sla-medvetslos', 'tigga', 'dolja', 'ljuga', 'provsmaka', 'fly', 'skugga', 'fingerfardighet', 'haleri'],
   },
+  // ── Nya magikeryrken ur Magikerns Handbok (Target Games, 1993) ──
+  // Specialiserade magiker. Alla kan lära magiskola + besvärjelser (magic: true)
+  // och väljer 9 yrkesfärdigheter ur en pool byggd på MAGIKER_BASE_SKILLS.
+  {
+    id: 'akademiker', namn: 'Akademiker', source: 'mh', krav: { INT: 15, PSY: 14 }, yrkesCount: 9, magic: true,
+    formaga: 'Kan känna igen och avläsa magiska artefakter och förnimma magiska krafter (slag mot INT eller halva PSY).',
+    groupPicks: MAGIKER_GROUP_PICKS,
+    pool: [...MAGIKER_BASE_SKILLS, 'historia', 'kunskap-andeplanet', 'kunskap-overnaturliga', 'kunskap-teknologi'],
+  },
+  {
+    id: 'alkemist', namn: 'Alkemist', source: 'mh', krav: { SMI: 12, FYS: 13, INT: 12, PSY: 14 }, yrkesCount: 9, magic: true,
+    formaga: 'Mästare på alkemi — kan i ett välutrustat laboratorium framställa elixir, salvor och preparat.',
+    groupPicks: MAGIKER_GROUP_PICKS,
+    pool: [...MAGIKER_BASE_SKILLS, 'kunskap-teknologi'],
+  },
+  {
+    id: 'andebesvarjare', namn: 'Andebesvärjare', source: 'mh', krav: { INT: 12, PSY: 15 }, yrkesCount: 9, magic: true,
+    formaga: 'Specialist på att frammana, besvärja och kommunicera med andar och andevärldens väsen.',
+    groupPicks: MAGIKER_GROUP_PICKS,
+    pool: [...MAGIKER_BASE_SKILLS, 'ritualmagi', 'kunskap-andeplanet', 'kunskap-overnaturliga'],
+  },
+  {
+    id: 'artefaktmagiker', namn: 'Artefaktmagiker', source: 'mh', krav: { STY: 11, SMI: 13, INT: 12, PSY: 14 }, yrkesCount: 9, magic: true,
+    formaga: 'Kan tillverka magiska föremål och vapen genom att lägga in besvärjelser i dem.',
+    groupPicks: MAGIKER_GROUP_PICKS,
+    pool: [...MAGIKER_BASE_SKILLS, 'kunskap-teknologi'],
+  },
+  {
+    id: 'druid', namn: 'Druid', source: 'mh', krav: { INT: 12, PSY: 14, KAR: 12 }, yrkesCount: 9, magic: true,
+    formaga: 'Naturmagiker som lever i samklang med naturen; behärskar Animism och dess underskolor.',
+    groupPicks: MAGIKER_GROUP_PICKS,
+    pool: [...MAGIKER_BASE_SKILLS, 'spa-vader', 'overlevnad', 'orientering'],
+  },
+  {
+    id: 'bastardmagiker', namn: 'Bastardmagiker', source: 'mh', krav: { INT: 12, PSY: 14 }, yrkesCount: 9, magic: true,
+    formaga: 'Behärskar en kombination av två yrken eller magiskolor; krav och förmågor varierar (SL avgör).',
+    groupPicks: MAGIKER_GROUP_PICKS,
+    pool: [...MAGIKER_BASE_SKILLS],
+  },
+  {
+    id: 'larling', namn: 'Lärling', source: 'mh', krav: { SMI: 12, INT: 12, PSY: 14 }, yrkesCount: 9, magic: true,
+    formaga: 'Magikerlärling i början av sin bana — billigare att lära men med begränsad tillgång till mästarens kunskap.',
+    groupPicks: MAGIKER_GROUP_PICKS,
+    pool: [...MAGIKER_BASE_SKILLS],
+  },
+  {
+    id: 'nekromantiker', namn: 'Nekromantiker', source: 'mh', krav: { FYS: 13, INT: 12, PSY: 15 }, yrkesCount: 9, magic: true,
+    formaga: 'Behärskar de dödas och förruttnelsens magi; kan väcka och behärska odöda.',
+    groupPicks: MAGIKER_GROUP_PICKS,
+    pool: [...MAGIKER_BASE_SKILLS, 'kunskap-animal-magnetism', 'kunskap-andeplanet'],
+  },
+  {
+    id: 'arkemagiker', namn: 'Ärkemagiker', source: 'mh', krav: { INT: 15, PSY: 15 }, yrkesCount: 9, magic: true,
+    formaga: 'Mästarmagiker som kan lära sig ritualer och de mäktigaste besvärjelserna.',
+    groupPicks: MAGIKER_GROUP_PICKS,
+    pool: [...MAGIKER_BASE_SKILLS, 'ritualmagi', 'kunskap-overnaturliga', 'kunskap-andeplanet'],
+  },
+  // ── Alvyrken (Alver, Äventyrsspel s. 27–31) ───────────────────────────────
+  // Egna alvyrken. Yrkesförmågorna är sammanfattade; antal yrkesfärdigheter och
+  // poolerna är anpassade till verktyget (boken anger främst ett maxtak för
+  // vapenfärdigheter per yrke).
+  {
+    id: 'alv-dodsbringare', namn: 'Dödsbringare', source: 'alver', krav: { STY: 15, SMI: 15, FYS: 14, INT: 14 }, yrkesCount: 10,
+    formaga: 'Fruktad alvkrigare som ägnat livet åt att jaga svartfolk. Inför striden mässar han en dödssång som ger honom bonus i strid mot svartfolk och annat ont. Har även alvkrigarens förmåga att känna svartfolks närvaro.',
+    groupPicks: { vapenfardigheter: 8, 'tala-frammande': 1 },
+    pool: [...ALV_WARRIOR_POOL, 'barsarkagang', 'harskri'],
+  },
+  {
+    id: 'alv-dodsdansare', namn: 'Dödsdansare', source: 'alver', krav: { SMI: 18, FYS: 15, INT: 17 }, yrkesCount: 10,
+    formaga: 'Ensam alv som mästrar dödsdansen — en dödlig stridsteknik. Hans otroliga förmåga att lära in vapentekniker gör att stridsteknikerna kostar mindre för honom. Har även alvkrigarens vanliga yrkesförmåga.',
+    groupPicks: { vapenfardigheter: 6, 'tala-frammande': 1 },
+    pool: [...ALV_WARRIOR_POOL, 'akrobatik'],
+  },
+  {
+    id: 'alv-hantverkare', namn: 'Hantverkare', source: 'alver', krav: { SMI: 15 }, yrkesCount: 10,
+    formaga: 'Alvisk hantverkare vars föremål alltid blir utomordentligt vackra — baschansen räknas alltid som ett (1) steg högre när det gäller föremålens skönhet, särskilt smycken och prydnadsföremål.',
+    groupPicks: { 'tala-frammande': 1 },
+    pool: ['tala-frammande', 'dans', 'djurhelning', 'djurtraning', 'dolk', 'drogkunskap', 'geografi', 'geologi', 'giftkunskap', 'hantverk', 'hantera-fallor', 'kamouflage', 'knopar', 'kulturkannedom', 'kunskap-magi', 'orientering', 'simma', 'spela-instrument', 'zoologi', 'ortkunskap', 'overlevnad'],
+  },
+  {
+    id: 'alv-helare', namn: 'Helare', source: 'alver', krav: { INT: 14, PSY: 14 }, yrkesCount: 10,
+    formaga: 'Botar med handpåläggning (läker 1 KP/SR mot PSY-poäng) och kan driva ut infektioner och gift. Mörkeralvernas helare kan istället tillfoga skada med samma teknik.',
+    groupPicks: { 'tala-frammande': 1 },
+    pool: ['tala-frammande', 'alkemi', 'astrologi', 'djurhelning', 'drogkunskap', 'geografi', 'giftkunskap', 'hantverk', 'kulturkannedom', 'kunskap-magi', 'lakekonst', 'massage', 'orientering', 'provsmaka', 'simma', 'zoologi', 'ortkunskap', 'overlevnad'],
+  },
+  {
+    id: 'alv-injirkrigare', namn: 'Injirkrigare', source: 'alver', krav: { FYS: 12, SMI: 12 }, yrkesCount: 10,
+    formaga: 'Injirsläktets mest vildsinta, barbariska krigare som slåss i blodrus. Har alvkrigarens yrkesförmåga och dessutom 1T3−1 kraftfulla tatueringar med egna verkningar.',
+    groupPicks: { vapenfardigheter: 6, 'tala-frammande': 1 },
+    pool: [...ALV_WARRIOR_POOL, 'akrobatik', 'barsarkagang', 'brottas-med-djur', 'harskri'],
+  },
+  {
+    id: 'alv-jagare', namn: 'Jägare', source: 'alver', krav: { FYS: 14, SMI: 15, PSY: 12 }, yrkesCount: 10,
+    formaga: 'Ensam jägare för vilken naturens röst alltid talar. Mästare på att spåra, lägga försåt och förlita sig på dolda fällor — en utveckling av utbygdsjägaren.',
+    groupPicks: { vapenfardigheter: 6, 'tala-frammande': 1 },
+    pool: ALV_RANGER_POOL,
+  },
+  {
+    id: 'alv-krigare', namn: 'Krigare', source: 'alver', krav: { STY: 12, FYS: 12, SMI: 15 }, yrkesCount: 10,
+    formaga: 'Alvkrigare med krigarens vanliga yrkesförmåga, samt förmågan att med ett PSY-slag känna närvaron av svartfolk och drägg inom 100 meter (svårare ju längre bort).',
+    groupPicks: { vapenfardigheter: 6, 'tala-frammande': 1 },
+    pool: ALV_WARRIOR_POOL,
+  },
+  {
+    id: 'alv-mistali', namn: 'Mistali', source: 'alver', krav: { STY: 14, FYS: 16, PSY: 14 }, yrkesCount: 10,
+    formaga: 'Gråalvernas främsta krigare, mästare på snabba blodiga sjöräder. Har outtröttlig uthållighet i vatten: simmar i princip hur långt som helst, dubbelt så snabbt som en olastad människa, och håller andan i upp till fem minuter. Har även krigarens yrkesförmåga.',
+    groupPicks: { vapenfardigheter: 6, 'tala-frammande': 1 },
+    pool: [...ALV_WARRIOR_POOL, 'sjokunnighet', 'navigera'],
+  },
+  {
+    id: 'alv-morkerbroder', namn: 'Mörkerbroder', source: 'alver', krav: { STY: 17, FYS: 15, SMI: 14, PSY: 15 }, yrkesCount: 10,
+    formaga: 'Mörkeralvernas mest blodtörstiga krigare ur Blodiga kallens brödraskap. Synen av en mörkerbroder kan Skräckslå (1/0) motståndare. Har krigarens och alvkrigarens förmågor, men känner lukten av alver istället för svartfolk.',
+    groupPicks: { vapenfardigheter: 6, 'tala-frammande': 1 },
+    pool: [...ALV_WARRIOR_POOL, 'barsarkagang', 'tortyr'],
+  },
+  {
+    id: 'alv-spejare', namn: 'Spejare', source: 'alver', krav: { STY: 13, FYS: 16, SMI: 13, PSY: 13 }, yrkesCount: 10,
+    formaga: 'Vältränad krigare som spejar bakom fiendens linjer. Har krigarens yrkesförmåga och en extraordinär uthållighet (klarar sig länge på minimala ransoner) samt motstår smärta — i praktiken immun mot tortyr.',
+    groupPicks: { vapenfardigheter: 6, 'tala-frammande': 1 },
+    pool: [...ALV_WARRIOR_POOL, 'akrobatik', 'skugga', 'utbrytarkonst', 'drogkunskap'],
+  },
+  {
+    id: 'alv-tradformare', namn: 'Trädformare', source: 'alver', krav: { INT: 17, PSY: 16 }, yrkesCount: 10,
+    formaga: 'Skogsalv som kan forma och få träd att växa med blotta händerna på minuter (mot PSY-poäng) — ett ekollon kan på en natt bli en fullväxt ek. Växter i hans närhet växer snabbare.',
+    groupPicks: { vapenfardigheter: 1, 'tala-frammande': 1 },
+    pool: ['vapenfardigheter', 'tala-frammande', 'dans', 'djurhelning', 'djurtraning', 'dolk', 'drogkunskap', 'geografi', 'geologi', 'giftkunskap', 'hantverk', 'hantera-fallor', 'kamouflage', 'knopar', 'kulturkannedom', 'kunskap-magi', 'orientering', 'simma', 'spela-instrument', 'spa-vader', 'zoologi', 'ortkunskap', 'overlevnad'],
+  },
+  {
+    id: 'alv-vindvavare', namn: 'Vindvävare', source: 'alver', krav: { INT: 17, PSY: 18 }, yrkesCount: 10,
+    formaga: 'Gråalv som väver gynnsamma vindar (motsvarar Vindkontroll) och styr väder (motsvarar Regnkontroll) — en effektgrad per spenderad PSY-poäng — och kan skingra dimma med ett PSY-slag.',
+    groupPicks: { vapenfardigheter: 1, 'tala-frammande': 1 },
+    pool: ['vapenfardigheter', 'tala-frammande', 'astrologi', 'dans', 'drogkunskap', 'geografi', 'hantverk', 'knopar', 'kulturkannedom', 'kunskap-magi', 'navigera', 'simma', 'sjokunnighet', 'spela-instrument', 'spa-vader', 'zoologi', 'overlevnad'],
+  },
 ]
 
 // ── FÄRDIGHETER ──────────────────────────────────────────────────────────
@@ -400,7 +630,7 @@ export const SECONDARY_SKILLS = [
   { id: 'lapplasning', namn: 'Läppläsning', grund: 'INT', yrken: ['bard', 'tjuv'] },
   { id: 'lasa-skriva-frammande', namn: 'Läsa/Skriva främmande språk', grund: 'INT', group: true, yrken: ['bard', 'helare', 'lardman', 'magiker', 'munk', 'sjofarare', 'riddare'], picks: { bard: 1, helare: 1, lardman: 4, magiker: 3, munk: 3, sjofarare: 1, riddare: 1 } },
   { id: 'magisk-kanalisering', namn: 'Magisk kanalisering', grund: 'INT', yrken: ['magiker'] },
-  { id: 'magiskola', namn: 'Magiskola', grund: 'INT', group: true, yrken: ['magiker', 'utbygdsjagare'], picks: { magiker: 1, utbygdsjagare: 1 }, options: ['Animism', 'Elementarmagi', 'Mentalism'], note: 'Magiker: en valfri skola. Utbygdsjägare: Animism. Du lär besvärjelser ur skolan i steget Besvärjelser.' },
+  { id: 'magiskola', namn: 'Magiskola', grund: 'INT', group: true, yrken: ['magiker', 'utbygdsjagare'], picks: { magiker: 1, utbygdsjagare: 1 }, options: ['Animism', 'Elementarmagi', 'Mentalism', 'Falsk drakmagi', 'Sann drakmagi', 'Demonologi', 'Portalmagi', 'Mörkermagi'], note: 'Grundskolorna Animism, Elementarmagi och Mentalism har underskolor (t.ex. Djurhamn, Eldmagi) som ingår i huvudskolan — du behärskar dem gratis upp till FV 7 och kan specialisera dig på en underskola per huvudskola för att nå högre. Övriga val (Falsk/Sann drakmagi, Demonologi, Portalmagi, Mörkermagi) är specialskolor ur Magikerns Handboks besvärjelseregister (s. 91–93); deras besvärjelser beskrivs i källböckerna Drakar, Kaos väktare och Nidland.' },
   { id: 'massage', namn: 'Massage', grund: 'SMI', yrken: ['helare', 'munk'] },
   { id: 'muta', namn: 'Muta', grund: 'KAR', yrken: ['bard', 'lonnmordare', 'sjofarare', 'tjuv'] },
   { id: 'malning', namn: 'Målning', grund: 'SMI', yrken: ['bard', 'munk', 'sjofarare', 'riddare'] },
@@ -462,6 +692,20 @@ export const SECONDARY_SKILLS = [
   { id: 'tigga', namn: 'Tigga', grund: 'PSY', tl: true, yrken: ['tjuv'] },
   { id: 'tortyr', namn: 'Tortyr', grund: 'INT', tl: true, yrken: ['lonnmordare', 'tjuv', 'krigare', 'lardman', 'magiker'] },
   { id: 'utbrytarkonst', namn: 'Utbrytarkonst', grund: 'SMI', tl: true, yrken: ['bard', 'lonnmordare', 'krigare'] },
+  // ── Nya färdigheter ur Magikerns Handbok ──
+  { id: 'improviserad-magi', namn: 'Improviserad magi', grund: 'INT', mh: true, yrken: ['magiker', 'akademiker', 'alkemist', 'andebesvarjare', 'artefaktmagiker', 'druid', 'bastardmagiker', 'larling', 'nekromantiker', 'arkemagiker'] },
+  { id: 'kunskap-alkemi', namn: 'Kunskap om alkemi', grund: 'INT', mh: true, yrken: ['magiker', 'akademiker', 'alkemist', 'andebesvarjare', 'artefaktmagiker', 'druid', 'bastardmagiker', 'larling', 'nekromantiker', 'arkemagiker'] },
+  { id: 'kunskap-andeplanet', namn: 'Kunskap om andeplanet', grund: 'INT', mh: true, yrken: ['andebesvarjare', 'nekromantiker', 'akademiker', 'arkemagiker'] },
+  { id: 'kunskap-animal-magnetism', namn: 'Kunskap om animal magnetism', grund: 'INT', mh: true, yrken: ['nekromantiker'] },
+  { id: 'kunskap-overnaturliga', namn: 'Kunskap om det övernaturliga', grund: 'INT', mh: true, yrken: ['andebesvarjare', 'akademiker', 'arkemagiker'] },
+  { id: 'kunskap-spadom', namn: 'Kunskap om spådom', grund: 'INT', mh: true, yrken: ['magiker', 'akademiker', 'alkemist', 'andebesvarjare', 'artefaktmagiker', 'druid', 'bastardmagiker', 'larling', 'nekromantiker', 'arkemagiker'] },
+  { id: 'kunskap-teknologi', namn: 'Kunskap om teknologi', grund: 'INT', mh: true, yrken: ['artefaktmagiker', 'akademiker', 'alkemist'] },
+  { id: 'magistudier', namn: 'Magistudier', grund: 'INT', mh: true, yrken: ['magiker', 'akademiker', 'alkemist', 'andebesvarjare', 'artefaktmagiker', 'druid', 'bastardmagiker', 'larling', 'nekromantiker', 'arkemagiker'] },
+  { id: 'memorera-besvarjelse', namn: 'Memorera besvärjelse', grund: 'INT', mh: true, yrken: ['magiker', 'akademiker', 'alkemist', 'andebesvarjare', 'artefaktmagiker', 'druid', 'bastardmagiker', 'larling', 'nekromantiker', 'arkemagiker'], note: 'Automatisk färdighet — alla magiker har den.' },
+  { id: 'minimagi', namn: 'Minimagi', grund: 'INT', mh: true, yrken: ['magiker', 'akademiker', 'alkemist', 'andebesvarjare', 'artefaktmagiker', 'druid', 'bastardmagiker', 'larling', 'nekromantiker', 'arkemagiker'] },
+  { id: 'pergament', namn: 'Pergament', grund: 'INT', mh: true, yrken: ['magiker', 'akademiker', 'alkemist', 'andebesvarjare', 'artefaktmagiker', 'druid', 'bastardmagiker', 'larling', 'nekromantiker', 'arkemagiker'] },
+  { id: 'ritualmagi', namn: 'Ritualmagi', grund: 'INT', mh: true, yrken: ['andebesvarjare', 'arkemagiker', 'nekromantiker', 'druid'] },
+  { id: 'matlagning', namn: 'Matlagning', grund: 'INT', mh: true, yrken: 'Alla' },
 ]
 
 export const ALL_SKILLS = [...PRIMARY_SKILLS, ...SECONDARY_SKILLS]
@@ -493,6 +737,31 @@ export const MAGIC_SCHOOLS = [
   {
     id: 'mentalism', namn: 'Mentalism',
     desc: 'Sinnets och tankens kraft — kontroll över egen och andras kropp och medvetande.',
+  },
+  // ── Registerskolor (Magikerns Handbok, besvärjelseregistret s. 91–93) ──
+  // Specialskolor som bara indexeras i Magikerns Handbok (namn + skolvärde +
+  // sidhänvisning). Besvärjelsernas fullständiga regeltext finns i respektive
+  // källbok (Drakar, Kaos väktare, Nidland), inte i Magikerns Handbok.
+  // Besvärjelsenamnen är OCR-tolkade ur registret och kan innehålla fel.
+  {
+    id: 'falsk-drakmagi', namn: 'Falsk drakmagi', register: true, sourceBook: 'Drakar',
+    desc: 'Drakmagikerns härmade drakmagi. Besvärjelserna beskrivs i Drakar (s. 76–79); Magikerns Handboks register listar bara namn och skolvärde.',
+  },
+  {
+    id: 'sann-drakmagi', namn: 'Sann drakmagi', register: true, sourceBook: 'Drakar',
+    desc: 'Den äkta drakmagin som riktiga drakar behärskar. Beskrivs i Drakar (s. 80–82).',
+  },
+  {
+    id: 'demonologi', namn: 'Demonologi', register: true, sourceBook: 'Kaos väktare',
+    desc: 'Konsten att frammana, binda och behärska demoner. Beskrivs i Kaos väktare (s. 44–48).',
+  },
+  {
+    id: 'portalmagi', namn: 'Portalmagi', register: true, sourceBook: 'Kaos väktare',
+    desc: 'Magi för att läsa, dölja, skapa och förgöra portaler. Beskrivs i Kaos väktare (s. 49–51).',
+  },
+  {
+    id: 'morkermagi', namn: 'Mörkermagi', register: true, sourceBook: 'Nidland',
+    desc: 'Vicotniks mörka magi. Beskrivs i Nidland (s. 38–41). Besvärjelsenamnen är särskilt osäkra (OCR ur registret).',
   },
 ]
 
@@ -580,6 +849,235 @@ export const SPELLS = [
   { id: 'teleportera', namn: 'Teleportera', skola: 'mentalism', niva: 12, flags: [], rackvidd: 'Beröring', varaktighet: 'Omedelbar', desc: 'Teleporterar tre poäng STO per effektgrad upp till Sx1 km; ovillig varelse får göra motstånd med PSY.' },
   { id: 'magisk-syn', namn: 'Magisk syn', skola: 'mentalism', niva: 13, flags: [], rackvidd: 'Beröring', varaktighet: 'Sx1 minuter', desc: 'Förhäxad syn som ser osynliga och dolda ting (t.ex. den som gjort sig osynlig) samt avslöjar besvärjelser.' },
   { id: 'oradd', namn: 'Orädd', skola: 'mentalism', niva: 14, flags: [], rackvidd: 'Beröring', varaktighet: 'Sx1 timmar', desc: 'Den förhäxade behöver inte slå på Skräcktabellen oavsett vad han möter.' },
+
+  // ── Nya besvärjelser ur Magikerns Handbok (Target Games, 1993), source 'MH' ──
+  // Underskolor (disciplin) ligger under sin huvudskola; en magiker når dem med
+  // halva sitt FV i huvudskolan (se schoolFv-beräkningen i characterLibrary).
+  { id: 'mh-skapa-tempel', namn: 'Skapa tempel', skola: 'allman', disciplin: null, niva: 3, flags: ['R'], rackvidd: 'Beröring', varaktighet: 'Permanent', source: 'MH', desc: 'Inviger en byggnad eller plats till magiskt tempel som ger fördelar åt besvärjelser som utförs där.' },
+  { id: 'mh-symbol', namn: 'Symbol', skola: 'allman', disciplin: null, niva: 12, flags: [], rackvidd: 'Spec', varaktighet: 'Spec', source: 'MH', desc: 'Lagrar en annan besvärjelse i ett föremål så att den utlöses när angivna villkor uppfylls.' },
+  { id: 'mh-skapa-alkemiskt-elixir', namn: 'Skapa alkemiskt elixir', skola: 'allman', disciplin: null, niva: 15, flags: [], rackvidd: 'Beröring', varaktighet: 'Permanent', source: 'MH', desc: 'Framställer ett magiskt elixir som bär en lagrad besvärjelses verkan i flytande form.' },
+  { id: 'mh-sigill', namn: 'Sigill', skola: 'allman', disciplin: null, niva: 17, flags: [], rackvidd: 'Beröring', varaktighet: 'Tills det aktiveras', source: 'MH', desc: 'Binder en lagrad besvärjelse till en symbol som utlöses när den bryts eller berörs.' },
+  { id: 'mh-permanens', namn: 'Permanens', skola: 'allman', disciplin: null, niva: 19, flags: ['R'], rackvidd: 'Beröring', varaktighet: 'Permanent', source: 'MH', desc: 'Ritual som gör effekten hos ett sigill eller liknande lagrad besvärjelse permanent.' },
+  { id: 'mh-nexus', namn: 'Nexus', skola: 'allman', disciplin: null, niva: 20, flags: ['R'], rackvidd: 'Beröring', varaktighet: 'Permanent', source: 'MH', desc: 'Skapar ett fokus som samlar naturens magiska flöden och lagrar stora mängder PSY för senare bruk.' },
+  { id: 'mh-kanna-best', namn: 'Känna best', skola: 'animism', disciplin: null, niva: 1, flags: [], rackvidd: 'Sx4 kilometer', varaktighet: 'Sx4 SR', source: 'MH', desc: 'Magikern förnimmer var djur befinner sig inom räckvidden.' },
+  { id: 'mh-eldfluga', namn: 'Eldfluga', skola: 'animism', disciplin: null, niva: 2, flags: [], rackvidd: 'Sx2 rutor', varaktighet: 'Sx4 timmar', source: 'MH', desc: 'Frammanar ett svalt lysande sken likt en eldfluga som lyser upp omgivningen.' },
+  { id: 'mh-finna-best', namn: 'Finna best', skola: 'animism', disciplin: null, niva: 3, flags: [], rackvidd: 'Sx4 kilometer', varaktighet: 'Sx4 SR', source: 'MH', desc: 'Anger riktning och avstånd till ett visst djur inom räckvidden.' },
+  { id: 'mh-lugna-best', namn: 'Lugna best', skola: 'animism', disciplin: null, niva: 4, flags: [], rackvidd: 'Sx10 rutor', varaktighet: 'Sx1 minuter', source: 'MH', desc: 'Lugnar ett djur så att det blir vänligt och fogligt mot magikern.' },
+  { id: 'mh-rida', namn: 'Rida', skola: 'animism', disciplin: null, niva: 5, flags: [], rackvidd: 'Sx10 rutor', varaktighet: 'Sx4 timmar', source: 'MH', desc: 'Låter magikern rida ett djur utan sadel och tygel med full kontroll.' },
+  { id: 'mh-hela-best', namn: 'Hela best', skola: 'animism', disciplin: null, niva: 6, flags: [], rackvidd: 'Beröring', varaktighet: 'Omedelbar', source: 'MH', desc: 'Botar skador och sjukdom hos ett djur som magikern rör vid.' },
+  { id: 'mh-tamja', namn: 'Tämja', skola: 'animism', disciplin: null, niva: 7, flags: [], rackvidd: 'Sx10 rutor', varaktighet: 'Sx4 timmar', source: 'MH', desc: 'Får ett vilt djur att uppträda som ett tamt och lydigt djur.' },
+  { id: 'mh-fordriva-insekter', namn: 'Fördriva insekter', skola: 'animism', disciplin: null, niva: 10, flags: [], rackvidd: 'Sx10 rutor', varaktighet: 'Sx1 SR', source: 'MH', desc: 'Driver bort alla insekter inom räckvidden från ett område.' },
+  { id: 'mh-djurminne', namn: 'Djurminne', skola: 'animism', disciplin: null, niva: 13, flags: [], rackvidd: 'Beröring', varaktighet: 'Spec', source: 'MH', desc: 'Låter magikern ta del av och tolka ett djurs minnesbilder.' },
+  { id: 'mh-fordriva-best', namn: 'Fördriva best', skola: 'animism', disciplin: null, niva: 14, flags: [], rackvidd: 'Sx10 rutor', varaktighet: 'Sx1 SR', source: 'MH', desc: 'Tvingar djur inom räckvidden att vända om och fly från området.' },
+  { id: 'mh-tjanande-best', namn: 'Tjänande best', skola: 'animism', disciplin: null, niva: 15, flags: [], rackvidd: 'Sx10 rutor', varaktighet: 'Sx10 timmar', source: 'MH', desc: 'Får ett djur att tjäna magikern lojalt och utföra enklare uppgifter.' },
+  { id: 'mh-fordriva-skogens-fiende', namn: 'Fördriva skogens fiende', skola: 'animism', disciplin: null, niva: 16, flags: ['R'], rackvidd: 'Sx10 rutor', varaktighet: 'Permanent', source: 'MH', desc: 'Ritual som driver bort varelser som hotar den naturliga ordningen i skogen.' },
+  { id: 'mh-skogsfrande', namn: 'Skogsfrände', skola: 'animism', disciplin: null, niva: 17, flags: [], rackvidd: 'Sx4 kilometer', varaktighet: 'Sx4 timmar', source: 'MH', desc: 'Ger magikern fullständig kunskap om ett område och dess invånare så länge besvärjelsen varar.' },
+  { id: 'mh-insektssvarm', namn: 'Insektssvärm', skola: 'animism', disciplin: null, niva: 18, flags: ['F'], rackvidd: 'Sx10 meter', varaktighet: 'Sx4 SR', source: 'MH', desc: 'Frammanar en svärm aggressiva flygande insekter som angriper magikerns fiender.' },
+  { id: 'mh-akalla-storm', namn: 'Åkalla storm', skola: 'animism', disciplin: null, niva: 19, flags: ['F'], rackvidd: 'Sx4 kilometer', varaktighet: 'Sx1 timmar', source: 'MH', desc: 'Frammanar oväder med åska och skyfall över ett område.' },
+  { id: 'mh-djurradare', namn: 'Djurrådare', skola: 'animism', disciplin: null, niva: 20, flags: ['R'], rackvidd: 'Sx2 rutor', varaktighet: 'Spec', source: 'MH', desc: 'Kallar fram en djurrådare som kan ge magikern råd och hjälp.' },
+  { id: 'mh-den-vilda-jakten', namn: 'Den vilda jakten', skola: 'animism', disciplin: null, niva: 24, flags: [], rackvidd: '1 kilometer', varaktighet: 'Spec', source: 'MH', desc: 'Åkallar en spöklik jaktskara som förföljer och anfaller en utpekad fiende.' },
+  { id: 'mh-skorda', namn: 'Skörda', skola: 'animism', disciplin: 'Växtrikets magi', niva: 26, flags: [], rackvidd: 'Sx10 rutor', varaktighet: 'Omedelbar', source: 'MH', desc: 'Påskyndar utvecklingen för en hel åker odlad gröda så den växer färdig; missbrukad kan den suga ut all magisk kraft ur jorden tills den är steril.' },
+  { id: 'mh-nattsyn', namn: 'Nattsyn', skola: 'animism', disciplin: 'Djurhamn', niva: 5, flags: [], rackvidd: 'Beröring', varaktighet: 'Sx1 timmar', source: 'MH', desc: 'Ger förmågan att se klart i mörker likt ett nattdjur.' },
+  { id: 'mh-klor', namn: 'Klor', skola: 'animism', disciplin: 'Djurhamn', niva: 8, flags: ['F'], rackvidd: 'Beröring', varaktighet: 'Sx1 minuter', source: 'MH', desc: 'Förvandlar magikerns händer till vassa klor som kan användas som vapen.' },
+  { id: 'mh-kaftar', namn: 'Käftar', skola: 'animism', disciplin: 'Djurhamn', niva: 8, flags: ['F'], rackvidd: 'Beröring', varaktighet: 'Sx1 minuter', source: 'MH', desc: 'Ger magikern ett rovdjurs käftar och tänder att bita med.' },
+  { id: 'mh-bjornsjal', namn: 'Björnsjäl', skola: 'animism', disciplin: 'Djurhamn', niva: 10, flags: [], rackvidd: 'Beröring', varaktighet: 'Sx1 timmar', source: 'MH', desc: 'Förlänar magikern en björns styrka och egenskaper.' },
+  { id: 'mh-leopardsjal', namn: 'Leopardsjäl', skola: 'animism', disciplin: 'Djurhamn', niva: 10, flags: [], rackvidd: 'Beröring', varaktighet: 'Sx1 timmar', source: 'MH', desc: 'Förlänar magikern en leopards snabbhet och rörlighet.' },
+  { id: 'mh-djurisk-intelligens', namn: 'Djurisk intelligens', skola: 'animism', disciplin: 'Djurhamn', niva: 12, flags: [], rackvidd: 'Sx10 rutor', varaktighet: 'Sx1 SR', source: 'MH', desc: 'Sänker tillfälligt en varelses intelligens till djurnivå.' },
+  { id: 'mh-ornvingar', namn: 'Örnvingar', skola: 'animism', disciplin: 'Djurhamn', niva: 13, flags: [], rackvidd: 'Beröring', varaktighet: 'Sx1 timmar', source: 'MH', desc: 'Ger magikern vingar att flyga med likt en örn.' },
+  { id: 'mh-vildman', namn: 'Vildman', skola: 'animism', disciplin: 'Djurhamn', niva: 15, flags: [], rackvidd: 'Sx2 rutor', varaktighet: 'Sx4 rutor', source: 'MH', desc: 'Förvandlar offret till en vild best som angriper allt i närheten.' },
+  { id: 'mh-bestpakt', namn: 'Bestpakt', skola: 'animism', disciplin: 'Djurhamn', niva: 18, flags: ['R'], rackvidd: 'Sx2 rutor', varaktighet: 'Permanent', source: 'MH', desc: 'Ritual som binder magikerns själ samman med ett djur i en bestående pakt.' },
+  { id: 'mh-bota-varulv', namn: 'Bota varulv', skola: 'animism', disciplin: 'Djurhamn', niva: 20, flags: [], rackvidd: 'Sx2 rutor', varaktighet: 'Omedelbar', source: 'MH', desc: 'Botar en person från varulvsförbannelse.' },
+  { id: 'mh-djurskepnad', namn: 'Djurskepnad', skola: 'animism', disciplin: 'Djurhamn', niva: 20, flags: [], rackvidd: 'Beröring', varaktighet: 'Sx1 timmar', source: 'MH', desc: 'Förvandlar magikern helt till ett djur med dess gestalt och egenskaper.' },
+  { id: 'mh-formanskliga-best', namn: 'Förmänskliga best', skola: 'animism', disciplin: 'Djurhamn', niva: 24, flags: [], rackvidd: 'Beröring', varaktighet: 'Permanent', source: 'MH', desc: 'Ger ett djur människans intelligens och förmåga att tala.' },
+  { id: 'mh-forma-vaxt', namn: 'Forma växt', skola: 'animism', disciplin: 'Växtrikets magi', niva: 5, flags: [], rackvidd: 'Sx2 rutor', varaktighet: 'Permanent', source: 'MH', desc: 'Magikern formar en växt efter sin vilja, till exempel till en figur eller form.' },
+  { id: 'mh-hela-vaxt', namn: 'Hela växt', skola: 'animism', disciplin: 'Växtrikets magi', niva: 6, flags: [], rackvidd: 'Beröring', varaktighet: 'Omedelbar', source: 'MH', desc: 'Botar skador och sjukdom hos en växt.' },
+  { id: 'mh-tala-med-vaxt', namn: 'Tala med växt', skola: 'animism', disciplin: 'Växtrikets magi', niva: 7, flags: [], rackvidd: 'Sx2 rutor', varaktighet: 'Sx4 minuter', source: 'MH', desc: 'Låter magikern samtala med en växt och få den att besvara frågor.' },
+  { id: 'mh-valsigna-sadd', namn: 'Välsigna sådd', skola: 'animism', disciplin: 'Växtrikets magi', niva: 8, flags: [], rackvidd: 'Sx2 rutor', varaktighet: 'Permanent', source: 'MH', desc: 'Välsignar utsäde så att grödan växer rikligt och frodigt.' },
+  { id: 'mh-skogsskydd', namn: 'Skogsskydd', skola: 'animism', disciplin: 'Växtrikets magi', niva: 9, flags: [], rackvidd: 'Personlig', varaktighet: 'Sx1 timmar', source: 'MH', desc: 'Döljer magikern i skogen så att han blir mycket svår att upptäcka.' },
+  { id: 'mh-skapa-vaxt', namn: 'Skapa växt', skola: 'animism', disciplin: 'Växtrikets magi', niva: 10, flags: [], rackvidd: 'Sx10 rutor', varaktighet: 'Permanent', source: 'MH', desc: 'Får växter att snabbt spira upp ur marken på en plats.' },
+  { id: 'mh-vaxtminne', namn: 'Växtminne', skola: 'animism', disciplin: 'Växtrikets magi', niva: 13, flags: [], rackvidd: 'Beröring', varaktighet: 'Spec', source: 'MH', desc: 'Låter magikern ta del av en växts intryck och minnesbilder.' },
+  { id: 'mh-levande-natur', namn: 'Levande natur', skola: 'animism', disciplin: 'Växtrikets magi', niva: 15, flags: ['F'], rackvidd: 'Sx10 rutor', varaktighet: 'Sx4 SR', source: 'MH', desc: 'Väcker växterna i ett område till liv så att de angriper magikerns fiender.' },
+  { id: 'mh-tornegrav', namn: 'Törnegrav', skola: 'animism', disciplin: 'Växtrikets magi', niva: 16, flags: ['F'], rackvidd: 'Sx10 rutor', varaktighet: 'Omedelbar', source: 'MH', desc: 'Låter törniga rankor spira upp och fånga och skada ett offer.' },
+  { id: 'mh-kropp-av-vaxter', namn: 'Kropp av växter', skola: 'animism', disciplin: 'Växtrikets magi', niva: 18, flags: [], rackvidd: 'Beröring', varaktighet: 'Sx4 timmar', source: 'MH', desc: 'Förvandlar magikerns kropp till en gestalt av sammanflätade växter.' },
+  { id: 'mh-kanna-manniska', namn: 'Känna människa', skola: 'mentalism', disciplin: null, niva: 2, flags: [], rackvidd: 'Sx10 rutor', varaktighet: 'Omedelbar', source: 'MH', desc: 'Magikern känner om någon människa befinner sig inom räckvidden och åt vilket håll, även om personen är dold.' },
+  { id: 'mh-gomma-sinne', namn: 'Gömma sinne', skola: 'mentalism', disciplin: null, niva: 5, flags: [], rackvidd: 'Personlig', varaktighet: 'Sx1 minuter', source: 'MH', desc: 'Gör magikerns sinne oåtkomligt för besvärjelser som påverkar tankar och känslor.' },
+  { id: 'mh-panik', namn: 'Panik', skola: 'mentalism', disciplin: null, niva: 6, flags: ['K'], rackvidd: 'Sx2 rutor', varaktighet: 'Omedelbar', source: 'MH', desc: 'Ett vald offer måste slå på Skräcktabellen om det inte motstår; verkar ej på odöda eller lägre djur.' },
+  { id: 'mh-kanna-logn', namn: 'Känna lögn', skola: 'mentalism', disciplin: null, niva: 7, flags: [], rackvidd: 'Sx2 rutor', varaktighet: 'Omedelbar', source: 'MH', desc: 'Magikern avgör om en person talar sanning, men inte vad sanningen är om personen själv tror på en lögn.' },
+  { id: 'mh-aura', namn: 'Aura', skola: 'mentalism', disciplin: null, niva: 9, flags: ['F'], rackvidd: 'Sx10 rutor', varaktighet: 'Omedelbar', source: 'MH', desc: 'Magikern ser en persons aura och avgör om personen är god eller ond samt skadad eller sjuk.' },
+  { id: 'mh-tankestot', namn: 'Tankestöt', skola: 'mentalism', disciplin: null, niva: 10, flags: ['F', 'K'], rackvidd: 'Sx10 rutor', varaktighet: 'Omedelbar', source: 'MH', desc: 'En mental attack som gör 1T6 skada per effektgrad mot offrets hjärna och kan slå denne medvetslös.' },
+  { id: 'mh-overtyga', namn: 'Övertyga', skola: 'mentalism', disciplin: null, niva: 10, flags: [], rackvidd: 'Sx2 rutor', varaktighet: 'Omedelbar', source: 'MH', desc: 'Magikern kan övertyga någon att göra något denne ändå kunde tänkas göra, men inget som strider mot dess natur.' },
+  { id: 'mh-forsta-sprak', namn: 'Förstå språk', skola: 'mentalism', disciplin: null, niva: 11, flags: [], rackvidd: 'Beröring', varaktighet: 'S/4 timmar', source: 'MH', desc: 'Den förhäxade kan förstå och tala ett främmande språk, men inte läsa eller skriva det.' },
+  { id: 'mh-charm', namn: 'Charm', skola: 'mentalism', disciplin: null, niva: 12, flags: [], rackvidd: 'Sx1 timmar', varaktighet: 'Omedelbar', source: 'MH', desc: 'Den förhäxade blir magikerns vän, men minns efteråt att han betedde sig underligt.' },
+  { id: 'mh-manniskans-minne', namn: 'Människans minne', skola: 'mentalism', disciplin: null, niva: 13, flags: [], rackvidd: 'Beröring', varaktighet: 'Omedelbar', source: 'MH', desc: 'Den förhäxade tvingas minnas tidigare händelser i sitt liv, styrt av magikern, ända till födelsen.' },
+  { id: 'mh-radera-minne', namn: 'Radera minne', skola: 'mentalism', disciplin: null, niva: 13, flags: [], rackvidd: 'Beröring', varaktighet: 'Permanent', source: 'MH', desc: 'Raderar ett minne ur den förhäxades medvetande; minnet kan eventuellt återkomma senare.' },
+  { id: 'mh-exorcism', namn: 'Exorcism', skola: 'mentalism', disciplin: null, niva: 13, flags: ['R'], rackvidd: 'Beröring', varaktighet: 'Omedelbar', source: 'MH', desc: 'Driver ut en ande som besatt någon; besvärjaren riskerar själv att bli besatt om ritualen misslyckas.' },
+  { id: 'mh-vansinne', namn: 'Vansinne', skola: 'mentalism', disciplin: null, niva: 14, flags: [], rackvidd: 'Sx2 rutor', varaktighet: 'S/4 dagar', source: 'MH', desc: 'Den förhäxade förlorar förståndet och drabbas av ett vansinne ur en tabell (katatoni, aggression, fobi m.m.).' },
+  { id: 'mh-falskt-minne', namn: 'Falskt minne', skola: 'mentalism', disciplin: null, niva: 15, flags: [], rackvidd: 'Beröring', varaktighet: 'Permanent', source: 'MH', desc: 'Implanterar ett falskt minne som personen tror på och inte kan skilja från sina verkliga minnen.' },
+  { id: 'mh-forslava', namn: 'Förslava', skola: 'mentalism', disciplin: null, niva: 18, flags: [], rackvidd: 'Sx2 rutor', varaktighet: 'Permanent', source: 'MH', desc: 'Förvandlar en intelligent varelse till en lydig slav som behåller sin personlighet men måste lyda magikern.' },
+  { id: 'mh-historia', namn: 'Historia', skola: 'mentalism', disciplin: null, niva: 18, flags: [], rackvidd: 'Beröring', varaktighet: 'Omedelbar', source: 'MH', desc: 'Magikern läser ut ett föremåls historia och vad det varit med om.' },
+  { id: 'mh-besatta', namn: 'Besätta', skola: 'mentalism', disciplin: null, niva: 20, flags: [], rackvidd: 'Sx7 rutor', varaktighet: 'Sx1 timmar', source: 'MH', desc: 'Magikern förflyttar sin ande till en annan varelse och styr dess kropp medan hans egen ligger försvarslös.' },
+  { id: 'mh-utplana', namn: 'Utplåna', skola: 'mentalism', disciplin: null, niva: 24, flags: [], rackvidd: 'Sx2 rutor', varaktighet: 'Permanent', source: 'MH', desc: 'Raderar fullständigt medvetandet hos en varelse så att kroppen lever kvar utan personlighet eller minne.' },
+  { id: 'mh-stanna-tiden', namn: 'Stanna tiden', skola: 'mentalism', disciplin: null, niva: 28, flags: ['F'], rackvidd: 'Sx10 rutor', varaktighet: 'Sx1 SR', source: 'MH', desc: 'Stannar tiden inom ett område (10×10 m) så att allt utom magikern står stilla.' },
+  { id: 'mh-utharda-hunger', namn: 'Uthärda hunger', skola: 'mentalism', disciplin: 'Kroppskontroll', niva: 7, flags: [], rackvidd: 'Beröring', varaktighet: 'S/4 dagar', source: 'MH', desc: 'Den förhäxade känner ingen hunger, men förlorar en FYS-poäng per dag utan mat.' },
+  { id: 'mh-smarta', namn: 'Smärta', skola: 'mentalism', disciplin: 'Kroppskontroll', niva: 8, flags: ['F'], rackvidd: 'Sx10 rutor', varaktighet: 'Omedelbar', source: 'MH', desc: 'En skärande smärta genomtränger offret; han förlorar 1T10 SP per effektgrad och kan svimma.' },
+  { id: 'mh-motsta-sjukdom', namn: 'Motstå sjukdom', skola: 'mentalism', disciplin: 'Kroppskontroll', niva: 8, flags: [], rackvidd: 'Beröring', varaktighet: 'S/4 dagar', source: 'MH', desc: 'Den förhäxade angrips inte av någon sjukdom så länge besvärjelsen varar.' },
+  { id: 'mh-utharda-torst', namn: 'Uthärda törst', skola: 'mentalism', disciplin: 'Kroppskontroll', niva: 10, flags: [], rackvidd: 'Beröring', varaktighet: 'S/4 dagar', source: 'MH', desc: 'Den förhäxade känner ingen törst, men förlorar en FYS-poäng per dag utan vatten.' },
+  { id: 'mh-forvrida-lem', namn: 'Förvrida lem', skola: 'mentalism', disciplin: 'Kroppskontroll', niva: 10, flags: [], rackvidd: 'Sx10 rutor', varaktighet: 'Permanent', source: 'MH', desc: 'En arm eller ett ben förvrids till en obrukbar, missbildad lem.' },
+  { id: 'mh-paralysera', namn: 'Paralysera', skola: 'mentalism', disciplin: 'Kroppskontroll', niva: 11, flags: [], rackvidd: 'Sx1 minuter', varaktighet: 'Sx1 SR', source: 'MH', desc: 'Alla inom ett område (E rutors radie) grips av paralyserande kramper och kan inte röra sig.' },
+  { id: 'mh-sjukdom', namn: 'Sjukdom', skola: 'mentalism', disciplin: 'Kroppskontroll', niva: 11, flags: ['F'], rackvidd: 'Sx10 rutor', varaktighet: 'S/4 dagar', source: 'MH', desc: 'Slår den drabbade med en våldsam infektionssjukdom som försämrar FYS varje dag.' },
+  { id: 'mh-andra-kropp', namn: 'Ändra kropp', skola: 'mentalism', disciplin: 'Kroppskontroll', niva: 18, flags: [], rackvidd: 'Beröring', varaktighet: 'Sx1 timmar', source: 'MH', desc: 'Den förhäxades kropp byggs tillfälligt om — STO ändras med en poäng per effektgrad.' },
+  { id: 'mh-forvrida-kropp', namn: 'Förvrida kropp', skola: 'mentalism', disciplin: 'Kroppskontroll', niva: 24, flags: [], rackvidd: 'Sx10 rutor', varaktighet: 'Permanent', source: 'MH', desc: 'Offrets hela kropp förvrids permanent till en vanskaplig, humanoid eller djurisk form.' },
+  { id: 'mh-doda', namn: 'Döda', skola: 'mentalism', disciplin: 'Kroppskontroll', niva: 30, flags: [], rackvidd: 'Sx10 rutor', varaktighet: 'Omedelbar', source: 'MH', desc: 'Offrets kropp förvrids och förstörs inifrån tills den dör; används mot draker och mycket motståndskraftiga varelser.' },
+  { id: 'mh-illusion', namn: 'Illusion', skola: 'mentalism', disciplin: 'Illusionism', niva: 7, flags: [], rackvidd: 'Sx10 rutor', varaktighet: 'Omedelbar', source: 'MH', desc: 'Skapar en falsk bild (upp till 10 STO) som kan röra sig och låta naturtroget men inte göra verklig skada.' },
+  { id: 'mh-perfekt-illusion', namn: 'Perfekt illusion', skola: 'mentalism', disciplin: 'Illusionism', niva: 10, flags: ['F'], rackvidd: 'Sx10 rutor', varaktighet: 'Omedelbar', source: 'MH', desc: 'En illusion så perfekt att den uppfattas som verklig av alla sinnen och kan göra verklig skada (PSY för att motstå).' },
+  { id: 'mh-se-genom-illusion', namn: 'Se genom illusion', skola: 'mentalism', disciplin: 'Illusionism', niva: 10, flags: [], rackvidd: 'Sx10 rutor', varaktighet: 'Omedelbar', source: 'MH', desc: 'Magikern ser rakt igenom alla illusioner, även en perfekt illusion.' },
+  { id: 'mh-konturlos', namn: 'Konturlös', skola: 'mentalism', disciplin: 'Illusionism', niva: 11, flags: [], rackvidd: 'Beröring', varaktighet: 'Sx1 SR', source: 'MH', desc: 'Den förhäxades kontur blir diffus och svajande, vilket gör honom svårträffad (avdrag på anfall mot honom).' },
+  { id: 'mh-kamouflage', namn: 'Kamouflage', skola: 'mentalism', disciplin: 'Illusionism', niva: 12, flags: [], rackvidd: 'Beröring', varaktighet: 'Sx1 timmar', source: 'MH', desc: 'Den förhäxade smälter samman med bakgrunden som en kameleont och får bonus på att gömma sig.' },
+  { id: 'mh-forkladnad', namn: 'Förklädnad', skola: 'mentalism', disciplin: 'Illusionism', niva: 15, flags: [], rackvidd: 'Beröring', varaktighet: 'Sx1 timmar', source: 'MH', desc: 'En illusion förvandlar den förhäxades utseende till en annan person eller varelse, ner till röst och rörelser.' },
+  { id: 'mh-skapa-foremal', namn: 'Skapa föremål', skola: 'mentalism', disciplin: 'Illusionism', niva: 16, flags: [], rackvidd: 'Sx2 rutor', varaktighet: 'Sx1 timmar', source: 'MH', desc: 'Skapar ett verkligt föremål av illusionär materia; kan inte vara magiskt eller riddat.' },
+  { id: 'mh-fata-morgana', namn: 'Fata morgana', skola: 'mentalism', disciplin: 'Illusionism', niva: 17, flags: ['F'], rackvidd: 'Sx1 kilometer', varaktighet: 'Sx1 timmar', source: 'MH', desc: 'En väldig hägring (oas, flygande stad) som kan förvilla och locka fienden mot en falsk syn.' },
+  { id: 'mh-skapa-best', namn: 'Skapa best', skola: 'mentalism', disciplin: 'Illusionism', niva: 19, flags: [], rackvidd: 'Sx2 meter', varaktighet: 'Sx1 timmar', source: 'MH', desc: 'Skapar en levande varelse med djurisk intelligens som kan slåss och utföra enkla uppgifter.' },
+  { id: 'mh-skapa-tjanare', namn: 'Skapa tjänare', skola: 'mentalism', disciplin: 'Illusionism', niva: 21, flags: [], rackvidd: 'Sx2 meter', varaktighet: 'Sx1 timmar', source: 'MH', desc: 'Skapar en intelligent humanoid varelse med egen kunskap som kan utföra färdighetsuppgifter.' },
+  { id: 'mh-sant-skapande', namn: 'Sant skapande', skola: 'mentalism', disciplin: 'Illusionism', niva: 25, flags: [], rackvidd: 'Sx10 rutor', varaktighet: 'Permanent', source: 'MH', desc: 'Skapar permanent ett föremål av naturligt material ur tomma intet.' },
+  { id: 'mh-morkerljus', namn: 'Mörkerljus', skola: 'mentalism', disciplin: 'Dödens magi', niva: 4, flags: ['F', 'K'], rackvidd: 'Personlig', varaktighet: 'Sx1 minuter', source: 'MH', desc: 'Magikern omger sig med ogenomträngligt mörker som hindrar alla utom honom själv att se.' },
+  { id: 'mh-zombie', namn: 'Zombie', skola: 'mentalism', disciplin: 'Dödens magi', niva: 10, flags: ['R'], rackvidd: 'Beröring', varaktighet: 'Permanent', source: 'MH', desc: 'Väcker en död kropp till en lydig zombie som tjänar magikern.' },
+  { id: 'mh-den-dodes-minne', namn: 'Den dödes minne', skola: 'mentalism', disciplin: 'Dödens magi', niva: 13, flags: [], rackvidd: 'Beröring', varaktighet: 'Konc', source: 'MH', desc: 'Magikern läser ut minnen ur en död person genom att röra vid kroppen.' },
+  { id: 'mh-blodstortning', namn: 'Blodstörtning', skola: 'mentalism', disciplin: 'Dödens magi', niva: 15, flags: [], rackvidd: 'Sx10 rutor', varaktighet: 'Omedelbar', source: 'MH', desc: 'Brister fina blodkärl i offrets kropp; blod sprutar ur kroppsöppningarna, 1T6 skada per effektgrad och SR.' },
+  { id: 'mh-forruttnelse', namn: 'Förruttnelse', skola: 'mentalism', disciplin: 'Dödens magi', niva: 16, flags: [], rackvidd: 'Beröring', varaktighet: 'Omedelbar', source: 'MH', desc: 'Offrets kött börjar ruttna och falla av; han förlorar FYS 1T8 om han överlever.' },
+  { id: 'mh-fortvina', namn: 'Förtvina', skola: 'mentalism', disciplin: 'Dödens magi', niva: 17, flags: [], rackvidd: 'Beröring', varaktighet: 'S/4 timmar', source: 'MH', desc: 'Offrets STY, FYS och SMI sänks tillfälligt till 1 så att han knappt kan stå upp.' },
+  { id: 'mh-dodslank', namn: 'Dödslänk', skola: 'mentalism', disciplin: 'Dödens magi', niva: 17, flags: [], rackvidd: 'Sx10 rutor', varaktighet: 'Sx1 minuter', source: 'MH', desc: 'All skada som drabbar magikern överförs i stället till en förhäxad person.' },
+  { id: 'mh-stjala-ungdom', namn: 'Stjäla ungdom', skola: 'mentalism', disciplin: 'Dödens magi', niva: 18, flags: ['R'], rackvidd: 'Beröring', varaktighet: 'Permanent', source: 'MH', desc: 'Ritual som överför ungdomskraft från ett offer till magikern; offret åldras i motsvarande grad.' },
+  { id: 'mh-pest', namn: 'Pest', skola: 'mentalism', disciplin: 'Dödens magi', niva: 20, flags: ['F'], rackvidd: 'Personlig', varaktighet: 'Sx1 timmar', source: 'MH', desc: 'Magikern blir en vandrande pesthärd; alla i hans närhet smittas av en dödlig pest.' },
+  { id: 'mh-forbannelse', namn: 'Förbannelse', skola: 'mentalism', disciplin: 'Dödens magi', niva: 24, flags: [], rackvidd: 'Spec', varaktighet: 'Spec', source: 'MH', desc: 'Lägger en förbannelse över en person eller dess ätt så att otur och olyckor drabbar dem tills ett villkor uppfylls.' },
+  { id: 'mh-zombiehar', namn: 'Zombiehär', skola: 'mentalism', disciplin: 'Dödens magi', niva: 28, flags: [], rackvidd: 'Sx10 rutor', varaktighet: 'Permanent', source: 'MH', desc: 'Väcker en hel armé döda kroppar till odöda tjänare som lyder magikerns befallningar.' },
+  { id: 'mh-ododas-furste', namn: 'Odödas furste', skola: 'mentalism', disciplin: 'Dödens magi', niva: 30, flags: ['R'], rackvidd: 'Personlig', varaktighet: 'Permanent', source: 'MH', desc: 'Förvandlar magikern till en mäktig odöd härskare över de odöda så att han består efter döden.' },
+  { id: 'mh-se-genom-sten', namn: 'Se genom sten', skola: 'elementarmagi', disciplin: 'Jordmagi', niva: 5, flags: [], rackvidd: 'Personlig', varaktighet: 'Konc', source: 'MH', desc: 'Magikern ser rakt igenom tio meter kompakt jord eller sten per effektgrad.' },
+  { id: 'mh-forma-sten', namn: 'Forma sten', skola: 'elementarmagi', disciplin: 'Jordmagi', niva: 7, flags: [], rackvidd: 'Sx10 rutor', varaktighet: 'Permanent', source: 'MH', desc: 'Formar och omformar fritt sten och jord, en kubikmeter per effektgrad.' },
+  { id: 'mh-krossande-klippblock', namn: 'Krossande klippblock', skola: 'elementarmagi', disciplin: 'Jordmagi', niva: 12, flags: ['F'], rackvidd: 'Sx10 meter', varaktighet: 'Omedelbar', source: 'MH', desc: 'Slungar ett stenblock mot ett mål som tar skada.' },
+  { id: 'mh-klippsvarm', namn: 'Klippsvärm', skola: 'elementarmagi', disciplin: 'Jordmagi', niva: 16, flags: ['F'], rackvidd: 'Sx10 meter', varaktighet: 'Omedelbar', source: 'MH', desc: 'En svärm flygande stenblock slår mot ett område och gör 1T10 skada per träffad person.' },
+  { id: 'mh-kropp-av-sten', namn: 'Kropp av sten', skola: 'elementarmagi', disciplin: 'Jordmagi', niva: 19, flags: [], rackvidd: 'Beröring', varaktighet: 'S/4 timmar', source: 'MH', desc: 'Förvandlar den förtrollades kropp till sten — skyddande men stel och orörlig.' },
+  { id: 'mh-jordbavning', namn: 'Jordbävning', skola: 'elementarmagi', disciplin: 'Jordmagi', niva: 20, flags: ['F'], rackvidd: '500 meter', varaktighet: 'Sx1 SR', source: 'MH', desc: 'Skapar ett jordskalv (E×25 m radie) som påverkar byggnader och varelser.' },
+  { id: 'mh-stenjatte', namn: 'Stenjätte', skola: 'elementarmagi', disciplin: 'Jordmagi', niva: 21, flags: [], rackvidd: 'Sx10 meter', varaktighet: 'Sx1 minuter', source: 'MH', desc: 'Frambesvärjer en mäktig jätte av sten som lyder magikerns befallning.' },
+  { id: 'mh-ren-luft', namn: 'Ren luft', skola: 'elementarmagi', disciplin: 'Luftmagi', niva: 3, flags: [], rackvidd: 'Sx10 rutor', varaktighet: 'Omedelbar', source: 'MH', desc: 'Renar förorenad eller rökfylld luft inom ett område.' },
+  { id: 'mh-stoppa-regn', namn: 'Stoppa regn', skola: 'elementarmagi', disciplin: 'Luftmagi', niva: 6, flags: [], rackvidd: 'Sx10 rutor', varaktighet: 'S/4 timmar', source: 'MH', desc: 'Allt regn upphör inom ett område (E×10 m radie).' },
+  { id: 'mh-spa-vader', namn: 'Spå väder', skola: 'elementarmagi', disciplin: 'Luftmagi', niva: 7, flags: [], rackvidd: 'Sx1 kilometer', varaktighet: 'Omedelbar', source: 'MH', desc: 'Magikern förutsäger hur vädret kommer att bli på platsen.' },
+  { id: 'mh-vindstot', namn: 'Vindstöt', skola: 'elementarmagi', disciplin: 'Luftmagi', niva: 8, flags: ['F'], rackvidd: 'Sx10 rutor', varaktighet: 'Omedelbar', source: 'MH', desc: 'Slungar ut en våldsam vindil som gör 1T6−1 skada.' },
+  { id: 'mh-regn', namn: 'Regn', skola: 'elementarmagi', disciplin: 'Luftmagi', niva: 9, flags: [], rackvidd: 'S/4 kilometer', varaktighet: 'S/4 timmar', source: 'MH', desc: 'Skapar ett kraftigt hällregn inom ett område (E×10 m radie).' },
+  { id: 'mh-lugna-storm', namn: 'Lugna storm', skola: 'elementarmagi', disciplin: 'Luftmagi', niva: 12, flags: [], rackvidd: 'S/4 kilometer', varaktighet: 'Omedelbar', source: 'MH', desc: 'Stillar en rasande storm inom räckvidden.' },
+  { id: 'mh-giftmoln', namn: 'Giftmoln', skola: 'elementarmagi', disciplin: 'Luftmagi', niva: 14, flags: ['F'], rackvidd: 'Sx10 meter', varaktighet: 'Sx1 minuter', source: 'MH', desc: 'Skapar ett giftigt gasmoln som driver med vinden och förgiftar dem som andas in det.' },
+  { id: 'mh-kvava', namn: 'Kväva', skola: 'elementarmagi', disciplin: 'Luftmagi', niva: 14, flags: [], rackvidd: 'Sx10 rutor', varaktighet: 'Konc', source: 'MH', desc: 'Driver på magisk väg luften ur en persons lungor så att han inte kan andas.' },
+  { id: 'mh-kropp-av-luft', namn: 'Kropp av luft', skola: 'elementarmagi', disciplin: 'Luftmagi', niva: 19, flags: [], rackvidd: 'Beröring', varaktighet: 'S/4 timmar', source: 'MH', desc: 'Förvandlar den förtrollades kropp till en osynlig varelse av luft med oerhörd rörlighet.' },
+  { id: 'mh-stormfagel', namn: 'Stormfågel', skola: 'elementarmagi', disciplin: 'Luftmagi', niva: 21, flags: [], rackvidd: 'Sx1 minuter', varaktighet: 'Sx1 minuter', source: 'MH', desc: 'Frambesvärjer en väldig fågel formad av stormkraft som lyder magikern.' },
+  { id: 'mh-forma-eld', namn: 'Forma eld', skola: 'elementarmagi', disciplin: 'Eldmagi', niva: 7, flags: [], rackvidd: 'Sx10 rutor', varaktighet: 'Konc', source: 'MH', desc: 'Formar och kontrollerar eld inom området; skapar eller släcker lågor efter sin vilja.' },
+  { id: 'mh-eldklot', namn: 'Eldklot', skola: 'elementarmagi', disciplin: 'Eldmagi', niva: 12, flags: ['F'], rackvidd: 'Sx10 meter', varaktighet: 'Omedelbar', source: 'MH', desc: 'Slungar ett brinnande eldklot mot ett mål; 1T6 skada per effektgrad.' },
+  { id: 'mh-mur-av-eld', namn: 'Mur av eld', skola: 'elementarmagi', disciplin: 'Eldmagi', niva: 14, flags: ['F'], rackvidd: 'Sx10 meter', varaktighet: 'Omedelbar', source: 'MH', desc: 'Skapar en två meter hög eldmur (en meter per effektgrad) som gör 1T6 skada vid passage.' },
+  { id: 'mh-inre-eld', namn: 'Inre eld', skola: 'elementarmagi', disciplin: 'Eldmagi', niva: 16, flags: [], rackvidd: 'Sx10 meter', varaktighet: 'Omedelbar', source: 'MH', desc: 'Tänder en magisk eld inuti offrets kropp så att han förtärs av hetta inifrån.' },
+  { id: 'mh-kropp-av-eld', namn: 'Kropp av eld', skola: 'elementarmagi', disciplin: 'Eldmagi', niva: 19, flags: [], rackvidd: 'Beröring', varaktighet: 'S/4 timmar', source: 'MH', desc: 'Förvandlar den förtrollades kropp till en varelse av flammande eld.' },
+  { id: 'mh-eldstorm', namn: 'Eldstorm', skola: 'elementarmagi', disciplin: 'Eldmagi', niva: 19, flags: ['F'], rackvidd: 'Sx10 rutor', varaktighet: 'Omedelbar', source: 'MH', desc: 'Ett ursinnigt eldinferno sveper över området och gör skada inom radien.' },
+  { id: 'mh-elddrake', namn: 'Elddrake', skola: 'elementarmagi', disciplin: 'Eldmagi', niva: 21, flags: [], rackvidd: 'Sx1 minuter', varaktighet: 'Sx1 minuter', source: 'MH', desc: 'Frambesvärjer en drake av flammande eld som lyder magikern; 1T6 skada per effektgrad.' },
+  { id: 'mh-rena-vattensamling', namn: 'Rena vattensamling', skola: 'elementarmagi', disciplin: 'Vattenmagi', niva: 3, flags: [], rackvidd: 'Sx10 rutor', varaktighet: 'Permanent', source: 'MH', desc: 'Renar en liten förorenad vattensamling, som en brunn eller källa.' },
+  { id: 'mh-se-genom-vatten', namn: 'Se genom vatten', skola: 'elementarmagi', disciplin: 'Vattenmagi', niva: 5, flags: [], rackvidd: 'Personlig', varaktighet: 'Konc', source: 'MH', desc: 'Magikern ser rakt igenom tio meter vatten per effektgrad.' },
+  { id: 'mh-forma-vatten', namn: 'Forma vatten', skola: 'elementarmagi', disciplin: 'Vattenmagi', niva: 7, flags: [], rackvidd: 'Sx10 rutor', varaktighet: 'Konc', source: 'MH', desc: 'Formar och kontrollerar vatten fritt inom området, en kubikmeter per effektgrad.' },
+  { id: 'mh-skapa-vatten', namn: 'Skapa vatten', skola: 'elementarmagi', disciplin: 'Vattenmagi', niva: 9, flags: [], rackvidd: 'Sx10 rutor', varaktighet: 'Permanent', source: 'MH', desc: 'Skapar en kubikmeter rent vatten (1000 liter) ur tomma luften per effektgrad.' },
+  { id: 'mh-dranka', namn: 'Dränka', skola: 'elementarmagi', disciplin: 'Vattenmagi', niva: 14, flags: [], rackvidd: 'Sx10 rutor', varaktighet: 'S/4 minuter', source: 'MH', desc: 'Fyller den förtrollades lungor med vatten så att han drunknar.' },
+  { id: 'mh-kropp-av-vatten', namn: 'Kropp av vatten', skola: 'elementarmagi', disciplin: 'Vattenmagi', niva: 19, flags: [], rackvidd: 'Beröring', varaktighet: 'S/4 timmar', source: 'MH', desc: 'Förvandlar den förtrollades kropp till en vattenelementar med stor rörlighet.' },
+  { id: 'mh-leviathan', namn: 'Leviathan', skola: 'elementarmagi', disciplin: 'Vattenmagi', niva: 21, flags: [], rackvidd: 'Sx10 rutor', varaktighet: 'Sx1 minuter', source: 'MH', desc: 'Frambesvärjer ur en vattensamling ett väldigt havsodjur som lyder magikern.' },
+  { id: 'mh-sanka-skepp', namn: 'Sänka skepp', skola: 'elementarmagi', disciplin: 'Vattenmagi', niva: 24, flags: [], rackvidd: 'Sx10 meter', varaktighet: 'Sx1 minuter', source: 'MH', desc: 'Sänker ett skepp med upp till fem meters köl ned i vågorna.' },
+  { id: 'mh-flodvag', namn: 'Flodvåg', skola: 'elementarmagi', disciplin: 'Vattenmagi', niva: 26, flags: ['F'], rackvidd: '500 meter', varaktighet: 'Sx1 minuter', source: 'MH', desc: 'Skapar en tio meter hög flodvåg ur tomma intet som sveper fram och förstör allt i sin väg.' },
+  { id: 'mh-forma-is', namn: 'Forma is', skola: 'elementarmagi', disciplin: 'Köldmagi', niva: 7, flags: [], rackvidd: 'Sx10 rutor', varaktighet: 'Permanent', source: 'MH', desc: 'Formar och kontrollerar is fritt inom området, en kubikmeter per effektgrad.' },
+  { id: 'mh-isklot', namn: 'Isklot', skola: 'elementarmagi', disciplin: 'Köldmagi', niva: 10, flags: [], rackvidd: 'Sx10 meter', varaktighet: 'Omedelbar', source: 'MH', desc: 'Slungar ett isblock mot ett mål med våldsam kraft; 1T8 skada.' },
+  { id: 'mh-ismissiler', namn: 'Ismissiler', skola: 'elementarmagi', disciplin: 'Köldmagi', niva: 14, flags: ['F'], rackvidd: 'Sx10 meter', varaktighet: 'Omedelbar', source: 'MH', desc: 'En svärm isspjut slungas mot målen; 1T8 skada per effektgrad.' },
+  { id: 'mh-forfrysa', namn: 'Förfrysa', skola: 'elementarmagi', disciplin: 'Köldmagi', niva: 15, flags: [], rackvidd: 'Sx10 meter', varaktighet: 'Omedelbar', source: 'MH', desc: 'Sänker temperaturen i en levande kropp till strax under fryspunkten.' },
+  { id: 'mh-kropp-av-is', namn: 'Kropp av is', skola: 'elementarmagi', disciplin: 'Köldmagi', niva: 18, flags: [], rackvidd: 'Beröring', varaktighet: 'S/4 timmar', source: 'MH', desc: 'Förvandlar den förtrollades kropp till en hård isvarelse — skyddande men stel.' },
+  { id: 'mh-isstorm', namn: 'Isstorm', skola: 'elementarmagi', disciplin: 'Köldmagi', niva: 19, flags: ['F'], rackvidd: '500 meter', varaktighet: 'Sx1 minuter', source: 'MH', desc: 'En storm med orkanvindar slungar isfragment omkring sig; 1T4 skada per SR.' },
+  { id: 'mh-isorm', namn: 'Isorm', skola: 'elementarmagi', disciplin: 'Köldmagi', niva: 21, flags: [], rackvidd: 'Sx10 rutor', varaktighet: 'Sx1 minuter', source: 'MH', desc: 'Frambesvärjer en ringlande orm av is med vassa köldhuggtänder som lyder magikern.' },
+]
+
+// ── Registerskolor: besvärjelser ur Magikerns Handboks besvärjelseregister (s. 91–93) ──
+// Magikerns Handbok listar dessa fem specialskolor enbart i registret: namn,
+// skolvärde och en sidhänvisning till källboken. Den fullständiga regeltexten
+// (räckvidd, varaktighet, effekt) finns i respektive bok (Drakar, Kaos väktare,
+// Nidland), inte i Magikerns Handbok. Tabellen nedan är [skolvärde, namn, flaggor,
+// källsida]; 'M' = minimagi (behandlas som skolvärde 1). Namnen är OCR-tolkade ur
+// registret och kan innehålla fel — särskilt Demonologi och Mörkermagi.
+const REGISTER_BOOKS = {
+  'falsk-drakmagi': { source: 'D', bok: 'Drakar' },
+  'sann-drakmagi': { source: 'D', bok: 'Drakar' },
+  'demonologi': { source: 'KV', bok: 'Kaos väktare' },
+  'portalmagi': { source: 'KV', bok: 'Kaos väktare' },
+  'morkermagi': { source: 'Nid', bok: 'Nidland' },
+}
+const REGISTER_SPELLS = {
+  'falsk-drakmagi': [
+    ['M', 'Drakröst', [], 76], ['M', 'Draktunga', [], 76], ['M', 'Genomskåda', [], 76],
+    ['M', 'Skrämsel', [], 76], ['M', 'Varsel', [], 76], ['M', 'Blottlägga psyke', [], 76],
+    [1, 'Begränsad empati', [], 76], [1, 'Orientering', [], 76], [2, 'Draksyn', [], 76],
+    [2, 'Elementarmotståndskraft', [], 76], [3, 'Fysisk motståndskraft', [], 76],
+    [3, 'Väckning', [], 77], [4, 'Känsloläsning', [], 77], [5, 'Avläsa PSY-mängd', [], 77],
+    [6, 'Paralysering', [], 77], [7, 'Flyga', [], 77], [8, 'Syn', [], 77],
+    [9, 'Telepatisk påverkan', [], 77], [10, 'Draksinne', [], 77], [10, 'Drakskydd', [], 77],
+    [11, 'Kontrollera person', [], 77], [11, 'Kommando', [], 77], [11, 'Mental aura', [], 78],
+    [12, 'Telepatisk sondering', [], 78], [13, 'Namnlös fasa', [], 78], [14, 'Vattenstråle', [], 78],
+    [14, 'Köldkon', [], 78], [15, 'Ljusknippe', [], 78], [16, 'Eldkvast', [], 78],
+    [17, 'Mörkerkon', [], 79], [18, 'Sondera föremål', [], 79], [19, 'Telepatisk illusion', [], 79],
+    [21, 'Tala med död', [], 79], [22, 'Kontrollera drake', [], 79], [23, 'Total kontroll', [], 79],
+    [24, 'Återuppliva', [], 79], [25, 'Tillkalla drake', [], 79], [30, 'Kontrollera högre drake', [], 79],
+    [34, 'Fängsla draksjäl', [], 79],
+  ],
+  'sann-drakmagi': [
+    ['M', 'Ordning', [], 80], [3, 'Empati', [], 80], [5, 'Tveksamhet', [], 80],
+    [5, 'Stumhet', [], 80], [6, 'Dövhet', [], 80], [7, 'Blindhet', [], 80],
+    [10, 'Upphäva drakmagi', [], 80], [12, 'Hela drake', [], 80], [15, 'Själsfrände', [], 80],
+    [18, 'Drakcharm', [], 80], [18, 'Total sensorisk avskärmning', [], 81], [19, 'Drakvänskap', [], 81],
+    [23, 'Ödesläsning', [], 81], [24, 'Elddom', [], 81], [25, 'Telepatisk dödförklaring', [], 81],
+    [30, 'Massivt mörker', [], 82],
+  ],
+  'demonologi': [
+    ['M', 'Svordom', [], 44], ['M', 'Demonsyn', [], 44], ['M', 'Ordning', [], 44],
+    [1, 'Finna demonväsen', [], 44], [2, 'Tala med demon', [], 44], [3, 'Tillkalla demon', [], 44],
+    [3, 'Fångsla demon', ['R'], 44], [10, 'Befria demon', [], 45], [10, 'Nedkalla demon', ['R'], 45],
+    [12, 'Kontrollera demon', [], 46], [12, 'Binda demon', ['R'], 46], [14, 'Kontakta väktare', [], 47],
+    [15, 'Forma demon', ['R'], 47], [16, 'Driva bort demon', ['R'], 47], [18, 'Skapa demongissel', ['R'], 48],
+  ],
+  'portalmagi': [
+    [9, 'Läsa portal', [], 49], [10, 'Dölja portal', [], 49], [11, 'Mental barriär', [], 49],
+    [13, 'Skapa kommunikationsportal', ['R'], 49], [14, 'Hemkalla resenär', ['R'], 50],
+    [14, 'Förgöra portal', [], 50], [16, 'Skapa portal', ['R'], 51],
+  ],
+  'morkermagi': [
+    [1, 'Vicotniks onda öga', [], 38], [3, 'Vicotniks mörka sanning', [], 38], [5, 'Vicotniks fasa', [], 38],
+    [6, 'Vicotniks mörkerblixt', [], 39], [8, 'Vicotniks förbannelse', [], 39],
+    [10, 'Vicotniks oorganiska förgörelse', [], 39], [11, 'Vicotniks märke', [], 40], [12, 'Vicotniks aura', [], 40],
+    [12, 'Vicotniks organiska förgörelse', [], 40], [14, 'Vicotniks mörka terror', [], 40],
+    [15, 'Vicotniks saknadsförgörelse', [], 40], [16, 'Vicotniks osynlighet', [], 41],
+    [18, 'Vicotniks sinnesförgörelse', [], 41], [18, 'Vicotniks själaförgörelse', [], 41],
+    [19, 'Vicotniks själavändning', [], 41], [25, 'Vicotniks verklighetsförvandling', [], 41],
+  ],
+}
+for (const [skola, list] of Object.entries(REGISTER_SPELLS)) {
+  const { source, bok } = REGISTER_BOOKS[skola]
+  list.forEach(([niva, namn, flags, sida], i) => {
+    const minimagi = niva === 'M'
+    SPELLS.push({
+      id: `reg-${skola}-${i + 1}`, namn, skola, niva: minimagi ? 1 : niva, flags,
+      rackvidd: '—', varaktighet: '—', source, register: true, minimagi,
+      desc: `${minimagi ? 'Minimagi. ' : ''}Beskrivs i ${bok} (s. ${sida}). Indexerad i Magikerns Handboks register (s. 91–93); namnet är OCR-tolkat ur registret.`,
+    })
+  })
+}
+
+// Underskolor (disciplin) per huvudskola — för gruppering i UI och rollformulär.
+export const MAGIC_DISCIPLINES = [
+  { namn: 'Djurhamn', skola: 'animism' },
+  { namn: 'Växtrikets magi', skola: 'animism' },
+  { namn: 'Kroppskontroll', skola: 'mentalism' },
+  { namn: 'Illusionism', skola: 'mentalism' },
+  { namn: 'Dödens magi', skola: 'mentalism' },
+  { namn: 'Jordmagi', skola: 'elementarmagi' },
+  { namn: 'Luftmagi', skola: 'elementarmagi' },
+  { namn: 'Eldmagi', skola: 'elementarmagi' },
+  { namn: 'Vattenmagi', skola: 'elementarmagi' },
+  { namn: 'Köldmagi', skola: 'elementarmagi' },
 ]
 
 export const spellById = (id) => SPELLS.find((s) => s.id === id) || null
@@ -763,6 +1261,146 @@ export function lookupFormaga(total) {
   for (const [min, max, namn] of SARSKILDA_FORMAGOR) if (total >= min && total <= max) return namn
   return SARSKILDA_FORMAGOR[0][2]
 }
+
+// Magikerns särskilda förmågor (Magikerns Handbok) — egen 2T20+BP-tabell med
+// magikerinriktade utfall. Används av magikeryrken i stället för tabellen ovan.
+export const SARSKILDA_FORMAGOR_MAGIKER = [
+  [3, 4, '+1 på FV på valfri sekundär färdighet (utom förbjudna).'],
+  [5, 6, 'Sjöfararbakgrund: +2 på FV i Sjökunnighet och Navigera.'],
+  [7, 8, 'Kock: +3 på FV i Matlagning.'],
+  [9, 10, 'Född bokmal: +3 på FV i Läsa/Skriva.'],
+  [11, 12, 'Hantverkarbakgrund: +3 på FV i valfri hantverksfärdighet.'],
+  [13, 14, 'Smidig kropp: +3 på FV i Akrobatik.'],
+  [15, 16, 'Köpmannabakgrund: +3 på FV i Värdera.'],
+  [17, 18, 'Kunnig: +3 på FV i en valfri kunskapsfärdighet.'],
+  [19, 20, 'Förmänniska: FV 3 i en valfri sekundär färdighet (kan läras från start).'],
+  [21, 22, 'Starka nypor: alltid +3 på CL i Klättra.'],
+  [23, 24, 'Mottagligt medium: +5 på CL i Magisk kanalisering (passiva parten).'],
+  [25, 26, 'Hängiven student: +2 på valfritt FV (höjer även ev. begränsning).'],
+  [27, 28, 'Magikerbakgrund: +3 på FV i valfri magikerfärdighet (ej besvärjelser/magiskola).'],
+  [29, 30, 'Sjätte sinne: +1 på FV i Upptäcka fara och Finna dolda ting.'],
+  [31, 32, 'Född hypnotisör: +5 på CL i Hypnotisera.'],
+  [33, 34, 'Magikänsla: +5 på CL i Känna magi.'],
+  [35, 36, 'Gott språksinne: FV 20 (B5) i att Tala och Läsa/Skriva ett valfritt språk.'],
+  [37, 38, 'Stort kunskapsområde: två extra valfria sekundära färdigheter som yrkesfärdigheter.'],
+  [39, 40, 'Lätt att lära magi: +1 på FV i tre valfria besvärjelser.'],
+  [41, 42, 'Absolut gehör: grundkostnaden för Spela instrument och Sjunga är alltid 1.'],
+  [43, 44, 'Precisionssinne: +1 på CL på alla vapenfärdigheter.'],
+  [45, 46, 'Alvvän: +5 på FV i Alviska samt Tala och Läsa/Skriva alviska.'],
+  [47, 48, 'God tidskänsla: vet alltid ungefär hur mycket klockan är (10 min när).'],
+  [49, 51, 'Absolut ögonmått: bedömer avstånd med 5% felmarginal.'],
+  [52, 54, 'Mycket uppmärksam: +2 på CL i Finna dolda ting och Upptäcka fara.'],
+  [55, 55, 'Blixtrande reflexer: +3 på alla initiativslag.'],
+  [56, 56, 'Demonsläkt: demonblod i ätten; lär demonspråk till FV 12.'],
+  [57, 57, 'Gott balanssinne: +5 på SMI vid balansakter och fall.'],
+  [58, 58, 'Hästarnas herre: +10 på FV i Rida; kan aldrig bli avkastad.'],
+  [59, 59, 'Lätt för improviserad magi: +5 i Improviserad magi.'],
+  [60, 60, 'Djurvän: blir aldrig anfallen av vanliga djur.'],
+  [61, 61, 'Tur: modifiera en CL med +1 per spenderad PSY-poäng (max +3).'],
+  [62, 62, 'Magisk empati: kan identifiera besvärjelser i magiska föremål du övervinner med PSY.'],
+  [63, 63, 'Gudarnas gunstling: 25% chans att guden återställer alla KP vid 0.'],
+  [64, 64, 'Lättlärd: grundkostnaden för sekundära färdigheter minskas till 4.'],
+  [65, 65, 'Eldsjäl: skyddas mot normal eld i 2T6 SR.'],
+  [66, 67, 'Tusen och en natt: äger en flygande matta (se Magiska föremål).'],
+  [68, 68, 'Hög PSY: +1 på ditt PSY-värde.'],
+  [69, 69, 'Hög INT: +1 på ditt INT-värde.'],
+  [70, 70, 'Extremt orädd: −5 på alla slag på Skräcktabellen.'],
+  [71, 71, 'Orubblig vilja: +5 på PSY på PSY-mot-PSY och Motståndstabellen.'],
+  [72, 72, 'Gott läkekött: KP-förluster läker dubbelt så fort.'],
+  [73, 73, 'Härdig mot element: +5 på FYS mot eld, köld, vatten, vind.'],
+  [74, 74, 'God mental kontroll: återfår PSY och besvärjelser dubbelt så fort.'],
+  [75, 75, 'Magikram: +3 på FV i valfri magiskola.'],
+  [76, 76, 'Kluven personlighet: välj även en yrkesförmåga från ett annat yrke.'],
+  [77, 77, 'God känsla för yrket: halverad kostnad för en besvärjelse/yrkesfärdighet.'],
+  [78, 78, 'Hamnskiftare: kan förvandlas till ett djur (slå 1T6).'],
+  [79, 79, 'Född till magiker: +5 på FV i valfri magiskola och +3 FV (se DoD Magi).'],
+  [80, 80, 'God PSY-potential: −5 på slaget för att höja PSY.'],
+  [81, Infinity, 'Vild magi: du behärskar vild magi gratis (se Vild magi).'],
+]
+export function lookupFormagaMagiker(total) {
+  for (const [min, max, namn] of SARSKILDA_FORMAGOR_MAGIKER) if (total >= min && total <= max) return namn
+  return SARSKILDA_FORMAGOR_MAGIKER[0][2]
+}
+
+// Alvernas särskilda förmågor (Alver s. 23–24). Boken listar bara de resultat
+// som AVVIKER från grundtabellen, plus släktspecifika resultat. lookupFormagaAlv
+// kollar släktets egna resultat först, sedan de alvgemensamma, och faller annars
+// tillbaka på grundtabellen (lookupFormaga).
+const SARSKILDA_FORMAGOR_ALV = [
+  [7, 8, 'Vän stämma: alltid +3 på FV i Sjunga.'],
+  [27, 28, 'Fager: alltid +3 på Förföra; människor känner sig instinktivt trygga i din närhet.'],
+  [29, 30, 'Stigfinnare: mästerlig spårare — alltid +4 i CL på Spåra.'],
+  [31, 32, 'Absolut gehör: +3 på FV i ett valfritt instrument eller Sjunga.'],
+  [39, 40, 'Mästerskytt: alla projektilvapnens räckvidder ökar 25 %; alltid +3 i CL på båge.'],
+  [63, 63, 'Kattfotad: landar alltid på fötter vid fall och tar halv fallskada.'],
+  [67, 67, 'Baneman: som grundreglerna men bonusen är +10 (gäller svartfolk, eller dvärgar om du är grottalv).'],
+  [72, 72, 'Härdig mot element: som grundreglerna men +15 istället (är du injir: +20).'],
+]
+const SARSKILDA_FORMAGOR_ALV_SLAKT = {
+  grottalv: [
+    [56, 56, 'Metallkänsla: identifierar automatiskt metaller genom att titta, lukta och känna på dem.'],
+    [64, 64, 'Mörkerseende: ser även i totalt mörker, som vore det dager.'],
+  ],
+  graalv: [
+    [56, 56, 'Utmärkt simmare: behärskar Simma utomordentligt och kan simma mycket långa sträckor.'],
+    [75, 75, 'Delfinkommunikation: kan telepatiskt tala med delfiner, som villkorslöst hjälper dig i nöd.'],
+  ],
+  injir: [
+    [21, 22, 'Skicklig ryttare: alltid +4 i CL på Rida och Slåss till häst.'],
+    [70, 70, 'Stålsättning: ignorera smärtan och sänk SB-skadan med 2 (annars KP-skadan med 1) när du träffas av ett slag.'],
+  ],
+  morkeralv: [
+    [64, 64, 'Blodtörst: +3 i CL i strid efter att du gjort den första KP:n i skada på din motståndare.'],
+  ],
+  skogsalv: [
+    [9, 10, 'Utmärkt balanssinne: +5 i CL på alla SMI-slag som rör balans.'],
+    [15, 16, 'Växtkännare: känner automatiskt igen växter med lägre vanlighet än 6.'],
+    [56, 56, 'Pilmakare: pilar du snidat ger +1 i CL på båge.'],
+    [75, 75, 'Andarnas vän: når lätt naturandarna — vid bruk av en visa anländer alltid minst en vänlig ande.'],
+  ],
+}
+export function lookupFormagaAlv(total, raceId) {
+  for (const [min, max, namn] of (SARSKILDA_FORMAGOR_ALV_SLAKT[raceId] || [])) if (total >= min && total <= max) return namn
+  for (const [min, max, namn] of SARSKILDA_FORMAGOR_ALV) if (total >= min && total <= max) return namn
+  return lookupFormaga(total)
+}
+
+// Alviska namn (Alver s. 34): slå 1T20 för förstavelse + 1T20 för ändelse.
+export const ALV_NAME_PREFIX = ['Lo', 'Tan', 'Rali', 'Arna', 'Elo', 'Lana', 'Cer', 'Leth', 'Car', 'Eli', 'Ler', 'Tav', 'Mal', 'Sin', 'Gal', 'Tista', 'Vari', 'Oli', 'Far', 'Dor']
+export const ALV_NAME_SUFFIX = ['rion', 'stari', 'ilion', 'riel', 'dion', 'ili', 'athlon', 'iol', 'alion', 'estion', 'arin', 'olori', 'iriol', 'asti', 'nion', 'lion', 'riol', 'nael', 'orion', 'anior']
+const VOWELS = 'aeiouyåäöáàâéíóúý'
+const ACCENT = { a: 'á', e: 'é', i: 'í', o: 'ó', u: 'ú', y: 'ý', å: 'å', ä: 'ä', ö: 'ö' }
+function accentLastVowel(word) {
+  for (let i = word.length - 1; i >= 0; i--) {
+    const c = word[i].toLowerCase()
+    if (VOWELS.includes(c)) return word.slice(0, i) + (ACCENT[c] || c) + word.slice(i + 1)
+  }
+  return word
+}
+// Sätter samman förstavelse + ändelse (Alver s. 34). Krockar två vokaler tas den
+// sista bort och en accent sätts på den första (Arna+alion → Arnálion). Krockar
+// samma konsonant dubblerat tas den ena bort och en accent sätts på föregående
+// vokal (Cer+rion → Cérion). Annars sammanfogas delarna rakt av.
+export function combineAlvName(prefix, suffix) {
+  const a = prefix[prefix.length - 1].toLowerCase()
+  const b = suffix[0].toLowerCase()
+  const aVowel = VOWELS.includes(a)
+  const bVowel = VOWELS.includes(b)
+  if (aVowel && bVowel) return prefix.slice(0, -1) + (ACCENT[a] || a) + suffix.slice(1)
+  if (!aVowel && !bVowel && a === b) return accentLastVowel(prefix) + suffix.slice(1)
+  return prefix + suffix
+}
+export function randomAlvName(rng = Math.random) {
+  const p = ALV_NAME_PREFIX[Math.floor(rng() * ALV_NAME_PREFIX.length)]
+  const s = ALV_NAME_SUFFIX[Math.floor(rng() * ALV_NAME_SUFFIX.length)]
+  return combineAlvName(p, s)
+}
+
+// Vild magi & familjar (Magikerns Handbok) — kostnader i bakgrundspoäng.
+export const VILD_MAGI_BAS_BP = 15   // första vilda förmågan
+export const VILD_MAGI_EXTRA_BP = 10 // per ytterligare förmåga
+export function vildMagiCost(antal) { return antal > 0 ? VILD_MAGI_BAS_BP + (antal - 1) * VILD_MAGI_EXTRA_BP : 0 }
+export const FAMILJAR_BP = 7
 
 // ── SVÄRDSHAND (slå 2T6 + spenderade BP) ────────────────────────────────────
 export function svardshand(total) {

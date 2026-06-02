@@ -27,7 +27,7 @@ export default function ProfessionStep({ state, update, derived }) {
               onClick={() => update({ yrkeId: p.id })}
             >
               <div className="cc-card__head">
-                <span className="cc-card__name">{p.namn}{p.source && <span className="cc-src-badge">{p.source === 'kh' ? 'KH' : p.source === 'tl' ? 'TL' : p.source.toUpperCase()}</span>}</span>
+                <span className="cc-card__name">{p.namn}{p.source && <span className="cc-src-badge">{p.source === 'kh' ? 'KH' : p.source === 'tl' ? 'TL' : p.source === 'alver' ? 'Alver' : p.source.toUpperCase()}</span>}</span>
                 <span className="cc-card__cost">{p.yrkesCount} färd.</span>
               </div>
               <div className="cc-card__krav">
