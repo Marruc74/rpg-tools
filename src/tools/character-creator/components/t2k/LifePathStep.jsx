@@ -85,10 +85,10 @@ export default function LifePathStep({ state, update, derived }) {
     if (out) update({ warOut: true })
   }
 
-  // ── At War ──
+  // ── At War ── (always two skills, one step each)
   const aw = state.atWar || { increases: [], specialty: null }
-  const setAwMode = (mode) => update({ atWar: { ...aw, increases: mode === 'one' ? [{ skill: null, steps: 2 }] : [{ skill: null, steps: 1 }, { skill: null, steps: 1 }] } })
-  const setAwInc = (slot, skill) => update({ atWar: { ...aw, increases: aw.increases.map((inc, k) => (k === slot ? { ...inc, skill } : inc)) } })
+  const awIncs = aw.increases.length === 2 ? aw.increases : [{ skill: null, steps: 1 }, { skill: null, steps: 1 }]
+  const setAwInc = (slot, skill) => update({ atWar: { ...aw, increases: awIncs.map((inc, k) => (k === slot ? { ...inc, skill } : inc)) } })
   const lastCareer = terms.length ? careerById(terms[terms.length - 1].careerId) : null
   const awColumn = atWarColumn(lastCareer?.category)
   const rollAwSpec = () => update({ atWar: { ...aw, specialty: AT_WAR_SPECIALTIES[awColumn][d6() - 1] } })
@@ -220,8 +220,8 @@ export default function LifePathStep({ state, update, derived }) {
           <label className="cc-check"><input type="checkbox" checked={!!aw.draft} onChange={(e) => update({ atWar: { ...aw, draft: e.target.checked } })} /> Drafted (civilian final term, non-local): one increase must be Ranged Combat; gear as Combat Arms</label>
           <div className="cc-lp-line">
             <span className="cc-lp-label">Increases:</span>
-            {(aw.increases.length ? aw.increases : [{ skill: null, steps: 1 }, { skill: null, steps: 1 }]).map((inc, slot) => (
-              <select key={slot} value={inc.skill || ''} onChange={(e) => { if (!aw.increases.length) setAwMode('two'); setAwInc(slot, e.target.value) }}>
+            {awIncs.map((inc, slot) => (
+              <select key={slot} value={inc.skill || ''} onChange={(e) => setAwInc(slot, e.target.value)}>
                 <option value="">— skill —</option>
                 {SKILLS.map((sk) => <option key={sk.id} value={sk.id}>{sk.name}</option>)}
               </select>

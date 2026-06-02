@@ -167,7 +167,7 @@ function deriveLifePath(state, { nationality, nameOk, chosen }) {
 
   const childhood = childhoodById(ch.id)
   const childhoodDone = !!(childhood && ch.skill && ch.specialty)
-  const atWarDone = warOut && (atWar.increases || []).length >= 2
+  const atWarDone = warOut && (atWar.increases || []).filter((inc) => inc.skill).length >= 2
   const coreValid = childhoodDone && terms.length >= 1 && warOut && atWarDone
   const valid = attrValid && coreValid && nameOk && !!nationality
 
