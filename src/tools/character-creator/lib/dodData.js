@@ -400,7 +400,7 @@ export const SECONDARY_SKILLS = [
   { id: 'lapplasning', namn: 'Läppläsning', grund: 'INT', yrken: ['bard', 'tjuv'] },
   { id: 'lasa-skriva-frammande', namn: 'Läsa/Skriva främmande språk', grund: 'INT', group: true, yrken: ['bard', 'helare', 'lardman', 'magiker', 'munk', 'sjofarare', 'riddare'], picks: { bard: 1, helare: 1, lardman: 4, magiker: 3, munk: 3, sjofarare: 1, riddare: 1 } },
   { id: 'magisk-kanalisering', namn: 'Magisk kanalisering', grund: 'INT', yrken: ['magiker'] },
-  { id: 'magiskola', namn: 'Magiskola', grund: 'INT', group: true, yrken: ['magiker', 'utbygdsjagare'], picks: { magiker: 1, utbygdsjagare: 1 }, note: 'Magiker: en valfri skola. Utbygdsjägare: Animism.' },
+  { id: 'magiskola', namn: 'Magiskola', grund: 'INT', group: true, yrken: ['magiker', 'utbygdsjagare'], picks: { magiker: 1, utbygdsjagare: 1 }, options: ['Animism', 'Elementarmagi', 'Mentalism'], note: 'Magiker: en valfri skola. Utbygdsjägare: Animism. Du lär besvärjelser ur skolan i steget Besvärjelser.' },
   { id: 'massage', namn: 'Massage', grund: 'SMI', yrken: ['helare', 'munk'] },
   { id: 'muta', namn: 'Muta', grund: 'KAR', yrken: ['bard', 'lonnmordare', 'sjofarare', 'tjuv'] },
   { id: 'malning', namn: 'Målning', grund: 'SMI', yrken: ['bard', 'munk', 'sjofarare', 'riddare'] },
@@ -465,6 +465,125 @@ export const SECONDARY_SKILLS = [
 ]
 
 export const ALL_SKILLS = [...PRIMARY_SKILLS, ...SECONDARY_SKILLS]
+
+// ── MAGI & BESVÄRJELSER (DrakarOchDemoner V4 Spelarboken, RiotMinds) ────────
+// Besvärjelserna är transkriberade ur Spelarbokens magikapitel. En magiker lär
+// sig en magiskola (färdigheten Magiskola, se SECONDARY_SKILLS) och kan därefter
+// lära besvärjelser ur den skolan vars skolvärde ≤ hans FV i skolan. Allmänna
+// besvärjelser kan läras av alla som behärskar minst en magiskola.
+//
+// niva  = skolvärde (lägsta FV i skolan som krävs för att lära besvärjelsen).
+// flags = F (Fysisk – verkar alltid vid lyckat slag), K (Kvick – snabb att lägga),
+//         R (Ritual – kräver lugn och tid; minst FV 1 i ritualen).
+export const MAGIC_FLAG_NAMES = { F: 'Fysisk', K: 'Kvick', R: 'Ritual' }
+
+export const MAGIC_SCHOOLS = [
+  {
+    id: 'allman', namn: 'Allmänna besvärjelser', general: true,
+    desc: 'Grundläggande besvärjelser som varje magiker kan lära oavsett magiskola. Skolvärdet jämförs mot magikerns högsta magiskole-FV.',
+  },
+  {
+    id: 'animism', namn: 'Animism',
+    desc: 'Naturens magi — djur, växter, väder och kropp. Utbygdsjägarens enda magiskola.',
+  },
+  {
+    id: 'elementarmagi', namn: 'Elementarmagi',
+    desc: 'Universums byggstenar: eld, luft, vatten, jord och mörker. Stridsmagikerns skola.',
+  },
+  {
+    id: 'mentalism', namn: 'Mentalism',
+    desc: 'Sinnets och tankens kraft — kontroll över egen och andras kropp och medvetande.',
+  },
+]
+
+// EP-kostnad för att lära en besvärjelse, efter skolvärde (Kostnad för
+// besvärjelser, Spelarboken s. 25): 1–3 → 2, 4–6 → 4, … +2 per ytterligare 3.
+export function spellLearnCost(niva) {
+  return 2 * Math.ceil(Math.max(1, niva) / 3)
+}
+
+// Varje besvärjelse: skola (MAGIC_SCHOOLS-id), niva (skolvärde), flags,
+// rackvidd, varaktighet, desc (kort sammanfattning av effekten).
+export const SPELLS = [
+  // ── Allmänna besvärjelser ──
+  { id: 'antimagi', namn: 'Antimagi', skola: 'allman', niva: 3, flags: [], rackvidd: 'Sx10 rutor', varaktighet: 'S/4 minuter', desc: 'Skapar en magisk sköld (volym upp till 125 m³) som negerar inkommande besvärjelser vars effektgrad inte överstiger Antimagins.' },
+  { id: 'skingra', namn: 'Skingra', skola: 'allman', niva: 6, flags: [], rackvidd: 'Sx10 rutor', varaktighet: 'Omedelbar', desc: 'Upphäver effekten av en redan lagd besvärjelse (t.ex. Förtrolla vapen eller Beskyddare) om effektgraden räcker.' },
+  { id: 'varseblivning', namn: 'Varseblivning', skola: 'allman', niva: 6, flags: [], rackvidd: 'Sx10 rutor', varaktighet: 'Omedelbar', desc: 'Lokaliserar något magikern specificerar — en person, ett föremål eller en viss besvärjelse — inom räckvidden.' },
+  { id: 'beskyddare', namn: 'Beskyddare', skola: 'allman', niva: 9, flags: [], rackvidd: 'Beröring', varaktighet: 'Permanent', desc: 'Bildar en skyddande kub (≈3×3×3 m) runt målet som negerar besvärjelser likt en personlig Antimagi tills energin tar slut.' },
+  { id: 'foryngra', namn: 'Föryngra', skola: 'allman', niva: 14, flags: ['R'], rackvidd: 'Beröring', varaktighet: 'S/4 veckor', desc: 'Ritual som tillfälligt föryngrar en person och höjer dess fysiska grundegenskaper (Ex5).' },
+  { id: 'laddning', namn: 'Laddning', skola: 'allman', niva: 14, flags: ['R'], rackvidd: 'Beröring', varaktighet: 'Permanent', desc: 'Ritual som lagrar PSY-poäng i ett engångsbatteri (t.ex. en formel) för senare bruk.' },
+
+  // ── Animism ──
+  { id: 'finna-vatten', namn: 'Finna vatten', skola: 'animism', niva: 1, flags: [], rackvidd: 'S/4 km', varaktighet: 'Omedelbar', desc: 'Känner av riktning och avstånd till vatten och vattensamlingar inom räckvidden.' },
+  { id: 'traeld', namn: 'Träeld', skola: 'animism', niva: 2, flags: ['F', 'K'], rackvidd: 'Beröring', varaktighet: 'Omedelbar', desc: 'Antänder ett stycke torrt, dött trä som sedan brinner av egen kraft; per extra effektgrad antänds ytterligare ett trästycke.' },
+  { id: 'sparlos', namn: 'Spårlös', skola: 'animism', niva: 4, flags: [], rackvidd: 'Beröring', varaktighet: 'S/4 minuter', desc: 'Målet rör sig utan att lämna spår; per extra effektgrad omfattas ännu en varelse.' },
+  { id: 'vaxtkunskap', namn: 'Växtkunskap', skola: 'animism', niva: 5, flags: [], rackvidd: 'Beröring', varaktighet: 'Omedelbar', desc: 'Ger omedelbart full kunskap om en växt magikern rör vid — vad den är och vad den används till.' },
+  { id: 'minska', namn: 'Minska', skola: 'animism', niva: 6, flags: [], rackvidd: 'Beröring', varaktighet: 'S/4 minuter', desc: 'Sänker en varelses STY, FYS, STO, KAR eller SMI med effektgraden i poäng.' },
+  { id: 'nedkalla-askvigg', namn: 'Nedkalla åskvigg', skola: 'animism', niva: 6, flags: ['F'], rackvidd: 'Sx10 rutor', varaktighet: 'Omedelbar', desc: 'Kallar ned en åskvigg ur regnmoln mot ett mål; kräver moln. Vållar skada likt elementarbesvärjelsen Blixt.' },
+  { id: 'vindpil', namn: 'Vindpil', skola: 'animism', niva: 6, flags: ['F'], rackvidd: 'Sx2 rutor', varaktighet: 'Sx1 SR', desc: 'Formar en pil av vind som skjuts mot ett mål och vållar skada.' },
+  { id: 'oka', namn: 'Öka', skola: 'animism', niva: 6, flags: [], rackvidd: 'Beröring', varaktighet: 'S/4 minuter', desc: 'Höjer en varelses STY, FYS, STO, KAR eller SMI med effektgraden i poäng (motsatsen till Minska).' },
+  { id: 'ortrankor', namn: 'Örtrankor', skola: 'animism', niva: 6, flags: ['F'], rackvidd: 'Särskild', varaktighet: 'Sx1 SR', desc: 'Kastar ett knippe frön som växer till rankor och snärjer in ett mål (en effektgrad per 10 STO hos offret).' },
+  { id: 'kamouflage', namn: 'Kamouflage', skola: 'animism', niva: 7, flags: [], rackvidd: 'Personlig', varaktighet: 'S/4 minuter', desc: 'Smälter in magikern i omgivningen så han blir mycket svår att upptäcka; söka kräver lyckat slag mot effektgraden.' },
+  { id: 'vindkontroll', namn: 'Vindkontroll', skola: 'animism', niva: 11, flags: [], rackvidd: 'Sx1 km', varaktighet: 'Sx1 timmar', desc: 'Förändrar vindens styrka och riktning inom räckvidden.' },
+  { id: 'forandra', namn: 'Förändra', skola: 'animism', niva: 12, flags: [], rackvidd: 'Sx2 rutor', varaktighet: 'Sx1 min', desc: 'Förvandlar föremål och varelser; varje grad räcker till tre poäng STO och man måste täcka hela målets STO.' },
+  { id: 'hela', namn: 'Hela', skola: 'animism', niva: 12, flags: [], rackvidd: 'Beröring', varaktighet: 'Omedelbar', desc: 'Läker 1T6 KP per effektgrad på en levande varelse och kan även bota sjukdomar.' },
+  { id: 'kanna-fiendskap', namn: 'Känna fiendskap', skola: 'animism', niva: 12, flags: [], rackvidd: 'Sx2 rutor', varaktighet: 'Omedelbar', desc: 'Känner av om en intelligent varelse är fientligt inställd mot någon.' },
+  { id: 'regnkontroll', namn: 'Regnkontroll', skola: 'animism', niva: 13, flags: [], rackvidd: 'S/4 km', varaktighet: 'Sx1 timmar', desc: 'Samlar moln och kallar fram regn inom räckvidden.' },
+  { id: 'dimma', namn: 'Dimma', skola: 'animism', niva: 15, flags: [], rackvidd: 'Sx10 rutor', varaktighet: 'S/4 timmar', desc: 'Framkallar dimma som täcker området; kräver tillgång till vatten eller fukt.' },
+  { id: 'neutralisera-gift', namn: 'Neutralisera gift', skola: 'animism', niva: 15, flags: ['F'], rackvidd: 'Beröring', varaktighet: 'Omedelbar', desc: 'Neutraliserar 1T6+1 poäng giftstyrka per effektgrad; verkar automatiskt utan att läka redan vållad skada.' },
+  // Varelsebesvärjelser — lärs separat för varje djurgrupp (däggdjur, fåglar,
+  // kräldjur, groddjur, fiskar, insekter/spindlar, skaldjur, maskar, blötdjur, växter).
+  { id: 'tillkalla-varelse', namn: 'Tillkalla varelse', skola: 'animism', niva: 2, flags: [], rackvidd: 'Sx4 km', varaktighet: 'Omedelbar', varelse: true, desc: 'Tillkallar 20 poäng STO varelser per effektgrad ur en vald djurgrupp inom räckvidden (ej kontroll). Lärs per djurgrupp.' },
+  { id: 'tala-med-varelse', namn: 'Tala med varelse', skola: 'animism', niva: 5, flags: [], rackvidd: 'Personlig', varaktighet: 'Sx1 minuter', varelse: true, desc: 'Kommunicerar med en varelse ur en vald djurgrupp. Lärs per djurgrupp.' },
+  { id: 'kontrollera-varelse', namn: 'Kontrollera varelse', skola: 'animism', niva: 10, flags: [], rackvidd: 'Sx10 rutor', varaktighet: 'Sx1 SR', varelse: true, desc: 'Tar full kontroll över 20 poäng STO varelser per effektgrad ur en vald djurgrupp. Lärs per djurgrupp.' },
+
+  // ── Elementarmagi ──
+  { id: 'ljus', namn: 'Ljus', skola: 'elementarmagi', niva: 2, flags: ['F'], rackvidd: 'Sx10 rutor', varaktighet: 'Sx4 minuter', desc: 'Får en del av ett föremål (≈50 cm³) att lysa; lyser upp allt inom tre meter. Per effektgrad ökad styrka eller varaktighet.' },
+  { id: 'laga', namn: 'Låga', skola: 'elementarmagi', niva: 2, flags: ['F', 'K'], rackvidd: 'Personlig', varaktighet: '1T3 SR', desc: 'En liten låga slår upp ur tummen; kan tända saker men skadar inte magikern.' },
+  { id: 'forsegla', namn: 'Försegla', skola: 'elementarmagi', niva: 3, flags: ['F'], rackvidd: 'Beröring', varaktighet: 'Sx1 minuter', desc: 'Binder samman två icke-levande föremål; STY som krävs för att bryta förseglingen ges av effektgraden.' },
+  { id: 'morker', namn: 'Mörker', skola: 'elementarmagi', niva: 3, flags: ['F'], rackvidd: 'Sx10 rutor', varaktighet: 'S/4 minuter', desc: 'Skapar mörker i ett område (1 m diameter per grad); motverkar Ljus.' },
+  { id: 'skold', namn: 'Sköld', skola: 'elementarmagi', niva: 3, flags: ['F', 'K'], rackvidd: 'Personlig', varaktighet: 'Omedelbar', desc: 'Formar en sköld framför magikern med BV 4 (+2 per effektgrad) som parerar första anfallet automatiskt.' },
+  { id: 'flammande-hand', namn: 'Flammande hand', skola: 'elementarmagi', niva: 4, flags: ['F'], rackvidd: 'Beröring', varaktighet: '1T3 minuter', desc: 'Ena handen flammar och ger 1T3 extra skada per effektgrad på utdelade slag; antänder lättantändliga föremål.' },
+  { id: 'kalla-handen', namn: 'Kalla handen', skola: 'elementarmagi', niva: 4, flags: ['F', 'K'], rackvidd: 'S/2 rutor', varaktighet: 'Omedelbar', desc: 'Avfyrar en köldstråle från handen mot en varelse.' },
+  { id: 'blixt', namn: 'Blixt', skola: 'elementarmagi', niva: 6, flags: ['F', 'K'], rackvidd: 'Sx10 rutor', varaktighet: 'Omedelbar', desc: 'En blixt slår från magikern till målet; 1T6 skada per effektgrad rakt från totala KP (rustning skyddar ej).' },
+  { id: 'eld', namn: 'Eld', skola: 'elementarmagi', niva: 6, flags: ['F'], rackvidd: 'Sx10 rutor', varaktighet: 'Omedelbar', desc: 'Tillfällig hetta i en sfär (1 m diameter); 1T6 skada per effektgrad och antänder lättantändligt. Kan spridas på flera sfärer.' },
+  { id: 'energistrale', namn: 'Energistråle', skola: 'elementarmagi', niva: 6, flags: ['F'], rackvidd: 'Sx10 rutor', varaktighet: 'Omedelbar', desc: 'En stråle av magisk kraft träffar målet; 1T6 skada per effektgrad — Sköld och rustning skyddar inte.' },
+  { id: 'frost', namn: 'Frost', skola: 'elementarmagi', niva: 6, flags: ['F'], rackvidd: 'Sx10 rutor', varaktighet: 'Omedelbar', desc: 'Plötslig köld i en sfär; verkar som Eld fast med kyla.' },
+  { id: 'forbanna-vapen', namn: 'Förbanna vapen', skola: 'elementarmagi', niva: 6, flags: [], rackvidd: 'Sx10 rutor', varaktighet: 'Sx1 minuter', desc: 'Sänker ett vapens chans att träffa och dess skada med 1 CL per effektgrad.' },
+  { id: 'fortrolla-vapen', namn: 'Förtrolla vapen', skola: 'elementarmagi', niva: 6, flags: [], rackvidd: 'Sx10 rutor', varaktighet: 'Sx1 minuter', desc: 'Höjer ett vapens chans att träffa och dess skada med 1 CL per effektgrad.' },
+  { id: 'knacka', namn: 'Knäcka', skola: 'elementarmagi', niva: 6, flags: ['F', 'K'], rackvidd: 'Sx2 rutor', varaktighet: 'Omedelbar', desc: 'Skadar ett icke-levande föremål och sänker dess BV; kan knäcka vapen och lås.' },
+  { id: 'oppna', namn: 'Öppna', skola: 'elementarmagi', niva: 6, flags: ['F'], rackvidd: 'Beröring', varaktighet: 'Omedelbar', desc: 'Öppnar låsta dörrar, luckor och kistor (motsats till Försegla och lås).' },
+  { id: 'viggfangare', namn: 'Viggfångare', skola: 'elementarmagi', niva: 7, flags: ['F'], rackvidd: 'Personlig', varaktighet: 'Omedelbar', desc: 'Kastas under åskväder och fångar in en blixt; energin lagras som PSY-poäng (8 + 4 per effektgrad) att använda inom en timme.' },
+  { id: 'virvelskold', namn: 'Virvelsköld', skola: 'elementarmagi', niva: 8, flags: ['F'], rackvidd: 'Personlig', varaktighet: 'Sx1 SR', desc: 'En kraftig luftvirvel (≈75 cm diameter) kring magikern som avvärjer inkommande och avfyrade projektiler.' },
+  { id: 'frammana-elementar', namn: 'Frammana/skicka bort elementar', skola: 'elementarmagi', niva: 9, flags: ['F'], rackvidd: 'Sx10 rutor', varaktighet: 'Sx1 SR', desc: 'Frammanar eller skickar bort en elementarvarelse av de fyra elementen (sylf, gnom, undin, salamander) eller mörker (umbra).' },
+  { id: 'astralvapen', namn: 'Astralvapen', skola: 'elementarmagi', niva: 10, flags: ['F'], rackvidd: 'S/2 rutor', varaktighet: 'Sx1 SR', desc: 'Frammanar ett vapen av magisk energi med skärande egg (en effektgrad per kg). Räknas som magiskt, vållar två poäng mindre skada, väger ingenting.' },
+  { id: 'explosion', namn: 'Explosion', skola: 'elementarmagi', niva: 11, flags: ['F', 'K'], rackvidd: 'Sx10 rutor', varaktighet: 'Omedelbar', desc: 'En eld- och kraftexplosion i en punkt; skada per effektgrad rakt från totala KP i en radie, träffar alla i området (även magikern).' },
+
+  // ── Mentalism ──
+  { id: 'sprang', namn: 'Språng', skola: 'mentalism', niva: 1, flags: ['K'], rackvidd: 'Beröring', varaktighet: 'S/4 SR', desc: 'Ett jättesprång utan ansats — upp till fyra meter vågrätt och två meter lodrätt per effektgrad. Normalt SMI-slag vid landning.' },
+  { id: 'motstandskraft', namn: 'Motståndskraft', skola: 'mentalism', niva: 3, flags: [], rackvidd: 'Beröring', varaktighet: 'Sx1 minuter', desc: 'Skyddar mot Eld, Frost och annan hetta/kyla; reducerar skadan med ett poäng per effektgrad.' },
+  { id: 'levitation', namn: 'Levitation', skola: 'mentalism', niva: 4, flags: [], rackvidd: 'Personlig', varaktighet: 'Sx1 minuter', desc: 'Svävar långsamt upp och ned i luften.' },
+  { id: 'kanslolasning', namn: 'Känsloläsning', skola: 'mentalism', niva: 5, flags: [], rackvidd: 'Sx2 rutor', varaktighet: 'S/4 SR', desc: 'Avläser en varelses känslor utan att den märker det.' },
+  { id: 'lyft', namn: 'Lyft', skola: 'mentalism', niva: 6, flags: [], rackvidd: 'Sx4 rutor', varaktighet: 'Sx1 minuter', desc: 'Lyfter och flyttar ett föremål telekinetiskt (tre poäng STO per effektgrad).' },
+  { id: 'skydd', namn: 'Skydd', skola: 'mentalism', niva: 6, flags: [], rackvidd: 'Beröring', varaktighet: 'S/4 minuter', desc: 'Fungerar likt bepansring — varje effektgrad ger en poäng absorbering.' },
+  { id: 'tankeoverforing', namn: 'Tankeöverföring', skola: 'mentalism', niva: 6, flags: [], rackvidd: 'Sx10 rutor', varaktighet: 'Sx1 SR', desc: 'Kommunicerar med en varelse via tanken; endast enkla tankar och känslor kan överföras.' },
+  { id: 'vattenandning', namn: 'Vattenandning', skola: 'mentalism', niva: 7, flags: [], rackvidd: 'Beröring', varaktighet: 'Sx1 timmar', desc: 'Låter den förhäxade andas under vatten utan problem.' },
+  { id: 'flyga', namn: 'Flyga', skola: 'mentalism', niva: 8, flags: [], rackvidd: 'Beröring', varaktighet: 'Sx5 rutor', desc: 'Ger förmågan att flyga fritt; hastighet Sx5 rutor, +20 STO buren vikt per effektgrad.' },
+  { id: 'laderhud', namn: 'Läderhud', skola: 'mentalism', niva: 8, flags: [], rackvidd: 'Personlig', varaktighet: 'Sx1 timmar', desc: 'Härdar huden till seg, brunaktig läderhud som ger skydd; KAR-baserade färdigheter −2.' },
+  { id: 'morkersyn', namn: 'Mörkersyn', skola: 'mentalism', niva: 8, flags: [], rackvidd: 'Beröring', varaktighet: 'Sx1 timmar', desc: 'Uppfattar värmestrålning och ser temperaturskillnader i mörker upp till ≈120 m.' },
+  { id: 'osynlighet', namn: 'Osynlighet', skola: 'mentalism', niva: 9, flags: [], rackvidd: 'Beröring', varaktighet: 'Sx1 minuter', desc: 'Gör målet osynligt (6 PSY per effektgrad); bryts om den osynlige anfaller eller använder magi.' },
+  { id: 'syn', namn: 'Syn', skola: 'mentalism', niva: 9, flags: [], rackvidd: 'Personlig', varaktighet: 'Sx1 SR', desc: 'Magikern ser och hör vad någon eller något inom räckvidden ser och hör (fjärrseende).' },
+  { id: 'elchock', namn: 'Elchock', skola: 'mentalism', niva: 10, flags: ['F', 'K'], rackvidd: 'Beröring', varaktighet: 'Omedelbar', desc: 'En elektrisk urladdning vid beröring; 1T4 skada per effektgrad — metallrustning absorberar bara hälften.' },
+  { id: 'tankelasning', namn: 'Tankeläsning', skola: 'mentalism', niva: 11, flags: [], rackvidd: 'Sx2 rutor', varaktighet: 'Sx1 minuter', desc: 'Läser en intelligent varelses tankar utan att offret märker något.' },
+  { id: 'kontrollera-person', namn: 'Kontrollera person', skola: 'mentalism', niva: 12, flags: [], rackvidd: 'Sx4 rutor', varaktighet: 'Sx1 minuter', desc: 'Kontrollerar en intelligent varelse (övervinn dess PSY); kan ej tvinga till självskada eller magi.' },
+  { id: 'telepati', namn: 'Telepati', skola: 'mentalism', niva: 12, flags: [], rackvidd: 'Special', varaktighet: 'Sx1 minuter', desc: 'Tankekommunikation med en känd intelligent varelse oavsett avstånd; magikern fungerar som telepatisk växel.' },
+  { id: 'teleportera', namn: 'Teleportera', skola: 'mentalism', niva: 12, flags: [], rackvidd: 'Beröring', varaktighet: 'Omedelbar', desc: 'Teleporterar tre poäng STO per effektgrad upp till Sx1 km; ovillig varelse får göra motstånd med PSY.' },
+  { id: 'magisk-syn', namn: 'Magisk syn', skola: 'mentalism', niva: 13, flags: [], rackvidd: 'Beröring', varaktighet: 'Sx1 minuter', desc: 'Förhäxad syn som ser osynliga och dolda ting (t.ex. den som gjort sig osynlig) samt avslöjar besvärjelser.' },
+  { id: 'oradd', namn: 'Orädd', skola: 'mentalism', niva: 14, flags: [], rackvidd: 'Beröring', varaktighet: 'Sx1 timmar', desc: 'Den förhäxade behöver inte slå på Skräcktabellen oavsett vad han möter.' },
+]
+
+export const spellById = (id) => SPELLS.find((s) => s.id === id) || null
+export const schoolById = (id) => MAGIC_SCHOOLS.find((s) => s.id === id) || null
 
 // ── BASCHANS (BC) ────────────────────────────────────────────────────────
 // Gratis FV man får på primära färdigheter och yrkesfärdigheter, från

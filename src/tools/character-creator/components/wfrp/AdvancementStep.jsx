@@ -2,8 +2,22 @@ import { useState } from 'react'
 import { v4 as uuid } from 'uuid'
 import {
   CHARACTERISTICS, charAdvanceCost, skillAdvanceCost, talentCost, SKILL_CHAR,
-  CLASSES, careersByClass, careerById, careerChangeCost,
+  CLASSES, careersByClass, careerById, careerChangeCost, skillCharacteristic,
 } from '../../lib/wfrpData.js'
+
+// WFRP 4e Basic Skills (core rulebook): every character has all of these, even
+// with no advances, and can Test them untrained. Every other skill (Heal, Lore,
+// Trade, …) is an Advanced Skill that must be learned before it can be used.
+const BASIC_SKILLS = [
+  'Art', 'Athletics', 'Bribery', 'Charm', 'Charm Animal', 'Climb',
+  'Consume Alcohol', 'Cool', 'Dodge', 'Drive', 'Endurance', 'Entertain',
+  'Gamble', 'Gossip', 'Haggle', 'Intimidate', 'Intuition', 'Leadership',
+  'Melee', 'Navigation', 'Outdoor Survival', 'Perception', 'Ride', 'Row', 'Stealth',
+]
+const BASIC_SET = new Set(BASIC_SKILLS)
+// The base name of a (possibly specialised) skill, e.g. "Melee (Basic)" → "Melee".
+const skillBase = (name) => (name || '').replace(/\s*\(.*\)\s*$/, '').trim()
+const isBasicSkill = (name) => BASIC_SET.has(skillBase(name))
 
 export default function AdvancementStep({ state, update, setState, derived }) {
   const { species, career } = derived
@@ -91,6 +105,58 @@ export default function AdvancementStep({ state, update, setState, derived }) {
   const { completion, careerLevelInfo, careerLevelIdx, maxLevelIdx, careerChangeCost: levelUpCost } = derived
   const nextLevel = careerLevelIdx < maxLevelIdx ? career.levels[careerLevelIdx + 1] : null
 
+  // The characteristics this career's eight skills draw on (the data doesn't
+  // model the rulebook's three "career characteristics" directly, so we surface
+  // the ones the career's skills are governed by, in sheet order).
+  const careerCharKeys = CHARACTERISTICS
+    .filter((c) => career.skills.some((sk) => skillCharacteristic(sk) === c.key))
+    .map((c) => c.key)
+  const charName = (k) => (CHARACTERISTICS.find((c) => c.key === k) || {}).name || k
+
+  // Split the character's skills into Basic (generic) and Advanced.
+  const basicRows = []
+  const advancedRows = []
+  for (const sk of derived.skills) (isBasicSkill(sk.name) ? basicRows : advancedRows).push(sk)
+  // Every character has all Basic skills, so list the ones not already present
+  // as 0-advance rows (a specialised one like "Melee (Basic)" already covers its
+  // group). They advance as non-career (×2) unless they're a career/species skill.
+  const haveBase = new Set(derived.skills.map((s) => skillBase(s.name)))
+  for (const name of BASIC_SKILLS) {
+    if (haveBase.has(name)) continue
+    const ck = skillCharacteristic(name)
+    const cv = ck ? derived.finalChars[ck] : null
+    basicRows.push({
+      name, char: ck, charValue: cv,
+      advances: 0, creationAdv: 0, purchasedAdv: 0,
+      total: cv, source: 'generic', nonCareer: true,
+    })
+  }
+
+  const renderSkillRow = (sk, untouched) => {
+    const cost = skillAdvanceCost(sk.advances) * (sk.nonCareer ? 2 : 1)
+    const canRemove = sk.source === 'extra' && sk.purchasedAdv <= 0
+    const advTitle = `${sk.advances} advance${sk.advances === 1 ? '' : 's'}`
+      + (sk.creationAdv ? ` — ${sk.creationAdv} from creation` : '')
+      + (sk.purchasedAdv ? `${sk.creationAdv ? ',' : ' —'} ${sk.purchasedAdv} bought` : '')
+    return (
+      <div key={sk.name} className={`cc-adv-row cc-adv-row--skill ${untouched ? 'is-untouched' : ''}`}>
+        <span className="cc-adv-row__name">
+          {sk.name} {sk.char && <em>{sk.char}</em>}
+          {sk.nonCareer && <span className="cc-x2" title="Non-career skill: double cost">×2</span>}
+        </span>
+        <span className="cc-adv-row__adv" title={advTitle}>{sk.advances} <small>adv</small></span>
+        <span className="cc-adv-row__val">{sk.total ?? '—'}</span>
+        <span className="cc-adv-row__cost">next {cost}</span>
+        <div className="cc-stepper cc-stepper--sm">
+          {canRemove
+            ? <button onClick={() => removeSkill(sk.name)} title="Remove this added skill">×</button>
+            : <button onClick={() => bumpSkill(sk.name, -1)} disabled={sk.purchasedAdv <= 0}>−</button>}
+          <button onClick={() => bumpSkill(sk.name, 1)} disabled={cost > avail}>+</button>
+        </div>
+      </div>
+    )
+  }
+
   return (
     <div className="cc-step">
       <h2>Advancement</h2>
@@ -117,8 +183,30 @@ export default function AdvancementStep({ state, update, setState, derived }) {
       </div>
 
       {/* ── Status / career level ── */}
-      <h3 className="cc-subhead">Status — {careerLevelInfo.title} <span className="cc-pill">{derived.status}</span></h3>
+      <h3 className="cc-subhead">
+        Status — Level {careerLevelIdx + 1} of {maxLevelIdx + 1}: {careerLevelInfo.title}
+        <span className="cc-pill">{derived.status}</span>
+      </h3>
       <div className="cc-status">
+        <div className="cc-career-ref">
+          <div className="cc-career-levels">
+            {career.levels.map((lv, i) => (
+              <span key={i} className={`cc-career-level ${i === careerLevelIdx ? 'is-current' : ''}`}>
+                {i === careerLevelIdx ? '▸ ' : ''}{i + 1}. {lv.title} <em>{lv.status}</em>
+              </span>
+            ))}
+          </div>
+          <p className="cc-career-ref__line">
+            <strong>Career characteristics:</strong> {careerCharKeys.map(charName).join(', ')}
+          </p>
+          <p className="cc-career-ref__line">
+            <strong>Career skills:</strong> {career.skills.join(', ')}
+          </p>
+          <p className="cc-note">
+            Advancing these (vs. non-career ×2 skills) is what completes the level. "Career characteristics"
+            shown here are the ones your career skills are governed by.
+          </p>
+        </div>
         <p className="cc-note">
           To complete this career level (and raise your Status) you need <strong>{completion.req} advances</strong> in
           all your career characteristics, in eight career skills, and at least one career talent. We approximate
@@ -194,34 +282,29 @@ export default function AdvancementStep({ state, update, setState, derived }) {
       </div>
 
       <h3 className="cc-subhead">Skills</h3>
+      <p className="cc-note">
+        <strong>Adv</strong> is the skill's current advances; the next number is the skill total
+        (characteristic + advances). Advancing a non-career skill (×2) costs double.
+      </p>
+
+      <h4 className="cc-minihead">Generic skills <span className="cc-note">— Basic skills every character has, even with no advances</span></h4>
       <div className="cc-adv-grid">
-        {derived.skills.map((sk) => {
-          const cost = skillAdvanceCost(sk.advances) * (sk.nonCareer ? 2 : 1)
-          const canRemove = sk.source === 'extra' && sk.purchasedAdv <= 0
-          return (
-            <div key={sk.name} className="cc-adv-row">
-              <span className="cc-adv-row__name">
-                {sk.name} {sk.char && <em>{sk.char}</em>}
-                {sk.nonCareer && <span className="cc-x2" title="Non-career skill: double cost">×2</span>}
-              </span>
-              <span className="cc-adv-row__val">{sk.total ?? '—'}</span>
-              <span className="cc-adv-row__bought">{sk.purchasedAdv ? `+${sk.purchasedAdv}` : '—'}</span>
-              <span className="cc-adv-row__cost">next {cost}</span>
-              <div className="cc-stepper cc-stepper--sm">
-                {canRemove
-                  ? <button onClick={() => removeSkill(sk.name)} title="Remove this added skill">×</button>
-                  : <button onClick={() => bumpSkill(sk.name, -1)} disabled={sk.purchasedAdv <= 0}>−</button>}
-                <button onClick={() => bumpSkill(sk.name, 1)} disabled={cost > avail}>+</button>
-              </div>
-            </div>
-          )
-        })}
+        {basicRows.map((sk) => renderSkillRow(sk, sk.source === 'generic'))}
       </div>
+
+      <h4 className="cc-minihead">Advanced skills <span className="cc-note">— must be learned; add new ones below</span></h4>
+      {advancedRows.length > 0 ? (
+        <div className="cc-adv-grid">
+          {advancedRows.map((sk) => renderSkillRow(sk, false))}
+        </div>
+      ) : (
+        <p className="cc-note">No advanced skills yet — add one with the box below.</p>
+      )}
       <div className="cc-buy-talent">
         <input
           list="cc-skill-suggestions"
           value={skillName}
-          placeholder="Add a new skill (e.g. Lore (Politics), Melee (Polearm))"
+          placeholder="Add an advanced skill (e.g. Lore (Politics), Ranged (Bow))"
           onChange={(e) => setSkillName(e.target.value)}
           onKeyDown={(e) => { if (e.key === 'Enter') addSkill(skillName) }}
         />

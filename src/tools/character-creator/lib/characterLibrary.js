@@ -7,6 +7,7 @@ import {
   bcFromAttr, bodyLocationKP, skadebonus, forflyttning,
   socialStand, startkapital, AGE_CATEGORIES, epRaiseCost,
   POWER_TIERS, TIER_EP, TIER_MAXFV, synHorsel,
+  MAGIC_SCHOOLS, SPELLS, spellById, spellLearnCost,
 } from './dodData.js'
 
 export const CHARACTER_KEY = 'dod-character-creator'
@@ -35,6 +36,7 @@ export function emptyState() {
     formagor: [], // [{ id, bp, dice, total, text }]
     yrkesSkills: [], // [{ key, skillId, label }]
     fvBoost: {}, // { key: extraPointsBoughtWithEP }
+    spells: [], // [spellId] — lärda besvärjelser (kostar EP, se spellLearnCost)
     utseende: '',
     bakgrund: '',
     inventory: [], // [{ id, namn, typ, stat, pris, qty }]
@@ -47,6 +49,7 @@ export function migrateState(stored) {
     ...emptyState(), ...stored,
     base: { ...emptyState().base, ...(stored.base || {}) },
     inventory: Array.isArray(stored.inventory) ? stored.inventory : [],
+    spells: Array.isArray(stored.spells) ? stored.spells : [],
   }
 }
 
@@ -56,6 +59,10 @@ export const profById = (id) => PROFESSIONS.find((p) => p.id === id) || null
 const primaryById = (id) => PRIMARY_SKILLS.find((s) => s.id === id) || null
 const secondaryById = (id) => SECONDARY_SKILLS.find((s) => s.id === id) || null
 export const skillById = (id) => primaryById(id) || secondaryById(id) || null
+const schoolByName = (label) => {
+  const norm = (label || '').trim().toLowerCase()
+  return MAGIC_SCHOOLS.find((s) => !s.general && s.namn.toLowerCase() === norm) || null
+}
 
 // Secondary skills a profession may choose as yrkesfärdigheter, with the
 // per-profession max count for group skills (språk, vapen, …).
@@ -181,7 +188,8 @@ export function deriveCharacter(state) {
     const boost = state.fvBoost[ys.key] || 0
     const floor = Math.max(bc, raceFV) + raceAdd
     skills.push({
-      key: ys.key, namn: ys.label ? `${s.namn} (${ys.label})` : s.namn,
+      key: ys.key, skillId: ys.skillId, label: ys.label,
+      namn: ys.label ? `${s.namn} (${ys.label})` : s.namn,
       grund: s.grund, typ: 'Yrkesfärdighet', bc, boost, raceAdd,
       fv: floor + boost,
     })
@@ -197,6 +205,42 @@ export function deriveCharacter(state) {
     })
   }
 
+  // ── Magi & besvärjelser ─────────────────────────────────────────────────
+  // Kända magiskolor härleds ur de magiskole-yrkesfärdigheter rollpersonen valt
+  // (etiketten = skolans namn). FV i skolan styr vilka besvärjelser som kan läras.
+  const knownSchools = []
+  for (const sk of skills) {
+    if (sk.skillId !== 'magiskola') continue
+    const school = schoolByName(sk.label)
+    if (school && !knownSchools.some((k) => k.id === school.id)) {
+      knownSchools.push({ id: school.id, namn: school.namn, fv: sk.fv })
+    }
+  }
+  // Allmänna besvärjelser styrs av högsta magiskole-FV.
+  const allmanFv = knownSchools.length ? Math.max(...knownSchools.map((s) => s.fv)) : null
+  const schoolFv = (skolaId) =>
+    skolaId === 'allman' ? allmanFv : (knownSchools.find((s) => s.id === skolaId)?.fv ?? null)
+
+  const magicSpells = []
+  let spellEp = 0
+  for (const id of state.spells || []) {
+    const sp = spellById(id)
+    if (!sp) continue
+    const govFv = schoolFv(sp.skola)
+    const cost = spellLearnCost(sp.niva)
+    const overCap = govFv == null || sp.niva > govFv
+    spellEp += cost
+    magicSpells.push({ ...sp, govFv, cost, overCap })
+  }
+  const magic = {
+    capable: knownSchools.length > 0,
+    schools: knownSchools,
+    allmanFv,
+    spells: magicSpells,
+    spellEp,
+    overSpells: magicSpells.filter((s) => s.overCap),
+  }
+
   // ── Budgetar ──────────────────────────────────────────────────────────
   let bpSpent = 0
   if (race) bpSpent += race.cost
@@ -208,7 +252,7 @@ export function deriveCharacter(state) {
   for (const f of state.formagor) bpSpent += f.bp || 0
   const bpRemaining = tier.bp - bpSpent
 
-  const epSpent = epCost.reduce((a, b) => a + b, 0)
+  const epSpent = epCost.reduce((a, b) => a + b, 0) + spellEp
   const epRemaining = epPool - epSpent
 
   // Utrustning — spenderas av startkapital (silvermynt), inte BP/EP.
@@ -232,10 +276,11 @@ export function deriveCharacter(state) {
     finalAttrs, derived, social, socialTotal,
     baseKapital, slutKapital, kapitalTotal, skills,
     bpSpent, bpRemaining, epSpent, epRemaining,
-    utrustningKostnad, silverKvar,
+    utrustningKostnad, silverKvar, magic,
     kravFail, yrkesLimit, yrkesChosen, overFV, maxFV,
     valid:
       bpRemaining >= 0 && epRemaining >= 0 && kravFail.length === 0 &&
-      !!race && !!prof && yrkesChosen <= yrkesLimit && overFV.length === 0,
+      !!race && !!prof && yrkesChosen <= yrkesLimit && overFV.length === 0 &&
+      magic.overSpells.length === 0,
   }
 }

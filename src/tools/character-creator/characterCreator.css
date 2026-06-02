@@ -293,6 +293,7 @@
 .cc-career-level { font-size: 12px; color: #6b6357; }
 .cc-career-level em { font-family: ui-monospace, monospace; font-style: normal; color: #8a6d3b; }
 .cc-career-level.is-first { color: #5a4a2c; font-weight: 600; }
+.cc-career-level.is-current { color: #5a4a2c; font-weight: 700; }
 
 /* ── Characteristics grid ─────────────────────────────── */
 .cc-char-grid { max-width: 560px; display: flex; flex-direction: column; gap: 2px; }
@@ -402,10 +403,23 @@
 .cc-bought-list li { display: inline-flex; align-items: center; gap: 4px; background: #efe9da; border-radius: 12px; padding: 2px 4px 2px 10px; font-size: 12px; color: #3a352c; }
 .cc-x2 { font-size: 10px; font-weight: 700; color: #b3402f; background: #f6dcd7; border-radius: 4px; padding: 0 4px; margin-left: 4px; }
 
+/* Skill advance rows: name | Adv | total | cost | stepper */
+.cc-adv-row--skill { grid-template-columns: 1fr 52px 44px 60px auto; }
+.cc-adv-row__adv { text-align: center; font-weight: 700; color: #5a4a2c; }
+.cc-adv-row__adv small { font-weight: 400; font-size: 9px; color: #8a6d3b; }
+.cc-adv-row.is-untouched { opacity: 0.78; }
+.cc-adv-row.is-untouched .cc-adv-row__val { color: #8a6d3b; }
+.cc-minihead { margin: 18px 0 8px; font-size: 13px; color: #5a4a2c; }
+.cc-minihead .cc-note { font-weight: 400; }
+
 /* ── Status / career-level completion ─────────────────── */
 .cc-subhead .cc-pill { font-weight: 600; }
 .cc-status { background: #fbf7ec; border: 1px solid #e3dcc8; border-radius: 8px; padding: 10px 14px; margin-bottom: 8px; }
 .cc-status .cc-note { margin-top: 0; }
+.cc-career-ref { background: #fff; border: 1px solid #e3dcc8; border-radius: 6px; padding: 8px 12px; margin-bottom: 10px; }
+.cc-career-ref .cc-career-levels { margin-bottom: 8px; }
+.cc-career-ref__line { margin: 4px 0; font-size: 13px; color: #3a352c; }
+.cc-career-ref__line strong { color: #5a4a2c; }
 .cc-status .cc-roll-bar { margin: 10px 0 0; }
 .cc-checklist { list-style: none; margin: 8px 0; padding: 0; display: flex; flex-direction: column; gap: 3px; }
 .cc-checklist li { font-size: 13px; color: #6b6357; }
@@ -414,9 +428,28 @@
 .cc-change-career label { display: flex; flex-direction: column; gap: 4px; font-size: 12px; font-weight: 600; color: #5a4a2c; }
 .cc-change-career select { border: 1px solid #c9b893; border-radius: 6px; padding: 7px 10px; background: #fff; min-width: 240px; font-size: 13px; }
 
+/* ── Magiskola-dropdown & besvärjelser ── */
+.cc-pick__add select { flex: 1; border: 1px solid #c9b893; border-radius: 5px; padding: 4px 8px; font-size: 12px; background: #fff; }
+.cc-magic { margin-top: 28px; border-top: 1px solid #e3dcc8; padding-top: 18px; }
+.cc-magic > h3 { display: flex; align-items: center; justify-content: space-between; margin: 0 0 8px; }
+.cc-magic-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 24px; align-items: start; }
+.cc-magic-school h4 { margin: 0 0 6px; font-family: 'Georgia', serif; color: #5a4a2c; font-size: 14px; display: flex; align-items: baseline; gap: 8px; }
+.cc-magic-fv { font-size: 11px; font-weight: 600; color: #8a6d3b; background: #f0e9d6; padding: 1px 7px; border-radius: 10px; }
+.cc-magic-fv.is-warn { color: #8a2e1e; background: #f6dcd7; }
+.cc-magic-orphan { grid-column: 1 / -1; margin-top: 8px; }
+.cc-spell.is-locked { opacity: 0.55; }
+.cc-spell__niva { font-family: ui-monospace, monospace; font-size: 11px; font-weight: 700; color: #8a6d3b; min-width: 16px; text-align: center; }
+.cc-spell__flag { font-style: normal; font-size: 9px; font-weight: 700; color: #8a2e1e; background: #f6ece6; border-radius: 3px; padding: 0 3px; margin-left: 3px; vertical-align: super; }
+.cc-spell__cost { margin-left: auto; font-size: 11px; color: #8a6d3b; font-family: ui-monospace, monospace; white-space: nowrap; }
+.cc-sheet-spells { margin-bottom: 8px; }
+.cc-sheet-spells > strong { display: block; font-size: 12px; color: #5a4a2c; margin-bottom: 2px; }
+.cc-sheet-spells ul { margin: 0 0 4px; padding-left: 18px; }
+.cc-sheet-spell__niva { font-family: ui-monospace, monospace; font-weight: 700; color: #8a6d3b; }
+.cc-sheet-spells li.is-over { color: #8a2e1e; }
+
 @media (max-width: 720px) {
   .cc__main { grid-template-columns: 1fr; }
-  .cc-skills-grid, .cc-sheet__cols, .cc-eq-grid { grid-template-columns: 1fr; }
+  .cc-skills-grid, .cc-sheet__cols, .cc-eq-grid, .cc-magic-grid { grid-template-columns: 1fr; }
   .cc-skill-list, .cc-adv-grid { grid-template-columns: 1fr; }
   .cc-roster__list, .cc-roster__empty { width: 280px; }
 }

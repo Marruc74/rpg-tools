@@ -1,11 +1,11 @@
 import { useRef, useState } from 'react'
 import { toPng } from 'html-to-image'
-import { ALL_ATTRS, ATTR_NAMES, KP_LOCATIONS, svardshand } from '../lib/dodData.js'
+import { ALL_ATTRS, ATTR_NAMES, KP_LOCATIONS, svardshand, MAGIC_SCHOOLS } from '../lib/dodData.js'
 
 export default function SheetView({ state, derived }) {
   const ref = useRef(null)
   const [busy, setBusy] = useState(false)
-  const { race, prof, age, tier, finalAttrs, derived: d, social, slutKapital, skills, silverKvar, synBonus, horselBonus } = derived
+  const { race, prof, age, tier, finalAttrs, derived: d, social, slutKapital, skills, silverKvar, synBonus, horselBonus, magic } = derived
   const inventory = state.inventory || []
 
   const exportPng = async () => {
@@ -34,6 +34,11 @@ export default function SheetView({ state, derived }) {
   if (derived.kravFail.length) issues.push('Yrkets grundegenskapskrav ej uppfyllda')
   if (derived.yrkesChosen > derived.yrkesLimit) issues.push('För många yrkesfärdigheter')
   if (derived.overFV.length) issues.push(`FV över max (${derived.maxFV}) på ${derived.overFV.length} färdighet(er)`)
+  if (magic.overSpells.length) issues.push(`${magic.overSpells.length} besvärjelse(r) över skolvärdet`)
+
+  const spellGroups = MAGIC_SCHOOLS
+    .map((sc) => ({ namn: sc.namn, spells: magic.spells.filter((sp) => sp.skola === sc.id) }))
+    .filter((g) => g.spells.length)
 
   return (
     <div className="cc-step">
@@ -128,6 +133,25 @@ export default function SheetView({ state, derived }) {
           <div className="cc-sheet__block">
             <h4>Yrkesförmåga — {prof.namn}</h4>
             <p>{prof.formaga}</p>
+          </div>
+        )}
+        {spellGroups.length > 0 && (
+          <div className="cc-sheet__block">
+            <h4>Besvärjelser</h4>
+            {spellGroups.map((g) => (
+              <div key={g.namn} className="cc-sheet-spells">
+                <strong>{g.namn}</strong>
+                <ul>
+                  {g.spells.map((sp) => (
+                    <li key={sp.id} className={sp.overCap ? 'is-over' : ''}>
+                      <span className="cc-sheet-spell__niva">{sp.niva}</span> {sp.namn}
+                      {sp.flags.length > 0 && ` (${sp.flags.join(', ')})`}
+                      {' — '}{sp.rackvidd} · {sp.varaktighet}
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            ))}
           </div>
         )}
         {state.formagor.length > 0 && (
