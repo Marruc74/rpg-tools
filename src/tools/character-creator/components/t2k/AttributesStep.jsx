@@ -1,10 +1,15 @@
 import { ATTRIBUTES, RANKS, DIE, RANK_DESC, rankIndex } from '../../lib/t2kData.js'
 
-// Step 2 — start at C in all four; make three increases (one step each, up to A);
-// you may drop one attribute to D for one extra increase.
+const d3 = () => 1 + Math.floor(Math.random() * 3)
+
+// Step 2 — start at C in all four; make your increases (one step each, up to A);
+// you may drop one attribute to D for one extra increase. Archetype: 3 increases.
+// Life path: roll 2D3 for your increase budget.
 export default function AttributesStep({ state, update, derived }) {
   const arch = derived.archetype
+  const lifepath = state.method === 'lifepath'
   const setAttr = (k, r) => update({ attrs: { ...state.attrs, [k]: r } })
+  const rollIncreases = () => update({ lpIncreases: d3() + d3() })
   const bump = (k, dir) => {
     const order = RANKS // A,B,C,D  (index 0 = best)
     const i = order.indexOf(state.attrs[k])
@@ -16,13 +21,21 @@ export default function AttributesStep({ state, update, derived }) {
     <div className="cc-step">
       <h2>Attributes</h2>
       <p className="cc-step__lede">
-        Everyone starts at <strong>C</strong> in all four attributes. Make <strong>{derived.increasesAllowed} increases</strong> of
+        Everyone starts at <strong>C</strong> in all four attributes. Make your increases of
         one step each (up to A). You may drop one attribute to D to earn one extra increase
         {arch && <> — your key attribute is <strong>{arch.keyAttr}</strong></>}.
+        {lifepath && <> Roll <strong>2D3</strong> for your increase budget.</>}
       </p>
 
+      {lifepath && (
+        <div className="cc-roll-bar">
+          <button className="cc-btn" onClick={rollIncreases}>🎲 Roll 2D3 increases</button>
+          {state.lpIncreases != null && <span className="cc-note">Budget: {state.lpIncreases} increases{derived.decreasesUsed ? ' (+1 from dropping to D)' : ''}</span>}
+        </div>
+      )}
+
       <div className={`cc-krav ${derived.attrValid ? 'is-ok' : 'is-fail'}`}>
-        Increases used: {derived.increasesUsed} / {derived.increasesAllowed}
+        {lifepath && state.lpIncreases == null ? 'Roll your 2D3 increase budget first' : `Increases used: ${derived.increasesUsed} / ${derived.increasesAllowed}`}
         {derived.decreasesUsed > 1 && ' · only one attribute may be dropped to D'}
       </div>
 

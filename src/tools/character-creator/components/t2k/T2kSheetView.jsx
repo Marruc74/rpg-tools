@@ -24,13 +24,18 @@ export default function T2kSheetView({ state, update, derived }) {
     }
   }
 
+  const lifepath = derived.method === 'lifepath'
   const issues = []
-  if (!arch) issues.push('No archetype chosen')
   if (!derived.nameOk) issues.push('No name')
-  if (!derived.attrValid) issues.push(`Use exactly ${derived.increasesAllowed} attribute increases (max one drop to D)`)
-  if (!derived.spreadOk) issues.push('Skills must be exactly one B, two C, three D')
-  if (derived.skillCounts.B > 0 && !derived.bSkillOk) issues.push('Your B-level skill must be a key skill')
-  if (!derived.specialty) issues.push('Choose a specialty')
+  if (!derived.attrValid) issues.push('Attribute increases not fully/legally allocated')
+  if (lifepath) {
+    if (!derived.coreValid) issues.push('Life path incomplete (childhood, ≥1 term, war + At War term)')
+  } else {
+    if (!arch) issues.push('No archetype chosen')
+    if (!derived.spreadOk) issues.push('Skills must be exactly one B, two C, three D')
+    if (derived.skillCounts.B > 0 && !derived.bSkillOk) issues.push('Your B-level skill must be a key skill')
+    if (!derived.specialty) issues.push('Choose a specialty')
+  }
 
   const trained = derived.skills.filter((s) => s.level !== 'F')
 
@@ -52,8 +57,8 @@ export default function T2kSheetView({ state, update, derived }) {
           <div>
             <h3>{state.name || 'Unnamed survivor'}{state.nickname ? ` “${state.nickname}”` : ''}</h3>
             <p>
-              {arch ? arch.name : '—'} · {derived.nationality ? derived.nationality.name : '—'}
-              {state.branch ? ` · ${state.branch}` : ''}{state.rank ? ` · ${state.rank}` : ''}
+              {lifepath ? `Life path · age ${derived.age}` : (arch ? arch.name : '—')} · {derived.nationality ? derived.nationality.name : '—'}
+              {lifepath ? (derived.rank ? ` · ${derived.rank}` : '') : `${state.branch ? ` · ${state.branch}` : ''}${state.rank ? ` · ${state.rank}` : ''}`}
             </p>
           </div>
           <div className="cc-sheet__game">TWILIGHT: 2000</div>
@@ -72,12 +77,20 @@ export default function T2kSheetView({ state, update, derived }) {
             <table className="cc-sheet-tbl">
               <caption>Condition</caption>
               <tbody>
+                {lifepath && <tr><th>Age</th><td>{derived.age}</td></tr>}
+                {lifepath && <tr><th>Rank</th><td>{derived.rank || '—'}</td></tr>}
                 <tr><th>Hit capacity</th><td>{derived.hitCap}</td></tr>
                 <tr><th>Stress capacity</th><td>{derived.stressCap}</td></tr>
                 <tr><th>Coolness Under Fire</th><td>{derived.cuf || '—'}</td></tr>
                 <tr><th>Permanent rads</th><td>{state.rads ?? '—'}</td></tr>
-                <tr><th>Specialty</th><td>{derived.specialty ? derived.specialty.name : '—'}</td></tr>
                 <tr><th>Language</th><td>{derived.nationality ? derived.nationality.language : '—'}</td></tr>
+              </tbody>
+            </table>
+            <table className="cc-sheet-tbl">
+              <caption>Specialties</caption>
+              <tbody>
+                {derived.specialties.length === 0 && <tr><td className="cc-empty">None</td></tr>}
+                {derived.specialties.map((sp) => <tr key={sp.id}><th>{sp.name}</th><td>{sp.skill ? sp.skill.replace(/-/g, ' ') : ''}</td></tr>)}
               </tbody>
             </table>
           </div>
@@ -92,10 +105,10 @@ export default function T2kSheetView({ state, update, derived }) {
                 ))}
               </tbody>
             </table>
-            {arch && (
+            {derived.gear && derived.gear.length > 0 && (
               <div className="cc-sheet__block">
-                <h4>Starting gear</h4>
-                <ul className="cc-sheet-inv">{arch.gear.map((g) => <li key={g}>{g}</li>)}</ul>
+                <h4>Starting gear{lifepath && derived.gearCareer ? ` — ${derived.gearCareer.name}` : ''}</h4>
+                <ul className="cc-sheet-inv">{derived.gear.map((g) => <li key={g}>{g}</li>)}</ul>
               </div>
             )}
           </div>

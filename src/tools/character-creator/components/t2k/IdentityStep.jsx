@@ -13,17 +13,38 @@ export default function IdentityStep({ state, update, derived }) {
   }
   const rollForRank = () => arch?.rank && update({ rank: rollRank(arch.rank) })
 
+  const lifepath = state.method === 'lifepath'
+
   return (
     <div className="cc-step">
-      <h2>Survivor &amp; archetype</h2>
+      <h2>Survivor</h2>
+      <div className="cc-system-switch cc-genmode">
+        <button className={`cc-system-switch__btn ${!lifepath ? 'is-active' : ''}`} onClick={() => update({ method: 'archetype' })}>Archetype (quick)</button>
+        <button className={`cc-system-switch__btn ${lifepath ? 'is-active' : ''}`} onClick={() => update({ method: 'lifepath' })}>Life Path (detailed)</button>
+      </div>
       <p className="cc-step__lede">
-        Pick an archetype — a typical Twilight: 2000 character type that gets you into the action fast.
-        It sets your key attribute, the skill your <strong>B-level</strong> skill is chosen from, your
-        starting Coolness Under Fire, and your gear. Then choose nationality, branch (flavor only), and
-        rank.
+        {lifepath
+          ? <>The life path builds your survivor term by term — childhood, careers, and the war that found you. Choose your nationality and name here, set your attribute budget next, then live your past in the <strong>Life Path</strong> step.</>
+          : <>Pick an archetype — a typical character type that gets you into the action fast. It sets your key attribute, the skill your <strong>B-level</strong> skill is chosen from, your starting Coolness Under Fire, and your gear.</>}
       </p>
 
-      <div className="cc-cards cc-t2k-arch-grid">
+      {lifepath && (
+        <div className="cc-identity cc-t2k-identity">
+          <label>Nationality
+            <select value={state.nationality} onChange={(e) => update({ nationality: e.target.value })}>
+              {NATIONALITIES.map((n) => <option key={n.id} value={n.id}>{n.name} ({n.language})</option>)}
+            </select>
+          </label>
+          <label>Name
+            <input value={state.name} onChange={(e) => update({ name: e.target.value })} placeholder="Character name" />
+          </label>
+          <label>Nickname
+            <input value={state.nickname} onChange={(e) => update({ nickname: e.target.value })} placeholder="optional" />
+          </label>
+        </div>
+      )}
+
+      {!lifepath && <div className="cc-cards cc-t2k-arch-grid">
         {ARCHETYPES.map((a) => (
           <button key={a.id} className={`cc-card cc-t2k-arch ${state.archetypeId === a.id ? 'is-selected' : ''}`} onClick={() => chooseArch(a)}>
             <div className="cc-card__head">
@@ -37,9 +58,9 @@ export default function IdentityStep({ state, update, derived }) {
             <p className="cc-card__desc">{a.blurb}</p>
           </button>
         ))}
-      </div>
+      </div>}
 
-      {arch && (
+      {!lifepath && arch && (
         <div className="cc-identity cc-t2k-identity">
           <label>Nationality
             <select value={state.nationality} onChange={(e) => update({ nationality: e.target.value })}>
