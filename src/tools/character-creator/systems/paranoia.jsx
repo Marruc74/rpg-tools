@@ -1,6 +1,6 @@
 // Paranoia (the Fifth Edition) game-system descriptor.
 import {
-  PARANOIA_KEY, emptyState, migrateState, deriveCharacter,
+  PARANOIA_KEY, emptyState, migrateState, deriveCharacter, rollRandomCharacter,
 } from '../lib/paranoiaLibrary.js'
 import { clearanceByLetter } from '../lib/paranoiaData.js'
 import IdentityStep from '../components/paranoia/IdentityStep.jsx'
@@ -59,7 +59,7 @@ export default {
   subtitle: 'Paranoia, the Fifth Edition — roll or allocate, stay happy, trust no one',
   resetConfirm: 'Terminate this clone and start a fresh one? All data will be lost (this is normal).',
   storageKey: PARANOIA_KEY,
-  emptyState, migrateState, deriveCharacter,
+  emptyState, migrateState, deriveCharacter, rollRandom: rollRandomCharacter,
   steps: STEPS,
   Budgets: ParanoiaBudgets,
   stepDone,

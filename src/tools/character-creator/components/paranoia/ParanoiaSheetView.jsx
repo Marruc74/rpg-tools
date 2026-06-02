@@ -1,29 +1,12 @@
-import { useRef, useState } from 'react'
-import { toPng } from 'html-to-image'
-import { ATTRIBUTES, SKILL_ATTRS, clearanceByLetter } from '../../lib/paranoiaData.js'
+import { useRef } from 'react'
+import { ATTRIBUTES, SKILL_ATTRS, clearanceByLetter, STANDARD_ISSUE } from '../../lib/paranoiaData.js'
+import { useSheetExport } from '../../lib/sheetExport.js'
 
-// Final step — the Troubleshooter dossier, with PNG export (mirrors the DoD
-// SheetView export pattern).
+// Final step — the Troubleshooter dossier, with PNG/PDF export.
 export default function ParanoiaSheetView({ state, update, derived }) {
   const ref = useRef(null)
-  const [busy, setBusy] = useState(false)
   const clear = clearanceByLetter(state.clearance)
-
-  const exportPng = async () => {
-    if (!ref.current || busy) return
-    setBusy(true)
-    try {
-      const url = await toPng(ref.current, { pixelRatio: 2, backgroundColor: '#fdfaf2' })
-      const a = document.createElement('a')
-      a.href = url
-      a.download = `${derived.fullName.replace(/[^\w\-]/g, '') || 'troubleshooter'}.png`
-      a.click()
-    } catch (err) {
-      alert('Could not export image: ' + (err?.message || err))
-    } finally {
-      setBusy(false)
-    }
-  }
+  const { busy, exportPng, exportPdf } = useSheetExport(ref, () => derived.fullName || 'troubleshooter')
 
   const issues = []
   if (!derived.nameOk) issues.push('Incomplete designation (first name + 3-letter sector)')
@@ -43,7 +26,8 @@ export default function ParanoiaSheetView({ state, update, derived }) {
           {issues.length === 0
             ? <span className="cc-ok-badge">Cleared for duty ✓</span>
             : <span className="cc-warn-badge">{issues.length} to fix</span>}
-          <button className="cc-btn" onClick={exportPng} disabled={busy}>{busy ? 'Exporting…' : 'Export PNG'}</button>
+          <button className="cc-btn" onClick={exportPdf} disabled={busy}>{busy ? 'Exporting…' : 'Export PDF'}</button>
+          <button className="cc-btn cc-btn--ghost" onClick={exportPng} disabled={busy}>PNG</button>
         </div>
       </div>
       {issues.length > 0 && <ul className="cc-issues">{issues.map((i) => <li key={i}>{i}</li>)}</ul>}
@@ -89,7 +73,7 @@ export default function ParanoiaSheetView({ state, update, derived }) {
               <tbody>
                 <tr><th>Mutant power</th><td>{state.mutantPower || '— none —'}{state.mutantPower && state.treasonRegistered ? ' (registered)' : ''}</td></tr>
                 <tr><th>Secret society</th><td>{state.society ? `${state.society} (rank ${state.societyRank})` : '— none —'}</td></tr>
-                <tr><th>Equipment</th><td>Standard Troubleshooter issue — see GM</td></tr>
+                <tr><th>Your Stuff</th><td>{state.stuff || '— roll it —'}</td></tr>
               </tbody>
             </table>
           </div>
@@ -120,6 +104,14 @@ export default function ParanoiaSheetView({ state, update, derived }) {
               </tbody>
             </table>
           </div>
+        </div>
+
+        <div className="cc-sheet__block">
+          <h4>Standard issue</h4>
+          <ul className="cc-sheet-inv">
+            {STANDARD_ISSUE.map((g) => <li key={g}>{g}</li>)}
+            {state.stuff && <li><strong>Stuff:</strong> {state.stuff}</li>}
+          </ul>
         </div>
 
         <div className="cc-sheet__block">

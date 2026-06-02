@@ -4,7 +4,11 @@ import {
   ATTR_KEYS, ATTR_MIN, ATTR_POINTS, SKILL_POINTS, MAX_RANK, SERVICE_ROLLS,
   SKILLS, SKILL_ATTRS, skillBase, lookupStrength, lookupEndurance,
   serviceGroupById, buildName, collectGrants,
+  SERVICE_GROUPS, resolveTraining, MUTANT_POWERS, rollSociety, randomNameParts,
 } from './paranoiaData.js'
+
+const rint = (rng, n) => Math.floor(rng() * n)
+const pick = (arr, rng) => arr[rint(rng, arr.length)]
 
 export const PARANOIA_KEY = 'paranoia-character-creator'
 
@@ -34,6 +38,7 @@ export function emptyState() {
     societyRoll: null,
     societyRank: 1,
     treasonRegistered: false, // confessed mutant power for the yellow stripe?
+    stuff: '', // one item rolled on the Stuff table (p.29)
     notes: '',
   }
 }
@@ -116,4 +121,48 @@ export function deriveCharacter(state) {
     pointsOk, powerOk, skillsSpent, noRankOver5, sgComplete, nameOk, sectorOk,
     valid,
   }
+}
+
+// Generate a complete, valid random Troubleshooter.
+export function rollRandomCharacter(rng = Math.random) {
+  const s = emptyState()
+  const { firstName, sector } = randomNameParts(rng)
+  s.firstName = firstName
+  s.sector = sector
+  s.clearance = 'R'
+  s.cloneNumber = 1
+  s.genMode = 'points'
+
+  // Attributes: 60 points across 8, each 1–10, Power ≥ 1.
+  const attrs = {}
+  for (const k of ATTR_KEYS) attrs[k] = 1
+  let rem = ATTR_POINTS - ATTR_KEYS.length
+  let guard = 0
+  while (rem > 0 && guard++ < 2000) {
+    const k = pick(ATTR_KEYS, rng)
+    if (attrs[k] < 10) { attrs[k] += 1; rem -= 1 }
+  }
+  s.attrs = attrs
+
+  // Service group + five resolved training rolls.
+  const g = pick(SERVICE_GROUPS, rng)
+  s.serviceGroupId = g.id
+  s.sgRolls = Array.from({ length: SERVICE_ROLLS }, () => resolveTraining(g.id, rng))
+
+  // Spend all 10 skill points without exceeding 5 total ranks in any skill.
+  const sg = {}
+  for (const r of s.sgRolls) collectGrants(r, sg)
+  const bought = {}
+  let pts = SKILL_POINTS
+  guard = 0
+  while (pts > 0 && guard++ < 4000) {
+    const sk = pick(SKILLS, rng)
+    if ((sg[sk.id] || 0) + (bought[sk.id] || 0) < MAX_RANK) { bought[sk.id] = (bought[sk.id] || 0) + 1; pts -= 1 }
+  }
+  s.skillRanks = bought
+
+  // Secrets (flavour — everyclone has them).
+  const mr = 1 + rint(rng, 20); s.mutantRoll = mr; s.mutantPower = MUTANT_POWERS[mr - 1]
+  const sr = 1 + rint(rng, 20); s.societyRoll = sr; s.society = rollSociety(sr); s.societyRank = 1
+  return s
 }

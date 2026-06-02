@@ -42,7 +42,7 @@ function RosterRow({ item, isLoaded, onLoad, onRename, onDelete, onExport }) {
 export default function RosterBar({
   roster, loadedId, dirty,
   onSave, onSaveCopy, onNew, onLoad, onRename, onDelete,
-  onExport, onExportItem, onImport,
+  onExport, onExportItem, onImport, onRandom, onShare,
 }) {
   const [open, setOpen] = useState(false)
   const fileRef = useRef(null)
@@ -69,8 +69,10 @@ export default function RosterBar({
           <button className="cc-btn cc-btn--sm cc-btn--ghost" onClick={onSaveCopy} title="Save as a new copy">Save copy</button>
         )}
         <button className="cc-btn cc-btn--sm cc-btn--ghost" onClick={onNew} title="Start a new character">＋ New</button>
+        {onRandom && <button className="cc-btn cc-btn--sm cc-btn--ghost" onClick={onRandom} title="Roll a complete random character">🎲 Random</button>}
         <button className="cc-btn cc-btn--sm cc-btn--ghost" onClick={onExport} title="Export the current character to a JSON file">⬇ Export</button>
         <button className="cc-btn cc-btn--sm cc-btn--ghost" onClick={() => fileRef.current?.click()} title="Import a character from a JSON file">⬆ Import</button>
+        {onShare && <button className="cc-btn cc-btn--sm cc-btn--ghost" onClick={onShare} title="Copy a shareable link to this character">🔗 Link</button>}
         <input ref={fileRef} type="file" accept=".json,application/json" hidden onChange={onFile} />
         <button
           className={`cc-btn cc-btn--sm cc-btn--ghost ${open ? 'is-on' : ''}`}
@@ -78,7 +80,7 @@ export default function RosterBar({
         >
           Saved ({roster.length}) {open ? '▴' : '▾'}
         </button>
-        {dirty && loadedId && <span className="cc-roster__dirty" title="Unsaved changes">●</span>}
+        {dirty && loadedId && <span className="cc-roster__dirty" title="Unsaved changes" role="status" aria-label="Unsaved changes">●</span>}
       </div>
 
       {open && (

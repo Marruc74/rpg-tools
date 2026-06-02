@@ -340,3 +340,84 @@ export function randomNameParts(rng = Math.random) {
   const sector = Array.from({ length: 3 }, () => SECTOR_LETTERS[Math.floor(rng() * 26)]).join('')
   return { firstName: pick(SAMPLE_FIRST, rng), sector }
 }
+
+// ── EQUIPMENT (pp. 29–30) ───────────────────────────────────────────────────
+// Standard Troubleshooter issue. The jumpsuit/barrel are tinted to the clone's
+// security clearance (Red at start).
+export const STANDARD_ISSUE = [
+  'Jumpsuit (clearance-coloured)',
+  'Undershirt, black',
+  'Underwear, supposedly black',
+  'Laser pistol',
+  'Laser pistol barrel, Red (six shots per barrel)',
+  'Boots, black',
+]
+
+// The Stuff Table (roll for one bonus item). Names transcribed from the rulebook.
+export const STUFF = [
+  'Bottle of Bouncy Bubble Beverage',
+  'Happy-Happy Goofballs (life is good, life is fun, life is upside down)',
+  'Superplastic knife',
+  'Gummy Gun (looks real, tastes like syntheberry paste!)',
+  'Bullhorn',
+  'Fire extinguisher',
+  'Watch',
+  'Extra jumpsuit',
+  'Extra boots',
+  "SuperSoaper Hygiene Spray (one squirt and they're clean!)",
+  'First aid kit',
+  'UltraRubber Bouncy Ball (nearly 100% elasticity!)',
+  'Bot repair kit',
+  'Yo-Yo with super-long string',
+  'Flashlight',
+  'Dead rat (treasonous food?)',
+  'Bake a Traitor, the Home Game',
+  'Commie cap with laser holes in it (possibly treasonous)',
+  'UltraHard Breakfast Muffin (guaranteed not to crumble apart)',
+  'Gas mask (ah, but what gas?)',
+  '50 plasticreds (buy your own stuff!)',
+  'A "Get out of Jail Free" card ("Jail?" What is "Jail?")',
+  '"Happiness is Mandatory" PR badge',
+  '"I\'m With the Traitor" novelty button',
+  'Happiness Energy Bar (yum!)',
+  'Defective spring shoes (jump higher with them off)',
+  'Freeze-dried bagel with synthecream cheese-like food product',
+  "Jackobot (okay, it malfunctions, but it's yours!)",
+  'SuperHot SuperLunch (are those noodles, or …)',
+  'Hot-torch (like a blowtorch, but with a mini-laser beam)',
+  'Mutant Wombat Detector Kit (it ain\'t beeping!)',
+  'Equipment Requisition Form (blank, unauthorized)',
+  'Termination Voucher (blank, unauthorized)',
+  'Something you found under a FoodLyke distribution vat',
+  'Picture of vidstar Teela-O-MLY (good luck charm)',
+  'Appropriate Service Group "Flash" Patch',
+  'Holster for laser pistol',
+  'Stretchy Rubber Container (holds water or air)',
+  'Desk plaque with name, clearance, and home sector',
+  'Personal hygiene kit',
+  '"I\'ve Got a Friend in the Computer" bot-bumper sticker',
+  'Voucher for One Free Stupid Question (authorized by the Computer)',
+  'Parachute (fully functioning? Maybe)',
+  'SuperSafety Goggles (completely opaque)',
+  'Plasticord (10 meters of syntherope)',
+  "HPD&MC's Creche Program Guide",
+  "The Computer's handbook, Why I'm in Charge and You're Not (audiodisk)",
+  'Utility belt',
+  'Gloves with fingers cut out',
+  'Smoke alarm',
+  'Smiley-face button ("Happiness is Really Mandatory!")',
+  'DIN Sector cafeteria menu from four yearcycles ago (still current!)',
+  'Troubleshooter Songbook and Phrase Guide',
+  'A newly-reedited version of War and Peace (two pages of text…)',
+  'SuperGum',
+  'SuperSolvent',
+  'HandiCam Vidlink (lens missing)',
+  "Spackle (there's a helluva lot of it here!)",
+  'One Dose of Ultra Vaccine and Pet Spray',
+  'Official Troubleshooter Bill-O-DAL Thermos and Lunch Pail',
+  'Something treasonous (Gamemaster\'s option)',
+  'Something useful (Gamemaster\'s option)',
+]
+export function rollStuff(rng = Math.random) {
+  return STUFF[Math.floor(rng() * STUFF.length)]
+}

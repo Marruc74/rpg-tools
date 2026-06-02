@@ -5,8 +5,14 @@ import {
   ATTR_KEYS, RANK_DESC, DIE, rankIndex, BASE_INCREASES,
   SKILLS, SKILL_SPREAD, hitCapacity, stressCapacity,
   archetypeById, nationalityById, specialtyById, skillById,
+  ARCHETYPES, NATIONALITIES, rollRank,
 } from './t2kData.js'
 import { CHILDHOODS, childhoodById, careerById, START_AGE } from './t2kLifePathData.js'
+
+const rint = (rng, n) => Math.floor(rng() * n)
+const pick = (arr, rng) => arr[rint(rng, arr.length)]
+const shuffle = (arr, rng) => { const a = [...arr]; for (let i = a.length - 1; i > 0; i--) { const j = rint(rng, i + 1);[a[i], a[j]] = [a[j], a[i]] } return a }
+const T2K_NAMES = ['Cole', 'Mara', 'Ivan', 'Lena', 'Diaz', 'Ortega', 'Petrov', 'Vasquez', 'Nowak', 'Sven', 'Reyes', 'Kade', 'Mira', 'Boone', 'Tova', 'Hicks']
 
 export const T2K_KEY = 't2k-character-creator'
 
@@ -31,6 +37,12 @@ export function emptyState() {
     terms: [], // [{ id, careerId, increases:[{skill,steps}], promotion:{success,specialty}|null, ageRoll, agePenaltyAttr, warRoll }]
     atWar: { increases: [], specialty: null, draft: false },
     warOut: false,
+    lpOverrideReqs: false, // allow careers you don't qualify for
+    nextPrison: false, // crime term flagged you for prison next term
+    // Group gear & vehicle (shared session kit)
+    partySize: 4,
+    vehicle: null, // { total, vehicle }
+    groupGear: [], // chosen group-gear strings
   }
 }
 
@@ -42,6 +54,7 @@ export function migrateState(s) {
   out.childhood = { ...base.childhood, ...(s?.childhood || {}) }
   out.terms = Array.isArray(s?.terms) ? s.terms : []
   out.atWar = { ...base.atWar, ...(s?.atWar || {}) }
+  out.groupGear = Array.isArray(s?.groupGear) ? s.groupGear : []
   return out
 }
 
@@ -184,3 +197,35 @@ function deriveLifePath(state, { nationality, nameOk, chosen }) {
 }
 
 export { skillById }
+
+// Generate a complete, valid random survivor (archetype method).
+export function rollRandomCharacter(rng = Math.random) {
+  const s = emptyState()
+  s.method = 'archetype'
+  const arch = pick(ARCHETYPES, rng)
+  s.archetypeId = arch.id
+  s.nationality = pick(NATIONALITIES, rng).id
+  s.branch = arch.branches[0] || ''
+  s.rank = arch.rank ? rollRank(arch.rank, rng) : ''
+  s.name = pick(T2K_NAMES, rng)
+  s.nickname = arch.nicknames ? pick(arch.nicknames, rng) : ''
+
+  // Attributes: raise the key attribute to A (+2) and one other to B (+1) = 3 increases.
+  const attrs = { STR: 'C', AGL: 'C', INT: 'C', EMP: 'C' }
+  attrs[arch.keyAttr] = 'A'
+  attrs[pick(ATTR_KEYS.filter((k) => k !== arch.keyAttr), rng)] = 'B'
+  s.attrs = attrs
+
+  // Skills: one B from the archetype's key skills, two C, three D (all distinct).
+  const skills = {}
+  const bId = pick(arch.keySkills, rng)
+  skills[bId] = 'B'
+  const rest = shuffle(SKILLS.map((x) => x.id).filter((id) => id !== bId), rng)
+  rest.slice(0, 2).forEach((id) => { skills[id] = 'C' })
+  rest.slice(2, 5).forEach((id) => { skills[id] = 'D' })
+  s.skills = skills
+
+  s.specialty = pick(arch.specialties, rng)
+  s.rads = 1 + rint(rng, 6)
+  return s
+}

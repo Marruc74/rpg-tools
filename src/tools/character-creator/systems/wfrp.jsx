@@ -1,6 +1,6 @@
 // Warhammer Fantasy Roleplay 4e game-system descriptor.
 import {
-  WFRP_KEY, emptyState, migrateState, deriveCharacter,
+  WFRP_KEY, emptyState, migrateState, deriveCharacter, rollRandomCharacter,
 } from '../lib/wfrpLibrary.js'
 import { CAREER_SKILL_ADVANCES } from '../lib/wfrpData.js'
 import Meter from '../components/Meter.jsx'
@@ -82,7 +82,7 @@ export default {
   subtitle: 'Warhammer Fantasy Roleplay 4e — roll or choose, with starting XP',
   resetConfirm: 'Start over? All data about this character will be lost.',
   storageKey: WFRP_KEY,
-  emptyState, migrateState, deriveCharacter,
+  emptyState, migrateState, deriveCharacter, rollRandom: rollRandomCharacter,
   steps: STEPS,
   Budgets: WfrpBudgets,
   stepDone,

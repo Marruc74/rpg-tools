@@ -228,3 +228,40 @@ export function atWarColumn(category) {
   if (category === 'white-collar') return 'white-collar'
   return 'other'
 }
+
+// ── GROUP GEAR & VEHICLE (Player's Manual p.18) ─────────────────────────────
+// The team picks a number of group items equal to the number of PCs.
+export const GROUP_GEAR = [
+  'Backpack',
+  'Any bow including D6 arrows',
+  'Any pistol or shotgun including D3 reloads',
+  'Any sniper or hunting rifle including D3 reloads',
+  'Any LMG/GPMG including one ammo belt',
+  'Any GL or ATRL (D3 reloads if applicable)',
+  'D6 magazines/reloads for any weapon',
+  'Two ammo belts for any machinegun',
+  'D6 reloads for any grenade or rocket launcher',
+  'D6 hand grenades of any type',
+  'Dirt bike with half a tank of fuel',
+  'Basic toolkit',
+  'Binoculars',
+  'D100 liters of any fuel, in jerrycans',
+  'D6 personal medkits',
+  'D6 rations of food',
+  'D6 rations of clean water',
+]
+
+// Starting vehicle: roll 2D6 and add the number of PCs.
+const VEHICLE_TABLE = [
+  { max: 6, vehicle: 'None' },
+  { max: 8, vehicle: '2WD car' },
+  { max: 10, vehicle: 'Pickup truck' },
+  { max: 12, vehicle: 'Jeep or HMMWV' },
+  { max: 14, vehicle: 'Armored Personnel Carrier' },
+  { max: 99, vehicle: 'Main Battle Tank' },
+]
+export function rollVehicle(partySize = 1, rng = Math.random) {
+  const total = (1 + Math.floor(rng() * 6)) + (1 + Math.floor(rng() * 6)) + (partySize || 0)
+  const row = VEHICLE_TABLE.find((r) => total <= r.max) || VEHICLE_TABLE[VEHICLE_TABLE.length - 1]
+  return { total, vehicle: row.vehicle }
+}

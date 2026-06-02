@@ -1,7 +1,12 @@
+import { GROUP_GEAR, rollVehicle } from '../../lib/t2kLifePathData.js'
+
 // Step 5 — the human details: moral code, big dream, how you met, appearance,
-// buddy, and your starting permanent radiation (roll D6).
+// buddy, starting rads, and the shared group gear & vehicle.
 export default function ProfileStep({ state, update }) {
   const rollRads = () => update({ rads: 1 + Math.floor(Math.random() * 6) })
+  const partySize = state.partySize || 4
+  const groupGear = state.groupGear || []
+  const toggleGear = (g) => update({ groupGear: groupGear.includes(g) ? groupGear.filter((x) => x !== g) : [...groupGear, g] })
 
   const field = (key, label, placeholder, rows = 2) => (
     <label className="cc-t2k-field">
@@ -34,6 +39,27 @@ export default function ProfileStep({ state, update }) {
           <span className="cc-xp"><span>Permanent rads</span><strong>{state.rads ?? '—'}</strong></span>
         </div>
         <p className="cc-note">Chances are you’ve already been irradiated before the game starts. This is your permanent radiation total.</p>
+      </section>
+
+      <section className="cc-bg-sec">
+        <h3>Group gear &amp; vehicle</h3>
+        <p className="cc-note">Shared by the whole team. Pick a number of group items equal to the number of PCs, and roll once for a starting vehicle.</p>
+        <div className="cc-roll-bar">
+          <span className="cc-lp-label">Party size</span>
+          <span className="cc-stepper">
+            <button type="button" className="cc-step-btn" disabled={partySize <= 1} onClick={() => update({ partySize: partySize - 1 })}>−</button>
+            <span className="cc-rank-n">{partySize}</span>
+            <button type="button" className="cc-step-btn" onClick={() => update({ partySize: partySize + 1 })}>+</button>
+          </span>
+          <button type="button" className="cc-btn" onClick={() => update({ vehicle: rollVehicle(partySize) })}>🎲 Roll vehicle (2D6+{partySize})</button>
+          {state.vehicle && <span className="cc-note"><strong>{state.vehicle.vehicle}</strong> (rolled {state.vehicle.total})</span>}
+        </div>
+        <div className="cc-t2k-reco">
+          {GROUP_GEAR.map((g) => (
+            <button key={g} type="button" className={`cc-chip cc-chip--sm ${groupGear.includes(g) ? 'is-on' : ''}`} onClick={() => toggleGear(g)}>{g}</button>
+          ))}
+        </div>
+        <p className={`cc-note ${groupGear.length > partySize ? 'cc-warn' : ''}`}>Group items chosen: {groupGear.length} / {partySize}</p>
       </section>
 
       <label className="cc-t2k-field">Notes

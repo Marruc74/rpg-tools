@@ -39,7 +39,7 @@ export default function LifePathStep({ state, update, derived }) {
 
   // ── Terms ──
   const newId = () => `t${terms.length}-${Math.floor(Math.random() * 1e6)}`
-  const addTerm = (careerId) => update({ terms: [...terms, { id: newId(), careerId, increases: [], promotion: null, ageRoll: null, agePenaltyAttr: null, warRoll: null }] })
+  const addTerm = (careerId) => update({ terms: [...terms, { id: newId(), careerId, increases: [], promotion: null, ageRoll: null, agePenaltyAttr: null, warRoll: null }], nextPrison: false })
   const patchTerm = (i, patch) => update({ terms: terms.map((t, j) => (j === i ? { ...t, ...patch } : t)) })
   const removeTerm = (i) => update({ terms: terms.filter((_, j) => j !== i), warOut: false, atWar: { increases: [], specialty: null, draft: false } })
 
@@ -83,6 +83,12 @@ export default function LifePathStep({ state, update, derived }) {
     const out = warRoll < termsCompleted
     patchTerm(i, { warRoll })
     if (out) update({ warOut: true })
+  }
+  // Crime term, no war → roll D6; odd result sends you to prison next term.
+  const rollPrison = (i) => {
+    const roll = d6()
+    patchTerm(i, { prisonRoll: roll })
+    update({ nextPrison: roll % 2 === 1 })
   }
 
   // ── At War ── (always two skills, one step each)
@@ -188,6 +194,10 @@ export default function LifePathStep({ state, update, derived }) {
                 )}
                 {!state.warOut && <button type="button" className="cc-btn cc-btn--ghost" onClick={() => rollWar(i)}>🎲 war</button>}
                 {t.warRoll != null && <span className={`cc-lp-result ${t.warRoll < i + 1 ? 'is-war' : ''}`}>war d8={t.warRoll}{t.warRoll < i + 1 ? ' — WAR!' : ''}</span>}
+                {!state.warOut && car?.category === 'crime' && t.warRoll != null && t.warRoll >= i + 1 && (
+                  <button type="button" className="cc-btn cc-btn--ghost" onClick={() => rollPrison(i)} title="Crime term, no war: roll D6 — odd = prison next term">🎲 prison</button>
+                )}
+                {t.prisonRoll != null && <span className={`cc-lp-result ${t.prisonRoll % 2 === 1 ? 'is-war' : ''}`}>prison d6={t.prisonRoll}{t.prisonRoll % 2 === 1 ? ' — prison!' : ' — free'}</span>}
               </div>
             </div>
           )
@@ -202,11 +212,13 @@ export default function LifePathStep({ state, update, derived }) {
                 <optgroup key={cat.id} label={cat.name}>
                   {CAREERS.filter((c) => c.category === cat.id).map((c) => {
                     const ok = c.reqCheck(ctx)
-                    return <option key={c.id} value={c.id}>{c.name}{ok ? '' : `  (needs: ${c.req})`}</option>
+                    return <option key={c.id} value={c.id} disabled={!ok && !state.lpOverrideReqs}>{c.name}{ok ? '' : `  (needs: ${c.req})`}</option>
                   })}
                 </optgroup>
               ))}
             </select>
+            <label className="cc-check"><input type="checkbox" checked={!!state.lpOverrideReqs} onChange={(e) => update({ lpOverrideReqs: e.target.checked })} /> Allow careers I don't qualify for (GM override)</label>
+            {state.nextPrison && <p className="cc-note cc-warn">Your last crime caught up with you — your next term should be <strong>Prisoner</strong>.</p>}
             <span className="cc-note">Roll D8 for war each term — it breaks out when the roll is under your term count.</span>
           </div>
         )}

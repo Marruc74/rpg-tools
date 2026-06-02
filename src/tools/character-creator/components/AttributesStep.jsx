@@ -44,10 +44,10 @@ export default function AttributesStep({ state, update, derived }) {
               <tr key={a}>
                 <th>{ATTR_NAMES[a]} <span className="cc-attrs__code">{a}</span></th>
                 <td>
-                  <div className="cc-stepper">
-                    <button onClick={() => setBase(a, base - 1)} disabled={base <= ATTR_MIN}>−</button>
-                    <span>{base}</span>
-                    <button onClick={() => setBase(a, base + 1)} disabled={base >= ATTR_MAX}>+</button>
+                  <div className="cc-stepper" role="group" aria-label={ATTR_NAMES[a]}>
+                    <button aria-label={`Sänk ${ATTR_NAMES[a]}`} onClick={() => setBase(a, base - 1)} disabled={base <= ATTR_MIN}>−</button>
+                    <span aria-live="polite">{base}</span>
+                    <button aria-label={`Höj ${ATTR_NAMES[a]}`} onClick={() => setBase(a, base + 1)} disabled={base >= ATTR_MAX}>+</button>
                   </div>
                 </td>
                 <td className="cc-attrs__bp">{cost}</td>

@@ -7,7 +7,12 @@ import {
   CAREER_SKILL_ADVANCES, CAREER_SKILL_CAP, STARTING_WEALTH, XP_BONUSES,
   costForCharAdvances, costForSkillAdvances, talentCost,
   CAREER_LEVEL_ADVANCES, CAREER_CHANGE_COST,
+  SPECIES, CAREERS, rollRandomTalent,
 } from './wfrpData.js'
+
+const wrint = (rng, n) => Math.floor(rng() * n)
+const wpick = (arr, rng) => arr[wrint(rng, arr.length)]
+const wshuffle = (arr, rng) => { const a = [...arr]; for (let i = a.length - 1; i > 0; i--) { const j = wrint(rng, i + 1);[a[i], a[j]] = [a[j], a[i]] } return a }
 
 export const WFRP_KEY = 'wfrp-character-creator'
 
@@ -328,4 +333,61 @@ export function deriveCharacter(state) {
     issues,
     valid: issues.length === 0,
   }
+}
+
+// Generate a complete, valid random WFRP character.
+export function rollRandomCharacter(rng = Math.random) {
+  const s = emptyState()
+  const sp = wpick(SPECIES, rng)
+  const car = wpick(CAREERS, rng)
+  s.speciesId = sp.id
+  s.careerId = car.id
+  s.careerMethod = 'choose'
+
+  // Characteristics: 2d10 each, in CHARACTERISTICS order.
+  const rolls = []
+  const charBase = {}
+  for (const c of CHARACTERISTICS) {
+    const v = (1 + wrint(rng, 10)) + (1 + wrint(rng, 10))
+    rolls.push(v)
+    charBase[c.key] = v
+  }
+  s.charRolls = rolls
+  s.charBase = charBase
+
+  // Species skill advances: SPECIES_SKILL_RULE.at5 @ +5, .at3 @ +3 from species skills.
+  const skills = wshuffle(sp.skills, rng)
+  const ssa = {}
+  skills.slice(0, SPECIES_SKILL_RULE.at5).forEach((n) => { ssa[n] = 5 })
+  skills.slice(SPECIES_SKILL_RULE.at5, SPECIES_SKILL_RULE.at5 + SPECIES_SKILL_RULE.at3).forEach((n) => { ssa[n] = 3 })
+  s.speciesSkillAdv = ssa
+
+  // Career skill advances: exactly CAREER_SKILL_ADVANCES total, ≤ cap each.
+  const csa = {}
+  car.skills.forEach((n) => { csa[n] = 0 })
+  let rem = CAREER_SKILL_ADVANCES
+  let guard = 0
+  while (rem > 0 && guard++ < 2000) {
+    const n = wpick(car.skills, rng)
+    if (csa[n] < CAREER_SKILL_CAP) { csa[n] += 1; rem -= 1 }
+  }
+  s.careerSkillAdv = csa
+
+  // Talents: resolve every species choice pair, roll the random talents, pick a career talent.
+  const tc = {}
+  ;(sp.talents.choices || []).forEach((pair, i) => { tc[i] = wpick(pair, rng) })
+  s.speciesTalentChoices = tc
+  const rt = []
+  for (let i = 0; i < (sp.talents.random || 0); i++) { const t = rollRandomTalent(); rt.push(t?.name || t) }
+  s.speciesRandomTalents = rt
+  s.careerTalent = wpick(car.talents, rng)
+
+  // Distribute the species' extra Fate/Resilience points exactly.
+  const extra = sp.extra || 0
+  const f = wrint(rng, extra + 1)
+  s.fateExtra = f
+  s.resilienceExtra = extra - f
+
+  s.motivation = 'Survive the grim and perilous world.'
+  return s
 }

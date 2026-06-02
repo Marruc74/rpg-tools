@@ -1,9 +1,13 @@
+import { useState } from 'react'
 import { PROFESSIONS } from '../lib/dodData.js'
+import FilterInput, { matches } from './FilterInput.jsx'
 
 const ATTR_NAMES = { STY: 'STY', FYS: 'FYS', SMI: 'SMI', INT: 'INT', PSY: 'PSY', KAR: 'KAR' }
 
 export default function ProfessionStep({ state, update, derived }) {
   const finalAttrs = derived.finalAttrs
+  const [q, setQ] = useState('')
+  const list = PROFESSIONS.filter((p) => matches(p.namn, q))
   return (
     <div className="cc-step">
       <h2>Yrke</h2>
@@ -13,8 +17,9 @@ export default function ProfessionStep({ state, update, derived }) {
         rasmodifierade värden måste uppfylla. Magiker väljer 9 yrkesfärdigheter, övriga 12.
       </p>
 
+      <FilterInput value={q} onChange={setQ} placeholder="Sök yrke…" />
       <div className="cc-cards">
-        {PROFESSIONS.map((p) => {
+        {list.map((p) => {
           const sel = state.yrkeId === p.id
           const krav = Object.entries(p.krav)
           const fails = state.raceId

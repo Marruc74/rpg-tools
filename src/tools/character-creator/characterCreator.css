@@ -543,6 +543,30 @@ input.is-bad { border-color: #c0392b; background: #fdeceb; }
   .cc-t2k-profile { grid-template-columns: 1fr; }
 }
 
+/* To-do guidance list (sidebar) */
+.cc-todo { margin-top: 14px; padding: 10px 12px; background: #fdeceb; border: 1px solid #e3b7b2; border-radius: 8px; }
+.cc-todo h4 { margin: 0 0 6px; font-size: 12px; text-transform: uppercase; letter-spacing: 0.5px; color: #9c3a2e; }
+.cc-todo ul { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 4px; }
+.cc-todo button { background: none; border: none; color: #b0392b; text-decoration: underline; cursor: pointer; font-size: 13px; padding: 0; text-align: left; }
+
+/* Party panel */
+.cc-party { margin-top: 8px; }
+.cc-party__empty { font-size: 13px; color: #8a7c5a; margin: 8px 0; }
+.cc-party__body { margin-top: 8px; padding: 10px 12px; background: #f6f0e2; border: 1px solid #d8cdae; border-radius: 8px; max-width: 520px; }
+.cc-party__list { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 4px; }
+.cc-party__member { display: flex; gap: 8px; align-items: baseline; }
+.cc-party__name { font-weight: 700; font-size: 13px; }
+.cc-party__summary { font-size: 12px; color: #6b6357; }
+.cc-party__stat { margin: 8px 0 0; font-weight: 700; color: #5a6a2c; font-size: 13px; }
+
+/* Shared filter box */
+.cc-filter { position: relative; margin: 8px 0 12px; max-width: 320px; }
+.cc-filter__input { width: 100%; box-sizing: border-box; border: 1px solid #c9b893; border-radius: 6px; padding: 6px 26px 6px 10px; font-size: 13px; background: #fff; }
+.cc-filter__input:focus { outline: none; border-color: #a8946b; box-shadow: 0 0 0 2px rgba(168,148,107,0.18); }
+.cc-filter__clear { position: absolute; right: 6px; top: 50%; transform: translateY(-50%); border: none; background: none; font-size: 16px; line-height: 1; color: #8a7c5a; cursor: pointer; }
+.cc-t2k-spec-groups { margin-top: 8px; display: flex; flex-direction: column; gap: 8px; }
+.cc-t2k-spec-group h5 { margin: 4px 0 2px; font-size: 12px; color: #6b6357; }
+
 /* T2K life path */
 .cc-chip--sm { padding: 2px 9px; font-size: 12px; }
 .cc-lp-childhood { margin-top: 8px; }

@@ -1,28 +1,12 @@
-import { useRef, useState } from 'react'
-import { toPng } from 'html-to-image'
+import { useRef } from 'react'
 import { ATTRIBUTES, DIE } from '../../lib/t2kData.js'
+import { useSheetExport } from '../../lib/sheetExport.js'
 
-// Final step — the survivor's character sheet, with PNG export.
+// Final step — the survivor's character sheet, with PNG/PDF export.
 export default function T2kSheetView({ state, update, derived }) {
   const ref = useRef(null)
-  const [busy, setBusy] = useState(false)
   const arch = derived.archetype
-
-  const exportPng = async () => {
-    if (!ref.current || busy) return
-    setBusy(true)
-    try {
-      const url = await toPng(ref.current, { pixelRatio: 2, backgroundColor: '#fdfaf2' })
-      const a = document.createElement('a')
-      a.href = url
-      a.download = `${(state.name || 'survivor').replace(/[^\w\-]/g, '') || 'survivor'}.png`
-      a.click()
-    } catch (err) {
-      alert('Could not export image: ' + (err?.message || err))
-    } finally {
-      setBusy(false)
-    }
-  }
+  const { busy, exportPng, exportPdf } = useSheetExport(ref, () => state.name || 'survivor')
 
   const lifepath = derived.method === 'lifepath'
   const issues = []
@@ -47,7 +31,8 @@ export default function T2kSheetView({ state, update, derived }) {
           {issues.length === 0
             ? <span className="cc-ok-badge">Ready to deploy ✓</span>
             : <span className="cc-warn-badge">{issues.length} to fix</span>}
-          <button className="cc-btn" onClick={exportPng} disabled={busy}>{busy ? 'Exporting…' : 'Export PNG'}</button>
+          <button className="cc-btn" onClick={exportPdf} disabled={busy}>{busy ? 'Exporting…' : 'Export PDF'}</button>
+          <button className="cc-btn cc-btn--ghost" onClick={exportPng} disabled={busy}>PNG</button>
         </div>
       </div>
       {issues.length > 0 && <ul className="cc-issues">{issues.map((i) => <li key={i}>{i}</li>)}</ul>}
@@ -114,6 +99,13 @@ export default function T2kSheetView({ state, update, derived }) {
           </div>
         </div>
 
+        {(state.vehicle || (state.groupGear || []).length > 0) && (
+          <div className="cc-sheet__block">
+            <h4>Group gear &amp; vehicle</h4>
+            {state.vehicle && <p><strong>Vehicle:</strong> {state.vehicle.vehicle}</p>}
+            {(state.groupGear || []).length > 0 && <ul className="cc-sheet-inv">{state.groupGear.map((g) => <li key={g}>{g}</li>)}</ul>}
+          </div>
+        )}
         {(state.moralCode || state.bigDream) && (
           <div className="cc-sheet__block">
             {state.moralCode && <p><strong>Moral code:</strong> {state.moralCode}</p>}

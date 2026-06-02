@@ -1,9 +1,11 @@
 import { useState } from 'react'
 import { epRaiseCost, SPELLS, MAGIC_DISCIPLINES, MAGIC_FLAG_NAMES, spellLearnCost } from '../lib/dodData.js'
 import { availableYrkesSkills } from '../lib/characterLibrary.js'
+import FilterInput, { matches } from './FilterInput.jsx'
 
 export default function SkillsStep({ state, update, derived }) {
   const [labels, setLabels] = useState({}) // group skillId -> draft label text
+  const [skillQ, setSkillQ] = useState('')
 
   if (!state.yrkeId) {
     return <div className="cc-step"><h2>Färdigheter</h2><p className="cc-note">Välj yrke först.</p></div>
@@ -62,8 +64,9 @@ export default function SkillsStep({ state, update, derived }) {
         {/* ── Vänster: välj yrkesfärdigheter ── */}
         <div className="cc-skills-col">
           <h3>Yrkesfärdigheter <span className={`cc-count ${chosen.length > limit ? 'is-over' : ''}`}>{chosen.length} / {limit}</span></h3>
+          <FilterInput value={skillQ} onChange={setSkillQ} placeholder="Sök färdighet…" />
           <ul className="cc-pick-list">
-            {avail.map((s) => {
+            {avail.filter((s) => matches(s.namn, skillQ)).map((s) => {
               if (s.group) {
                 const inst = instancesOf(s.id)
                 return (
@@ -154,6 +157,8 @@ export default function SkillsStep({ state, update, derived }) {
 // magiskole-yrkesfärdigheter som valts ovan; varje lärd besvärjelse kostar EP.
 function MagicSection({ state, update, derived, avail }) {
   const { magic } = derived
+  const [spellQ, setSpellQ] = useState('')
+  const m = (sp) => matches(sp.namn, spellQ)
   const chosen = new Set(state.spells || [])
   const canMagic = magic.capable || avail.some((s) => s.id === 'magiskola')
   if (!canMagic && chosen.size === 0) return null
@@ -229,16 +234,19 @@ function MagicSection({ state, update, derived, avail }) {
         </p>
       )}
 
+      <FilterInput value={spellQ} onChange={setSpellQ} placeholder="Sök besvärjelse…" />
       <div className="cc-magic-grid">
         {magic.capable && (
           <div className="cc-magic-school">
             <h4>Allmänna besvärjelser <span className="cc-magic-fv">FV {magic.allmanFv}</span></h4>
-            <ul className="cc-pick-list">{SPELLS.filter((sp) => sp.skola === 'allman').map((sp) => renderSpell(sp, magic.allmanFv))}</ul>
+            <ul className="cc-pick-list">{SPELLS.filter((sp) => sp.skola === 'allman' && m(sp)).map((sp) => renderSpell(sp, magic.allmanFv))}</ul>
           </div>
         )}
         {magic.schools.map((b) => {
-          const mainSpells = SPELLS.filter((sp) => sp.skola === b.id && !sp.disciplin)
+          const mainSpells = SPELLS.filter((sp) => sp.skola === b.id && !sp.disciplin && m(sp))
           const disciplines = MAGIC_DISCIPLINES.filter((d) => d.skola === b.id)
+          const discLists = disciplines.map((d) => ({ d, spells: SPELLS.filter((sp) => sp.disciplin === d.namn && m(sp)) }))
+          if (spellQ && mainSpells.length === 0 && discLists.every((x) => x.spells.length === 0)) return null
           return (
             <div key={b.id} className="cc-magic-school">
               <h4>{b.namn} <span className="cc-magic-fv">FV {b.fv}</span></h4>
@@ -248,8 +256,7 @@ function MagicSection({ state, update, derived, avail }) {
               {mainSpells.length > 0 && (
                 <ul className="cc-pick-list">{mainSpells.map((sp) => renderSpell(sp, b.fv))}</ul>
               )}
-              {disciplines.map((d) => {
-                const discSpells = SPELLS.filter((sp) => sp.disciplin === d.namn)
+              {discLists.map(({ d, spells: discSpells }) => {
                 if (!discSpells.length) return null
                 const spec = isSpecialised(d.namn)
                 const cap = spec ? b.fv : Math.min(b.fv, magic.freeDiscFv)

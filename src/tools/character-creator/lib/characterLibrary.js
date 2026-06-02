@@ -315,3 +315,41 @@ export function deriveCharacter(state) {
       magic.overSpells.length === 0,
   }
 }
+
+// ── Random character ────────────────────────────────────────────────────────
+const rndInt = (rng, n) => Math.floor(rng() * n)
+const rndPick = (arr, rng) => arr[rndInt(rng, arr.length)]
+const rndShuffle = (arr, rng) => { const a = [...arr]; for (let i = a.length - 1; i > 0; i--) { const j = rndInt(rng, i + 1);[a[i], a[j]] = [a[j], a[i]] } return a }
+const DOD_NAMES = ['Aldric', 'Bryn', 'Sigrid', 'Torvald', 'Mira', 'Kael', 'Elina', 'Gorm', 'Rurik', 'Yrsa', 'Faramund', 'Hilda', 'Osric', 'Ragna']
+
+// Generate a complete, valid (conservative) Drakar och Demoner character.
+export function rollRandomCharacter(rng = Math.random) {
+  const s = emptyState()
+  s.tier = 'vanlig'
+  s.namn = rndPick(DOD_NAMES, rng)
+  s.raceId = rndPick(RACES, rng).id
+
+  // Pick an affordable uniform attribute base so race cost + attributes stay
+  // within the Vanlig BP budget (with a little slack for safety).
+  const bp = (POWER_TIERS.find((t) => t.id === 'vanlig') || POWER_TIERS[0]).bp
+  const raceCost = raceById(s.raceId).cost
+  let base = 18
+  while (base > ATTR_MIN && ATTR_BUY_COST[base] * ATTRS.length > bp - raceCost - 8) base -= 1
+  for (const a of ATTRS) s.base[a] = base
+
+  // Choose a profession whose grundegenskapskrav are satisfied by the rolled
+  // (race/age-modified) attributes; fall back to a no-krav profession.
+  let d = deriveCharacter(s)
+  const met = PROFESSIONS.filter((p) => Object.entries(p.krav || {}).every(([a, min]) => (d.finalAttrs[a] || 0) >= min))
+  const noKrav = PROFESSIONS.filter((p) => !Object.keys(p.krav || {}).length)
+  const prof = rndPick(met.length ? met : (noKrav.length ? noKrav : PROFESSIONS), rng)
+  s.yrkeId = prof.id
+
+  // Fill yrkesfärdigheter (non-group only — keeps it valid without labels/magic)
+  // up to the limit, leaving EP unspent for the player to refine.
+  d = deriveCharacter(s)
+  const avail = availableYrkesSkills(s.yrkeId).filter((x) => !x.group)
+  const limit = d.yrkesLimit
+  s.yrkesSkills = rndShuffle(avail, rng).slice(0, Math.min(limit, avail.length)).map((x) => ({ key: x.id, skillId: x.id, label: '' }))
+  return s
+}

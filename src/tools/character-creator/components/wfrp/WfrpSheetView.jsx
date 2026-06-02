@@ -1,27 +1,11 @@
-import { useRef, useState } from 'react'
-import { toPng } from 'html-to-image'
+import { useRef } from 'react'
 import { CHARACTERISTICS } from '../../lib/wfrpData.js'
+import { useSheetExport } from '../../lib/sheetExport.js'
 
 export default function WfrpSheetView({ state, derived }) {
   const ref = useRef(null)
-  const [busy, setBusy] = useState(false)
   const { species, career, klass, careerLevelInfo, finalChars, bonuses, skills, talents, trappings } = derived
-
-  const exportPng = async () => {
-    if (!ref.current || busy) return
-    setBusy(true)
-    try {
-      const url = await toPng(ref.current, { pixelRatio: 2, backgroundColor: '#fdfaf2' })
-      const a = document.createElement('a')
-      a.href = url
-      a.download = `${(state.name || 'character').replace(/[^\w\- ]/g, '').trim() || 'character'}.png`
-      a.click()
-    } catch (err) {
-      alert('Could not export image: ' + (err?.message || err))
-    } finally {
-      setBusy(false)
-    }
-  }
+  const { busy, exportPng, exportPdf } = useSheetExport(ref, () => state.name || 'character')
 
   const money = state.moneyRoll
 
@@ -33,7 +17,8 @@ export default function WfrpSheetView({ state, derived }) {
           {derived.valid
             ? <span className="cc-ok-badge">Complete ✓</span>
             : <span className="cc-warn-badge">{derived.issues.length} to resolve</span>}
-          <button className="cc-btn" onClick={exportPng} disabled={busy}>{busy ? 'Exporting…' : 'Export PNG'}</button>
+          <button className="cc-btn" onClick={exportPdf} disabled={busy}>{busy ? 'Exporting…' : 'Export PDF'}</button>
+          <button className="cc-btn cc-btn--ghost" onClick={exportPng} disabled={busy}>PNG</button>
         </div>
       </div>
       {derived.issues.length > 0 && <ul className="cc-issues">{derived.issues.map((i) => <li key={i}>{i}</li>)}</ul>}

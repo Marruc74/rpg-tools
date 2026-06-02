@@ -1,15 +1,18 @@
+import { useState } from 'react'
 import { ATTRIBUTES, SKILL_ATTRS, SKILL_POINTS, MAX_RANK } from '../../lib/paranoiaData.js'
+import FilterInput, { matches } from '../FilterInput.jsx'
 
 // Step 4 — spend 10 skill points on ranks (1 point = 1 rank). No skill may
 // exceed five ranks. Service-group training ranks are already baked in.
 export default function SkillsStep({ state, update, derived }) {
+  const [q, setQ] = useState('')
   const remaining = SKILL_POINTS - derived.skillPointsUsed
   const setRank = (id, n) => {
     const next = { ...state.skillRanks }
     if (n <= 0) delete next[id]; else next[id] = n
     update({ skillRanks: next })
   }
-  const byAttr = (k) => derived.skills.filter((s) => s.attr === k)
+  const byAttr = (k) => derived.skills.filter((s) => s.attr === k && matches(s.name, q))
 
   return (
     <div className="cc-step">
@@ -25,10 +28,12 @@ export default function SkillsStep({ state, update, derived }) {
         {!derived.noRankOver5 && ' · a skill exceeds 5 ranks!'}
       </div>
 
+      <FilterInput value={q} onChange={setQ} placeholder="Filter skills…" />
       <div className="cc-magic-grid">
         {SKILL_ATTRS.map((k) => {
           const attr = ATTRIBUTES.find((a) => a.key === k)
           const list = byAttr(k)
+          if (q && list.length === 0) return null
           return (
             <div key={k} className="cc-magic-school">
               <h4>{attr.name} <span className="cc-magic-fv">base {derived.skillBases[k]}</span></h4>

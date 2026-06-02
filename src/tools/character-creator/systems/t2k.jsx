@@ -1,5 +1,5 @@
 // Twilight: 2000 (4th edition) game-system descriptor — archetype method.
-import { T2K_KEY, emptyState, migrateState, deriveCharacter } from '../lib/t2kLibrary.js'
+import { T2K_KEY, emptyState, migrateState, deriveCharacter, rollRandomCharacter } from '../lib/t2kLibrary.js'
 import IdentityStep from '../components/t2k/IdentityStep.jsx'
 import AttributesStep from '../components/t2k/AttributesStep.jsx'
 import SkillsStep from '../components/t2k/SkillsStep.jsx'
@@ -75,10 +75,20 @@ export default {
   subtitle: 'Twilight: 2000 (4E) — the archetype method, for World War III that never was',
   resetConfirm: 'Start a new survivor? All data about this character will be lost.',
   storageKey: T2K_KEY,
-  emptyState, migrateState, deriveCharacter,
+  emptyState, migrateState, deriveCharacter, rollRandom: rollRandomCharacter,
   steps: STEPS,
   Budgets: T2kBudgets,
   stepDone,
+  // Party unit morale = the highest Command skill level across the team.
+  groupStat: (states, derive) => {
+    const order = ['F', 'D', 'C', 'B', 'A']
+    let best = 'F'
+    for (const st of states) {
+      const lvl = derive(st).skills.find((s) => s.id === 'command')?.level || 'F'
+      if (order.indexOf(lvl) > order.indexOf(best)) best = lvl
+    }
+    return best === 'F' ? 'Unit morale: F (no Command in the party)' : `Unit morale: ${best} (highest Command)`
+  },
   getName: (state) => state.name,
   getSummary: (state, derived) => (
     state.method === 'lifepath'

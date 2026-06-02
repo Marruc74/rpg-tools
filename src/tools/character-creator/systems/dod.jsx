@@ -1,7 +1,7 @@
 // Drakar och Demoner game-system descriptor. Wraps the existing DoD library and
 // step components into the generic shape the CharacterCreatorPage host expects.
 import {
-  CHARACTER_KEY, emptyState, migrateState, deriveCharacter,
+  CHARACTER_KEY, emptyState, migrateState, deriveCharacter, rollRandomCharacter,
 } from '../lib/characterLibrary.js'
 import Meter from '../components/Meter.jsx'
 import RaceStep from '../components/RaceStep.jsx'
@@ -58,7 +58,7 @@ export default {
   subtitle: 'Drakar och Demoner — skapa en rollperson med bakgrundspoäng',
   resetConfirm: 'Börja om från början? All data om rollpersonen försvinner.',
   storageKey: CHARACTER_KEY,
-  emptyState, migrateState, deriveCharacter,
+  emptyState, migrateState, deriveCharacter, rollRandom: rollRandomCharacter,
   steps: STEPS,
   Budgets: DodBudgets,
   stepDone,

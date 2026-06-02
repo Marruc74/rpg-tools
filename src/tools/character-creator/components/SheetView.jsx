@@ -1,28 +1,12 @@
-import { useRef, useState } from 'react'
-import { toPng } from 'html-to-image'
+import { useRef } from 'react'
 import { ALL_ATTRS, ATTR_NAMES, KP_LOCATIONS, svardshand, MAGIC_SCHOOLS } from '../lib/dodData.js'
+import { useSheetExport } from '../lib/sheetExport.js'
 
 export default function SheetView({ state, derived }) {
   const ref = useRef(null)
-  const [busy, setBusy] = useState(false)
   const { race, prof, age, tier, finalAttrs, derived: d, social, slutKapital, skills, silverKvar, synBonus, horselBonus, magic } = derived
   const inventory = state.inventory || []
-
-  const exportPng = async () => {
-    if (!ref.current || busy) return
-    setBusy(true)
-    try {
-      const url = await toPng(ref.current, { pixelRatio: 2, backgroundColor: '#fdfaf2' })
-      const a = document.createElement('a')
-      a.href = url
-      a.download = `${(state.namn || 'rollperson').replace(/[^\w\-åäöÅÄÖ ]/g, '').trim() || 'rollperson'}.png`
-      a.click()
-    } catch (err) {
-      alert('Kunde inte exportera bilden: ' + (err?.message || err))
-    } finally {
-      setBusy(false)
-    }
-  }
+  const { busy, exportPng, exportPdf } = useSheetExport(ref, () => state.namn || 'rollperson')
 
   const primarySkills = skills.filter((s) => s.typ.startsWith('Primär'))
   const yrkesSkills = skills.filter((s) => s.typ === 'Yrkesfärdighet')
@@ -48,7 +32,8 @@ export default function SheetView({ state, derived }) {
           {issues.length === 0
             ? <span className="cc-ok-badge">Klar rollperson ✓</span>
             : <span className="cc-warn-badge">{issues.length} att åtgärda</span>}
-          <button className="cc-btn" onClick={exportPng} disabled={busy}>{busy ? 'Exporterar…' : 'Exportera PNG'}</button>
+          <button className="cc-btn" onClick={exportPdf} disabled={busy}>{busy ? 'Exporterar…' : 'Exportera PDF'}</button>
+          <button className="cc-btn cc-btn--ghost" onClick={exportPng} disabled={busy}>PNG</button>
         </div>
       </div>
       {issues.length > 0 && <ul className="cc-issues">{issues.map((i) => <li key={i}>{i}</li>)}</ul>}

@@ -1,4 +1,4 @@
-import { MUTANT_POWERS, SECRET_SOCIETIES, rollSociety } from '../../lib/paranoiaData.js'
+import { MUTANT_POWERS, SECRET_SOCIETIES, rollSociety, STANDARD_ISSUE, rollStuff } from '../../lib/paranoiaData.js'
 
 const d20 = () => 1 + Math.floor(Math.random() * 20)
 
@@ -57,6 +57,17 @@ export default function SecretsStep({ state, update }) {
       </section>
 
       <p className="cc-note">Both of these are optional in the tool, but the gamemaster is going to assign them anyway. They always do.</p>
+
+      <section className="cc-bg-sec">
+        <h3>Mandatory equipment</h3>
+        <p className="cc-note">Issued to every Troubleshooter by the Computer:</p>
+        <ul className="cc-sheet-inv">{STANDARD_ISSUE.map((g) => <li key={g}>{g}</li>)}</ul>
+        <div className="cc-roll-bar">
+          <button type="button" className="cc-btn" onClick={() => update({ stuff: rollStuff() })}>🎲 Roll your Stuff</button>
+          {state.stuff && <span className="cc-note"><strong>Stuff:</strong> {state.stuff}</span>}
+        </div>
+        <p className="cc-note">Your Stuff is secret — nobody has to know. The Computer provides!</p>
+      </section>
     </div>
   )
 }
