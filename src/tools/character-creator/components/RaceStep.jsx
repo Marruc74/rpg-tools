@@ -8,7 +8,15 @@ function fmtMod(n) {
 
 export default function RaceStep({ state, update }) {
   const selRace = RACES.find((r) => r.id === state.raceId)
-  const showAlvName = selRace && (selRace.source === 'alver' || selRace.id === 'alv' || selRace.id === 'halvalv')
+  const showAlvName = selRace && (selRace.source === 'alver' || selRace.alv || selRace.id === 'alv' || selRace.id === 'halvalv' || selRace.id === 'halvalv-mb')
+  // Gruppera raserna i sektioner (i den ordning de förekommer i RACES).
+  const groups = []
+  for (const r of RACES) {
+    const namn = r.grupp || 'Övriga'
+    let g = groups.find((x) => x.namn === namn)
+    if (!g) { g = { namn, races: [] }; groups.push(g) }
+    g.races.push(r)
+  }
   return (
     <div className="cc-step">
       <h2>Grunduppgifter & ras</h2>
@@ -51,38 +59,45 @@ export default function RaceStep({ state, update }) {
       </div>
       <p className="cc-note">Kön påverkar inte grundegenskaper, färdigheter eller liknande.</p>
 
-      <div className="cc-cards">
-        {RACES.map((r) => {
-          const sel = state.raceId === r.id
-          return (
-            <button key={r.id} className={`cc-card ${sel ? 'is-selected' : ''}`} onClick={() => update({ raceId: r.id })}>
-              <div className="cc-card__head">
-                <span className="cc-card__name">
-                  {r.namn}
-                  {r.source === 'alver' && <span className="cc-src-badge cc-src-badge--xs" title="Alvsläkt ur Alver (Äventyrsspel)">Alver</span>}
-                </span>
-                <span className="cc-card__cost">{r.cost} BP</span>
-              </div>
-              <div className="cc-card__mods">
-                {ATTRS.map((a) => (
-                  <span key={a} className={`cc-card__mod ${r.mod[a] ? '' : 'is-zero'}`}>
-                    {a} {fmtMod(r.mod[a])}
-                  </span>
-                ))}
-                <span className="cc-card__mod cc-card__mod--sto">STO {r.sto.min}–{r.sto.max} ({r.sto.normal})</span>
-              </div>
-              {r.bonus.length > 0 && (
-                <div className="cc-card__bonus">
-                  {r.bonus.map((b) => (
-                    <span key={b.skill}>+{b.fv} {b.skill}{b.asPrimary ? ' (primär)' : ''}</span>
-                  ))}
-                </div>
-              )}
-              <p className="cc-card__desc">{r.desc}</p>
-            </button>
-          )
-        })}
-      </div>
+      {groups.map((g) => (
+        <div key={g.namn}>
+          <h3 className="cc-race-group">{g.namn}</h3>
+          <div className="cc-cards">
+            {g.races.map((r) => {
+              const sel = state.raceId === r.id
+              return (
+                <button key={r.id} className={`cc-card ${sel ? 'is-selected' : ''}`} onClick={() => update({ raceId: r.id })}>
+                  <div className="cc-card__head">
+                    <span className="cc-card__name">
+                      {r.namn}
+                      {r.source === 'alver' && <span className="cc-src-badge cc-src-badge--xs" title="Alvsläkt ur Alver (Äventyrsspel)">Alver</span>}
+                      {r.source === 'monsterboxen' && !r.kultur && <span className="cc-src-badge cc-src-badge--xs" title="Ras ur Monsterboxen (1990)">Monsterboxen</span>}
+                      {r.kultur && <span className="cc-src-badge cc-src-badge--xs" title="Människokultur i Ereb Altor (Monsterboxen)">Kultur</span>}
+                    </span>
+                    <span className="cc-card__cost">{r.cost} BP</span>
+                  </div>
+                  <div className="cc-card__mods">
+                    {ATTRS.map((a) => (
+                      <span key={a} className={`cc-card__mod ${r.mod[a] ? '' : 'is-zero'}`}>
+                        {a} {fmtMod(r.mod[a])}
+                      </span>
+                    ))}
+                    <span className="cc-card__mod cc-card__mod--sto">STO {r.sto.min}–{r.sto.max} ({r.sto.normal})</span>
+                  </div>
+                  {r.bonus.length > 0 && (
+                    <div className="cc-card__bonus">
+                      {r.bonus.map((b) => (
+                        <span key={b.skill}>+{b.fv} {b.skill}{b.asPrimary ? ' (primär)' : ''}</span>
+                      ))}
+                    </div>
+                  )}
+                  <p className="cc-card__desc">{r.desc}</p>
+                </button>
+              )
+            })}
+          </div>
+        </div>
+      ))}
     </div>
   )
 }

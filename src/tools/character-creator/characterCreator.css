@@ -118,6 +118,10 @@
 }
 
 /* ── Cards (race / profession / age) ──────────────────── */
+.cc-race-group {
+  font-family: 'Georgia', serif; font-size: 15px; color: #5a4a2c;
+  margin: 20px 0 8px; padding-bottom: 4px; border-bottom: 1px solid #d8cfb8;
+}
 .cc-cards { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 12px; }
 .cc-card {
   display: block; text-align: left; background: #fff; border: 1px solid #d8cfb8;

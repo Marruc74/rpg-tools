@@ -108,7 +108,7 @@ export function deriveCharacter(state) {
   const age = AGE_CATEGORIES.find((a) => a.id === state.alderId) || AGE_CATEGORIES[1]
   const tier = POWER_TIERS.find((t) => t.id === state.tier) || POWER_TIERS[0]
   // Alvsläkter använder fasta EP/Max-FV per kraftnivå (oberoende av ålder).
-  const isAlv = race?.source === 'alver'
+  const isAlv = race?.source === 'alver' || race?.alv === true
   const epPool = isAlv
     ? (ALV_TIER_EP[tier.id] ?? ALV_TIER_EP.vanlig)
     : (TIER_EP[tier.id] || TIER_EP.vanlig)[age.id]
