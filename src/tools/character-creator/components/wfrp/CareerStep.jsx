@@ -1,7 +1,11 @@
 import { useState } from 'react'
-import { CLASSES, CAREERS, careersByClass, careerById, classById } from '../../lib/wfrpData.js'
+import { CLASSES, CAREERS, careersByClass, careerById, classById, speciesById } from '../../lib/wfrpData.js'
 
-const randomCareer = () => CAREERS[Math.floor(Math.random() * CAREERS.length)]
+// Expansion careers carry a species eligibility list — random rolls skip illegal combos.
+const randomCareer = (speciesId) => {
+  const pool = CAREERS.filter((c) => !c.species || !speciesId || c.species.includes(speciesId))
+  return pool[Math.floor(Math.random() * pool.length)]
+}
 
 export default function CareerStep({ state, setState, derived }) {
   const career = careerById(state.careerId)
@@ -20,17 +24,21 @@ export default function CareerStep({ state, setState, derived }) {
     if (c) setOpenClass(c.classId)
   }
 
-  const rollOne = () => { setRolled([]); pick(randomCareer().id, 'firstRoll') }
+  const rollOne = () => { setRolled([]); pick(randomCareer(state.speciesId).id, 'firstRoll') }
   const rollThree = () => {
     const picks = []
     while (picks.length < 3) {
-      const c = randomCareer()
+      const c = randomCareer(state.speciesId)
       if (!picks.includes(c.id)) picks.push(c.id)
     }
     setRolled(picks)
   }
 
   const list = careersByClass(openClass)
+  // A career is open to the chosen species when it has no restriction list or
+  // the species is on it (no species chosen yet = everything selectable).
+  const eligible = (c) => !c.species || !state.speciesId || c.species.includes(state.speciesId)
+  const speciesName = (id) => speciesById(id)?.name.replace(/\s*\(.*\)$/, '') || id
 
   return (
     <div className="cc-step">
@@ -74,7 +82,7 @@ export default function CareerStep({ state, setState, derived }) {
             onClick={() => setOpenClass(k.id)}
           >
             <span className="cc-tier__name">{k.name}</span>
-            <span className="cc-tier__detail">{careersByClass(k.id).length} careers</span>
+            <span className="cc-tier__detail">{careersByClass(k.id).filter(eligible).length} careers</span>
           </button>
         ))}
       </div>
@@ -84,12 +92,31 @@ export default function CareerStep({ state, setState, derived }) {
       <div className="cc-cards">
         {list.map((c) => {
           const sel = state.careerId === c.id
+          // Careers closed to the chosen species (per the rulebook's Random
+          // Class and Career Table) are shown greyed-out and unselectable.
+          const locked = !eligible(c)
           return (
-            <button key={c.id} className={`cc-card ${sel ? 'is-selected' : ''}`} onClick={() => pick(c.id, 'choose')}>
+            <button
+              key={c.id}
+              className={`cc-card ${sel ? 'is-selected' : ''}`}
+              disabled={locked}
+              title={locked ? `Not available to ${speciesName(state.speciesId)}` : undefined}
+              onClick={() => pick(c.id, 'choose')}
+            >
               <div className="cc-card__head">
                 <span className="cc-card__name">{c.name}</span>
-                <span className="cc-card__cost">{c.levels[0].status}</span>
+                <span>
+                  {c.book && <span className="cc-pill" title={`From ${c.book}`}>{c.book}</span>}
+                  {' '}
+                  <span className="cc-card__cost">{c.levels[0].status}</span>
+                </span>
               </div>
+              {c.species && (
+                <div className="cc-card__bonus">
+                  <strong>Species:</strong> {c.species.map(speciesName).join(', ')}
+                  {locked && <em> — not available to {speciesName(state.speciesId)}</em>}
+                </div>
+              )}
               <div className="cc-career-levels">
                 {c.levels.map((lv, i) => (
                   <span key={i} className={`cc-career-level ${i === 0 ? 'is-first' : ''}`}>

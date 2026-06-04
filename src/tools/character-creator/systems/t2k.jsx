@@ -67,6 +67,21 @@ function stepDone(id, state, derived) {
   }
 }
 
+// Which state fields each step owns — editing a step resets all later steps'
+// fields (see cascadeReset in CharacterCreatorPage). `name`/`nickname`/`notes`
+// belong to no step and are never auto-reset. Switching method (archetype ↔
+// life path) on the first step therefore wipes everything downstream.
+const STEP_FIELDS = {
+  identity: ['method', 'nationality', 'archetypeId', 'branch', 'rank'],
+  attributes: ['attrs', 'lpIncreases'],
+  core: ['skills', 'childhood', 'terms', 'atWar', 'warOut', 'lpOverrideReqs', 'nextPrison'],
+  detail: ['specialty'],
+  profile: ['rads', 'partySize', 'vehicle', 'groupGear', 'moralCode', 'bigDream', 'appearance', 'howMet', 'buddy'],
+  sheet: [],
+}
+// Free-text fields: reset with their step, but typing in them never cascades.
+const NO_CASCADE = ['branch', 'rank', 'lpOverrideReqs', 'moralCode', 'bigDream', 'appearance', 'howMet', 'buddy']
+
 export default {
   id: 't2k',
   name: 'Twilight: 2000 (4th Edition)',
@@ -77,6 +92,8 @@ export default {
   storageKey: T2K_KEY,
   emptyState, migrateState, deriveCharacter, rollRandom: rollRandomCharacter,
   steps: STEPS,
+  stepFields: STEP_FIELDS,
+  noCascadeFields: NO_CASCADE,
   Budgets: T2kBudgets,
   stepDone,
   // Party unit morale = the highest Command skill level across the team.

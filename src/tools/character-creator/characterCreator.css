@@ -127,7 +127,8 @@
   display: block; text-align: left; background: #fff; border: 1px solid #d8cfb8;
   border-radius: 8px; padding: 14px; color: inherit;
 }
-.cc-card:hover { border-color: #a8946b; }
+.cc-card:hover:not(:disabled) { border-color: #a8946b; }
+.cc-card:disabled { opacity: 0.45; cursor: not-allowed; filter: grayscale(0.6); }
 .cc-card.is-selected { border-color: #5a4a2c; box-shadow: 0 0 0 2px rgba(90, 74, 44, 0.25); }
 .cc-card.is-warn { border-color: #d8a07a; }
 .cc-card.is-warn.is-selected { box-shadow: 0 0 0 2px rgba(179, 64, 47, 0.25); }

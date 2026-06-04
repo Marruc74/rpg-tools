@@ -51,6 +51,20 @@ function stepDone(id, state, derived) {
   }
 }
 
+// Which state fields each step owns — editing a step resets all later steps'
+// fields (see cascadeReset in CharacterCreatorPage). `notes` belongs to no
+// step and is never auto-reset.
+const STEP_FIELDS = {
+  identity: ['firstName', 'clearance', 'sector', 'cloneNumber'],
+  attributes: ['genMode', 'attrs', 'attrRolls', 'rerollUsed'],
+  service: ['serviceGroupId', 'sgRolls'],
+  skills: ['skillRanks'],
+  secrets: ['mutantPower', 'mutantRoll', 'society', 'societyRoll', 'societyRank', 'treasonRegistered', 'stuff'],
+  sheet: [],
+}
+// Free-text fields: reset with their step, but typing in them never cascades.
+const NO_CASCADE = ['firstName', 'sector', 'cloneNumber']
+
 export default {
   id: 'paranoia',
   name: 'Paranoia (the Fifth Edition)',
@@ -61,6 +75,8 @@ export default {
   storageKey: PARANOIA_KEY,
   emptyState, migrateState, deriveCharacter, rollRandom: rollRandomCharacter,
   steps: STEPS,
+  stepFields: STEP_FIELDS,
+  noCascadeFields: NO_CASCADE,
   Budgets: ParanoiaBudgets,
   stepDone,
   getName: (state) => state.firstName,

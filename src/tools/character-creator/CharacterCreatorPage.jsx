@@ -3,6 +3,7 @@ import { useSearchParams } from 'react-router-dom'
 import { v4 as uuid } from 'uuid'
 import './characterCreator.css'
 import { useIndexedDBState } from '../../shared/hooks/useIndexedDBState.js'
+import { cascadeReset } from './lib/stepCascade.js'
 import { SYSTEMS, systemById } from './systems/index.js'
 import RosterBar from './components/RosterBar.jsx'
 import PartyPanel from './components/PartyPanel.jsx'
@@ -70,7 +71,14 @@ function SystemRunner({ system, pendingImport, onConsumePending, onCrossImport }
     return <main className="cc__main"><p className="hint">Laddar…</p></main>
   }
 
-  const update = (patch) => setState((s) => ({ ...s, ...patch }))
+  // Step components get a cascade-aware setState: editing the current step
+  // resets every later step (see cascadeReset). Roster loads, imports and the
+  // random generator use the raw setState — they install complete states.
+  const stepSetState = (updater) => setState((s) => {
+    const next = typeof updater === 'function' ? updater(s) : { ...s, ...updater }
+    return cascadeReset(system, stepIdx, s, next)
+  })
+  const update = (patch) => stepSetState((s) => ({ ...s, ...patch }))
   const steps = system.steps
   const Active = steps[stepIdx].Comp
   const Budgets = system.Budgets
@@ -165,10 +173,12 @@ function SystemRunner({ system, pendingImport, onConsumePending, onCrossImport }
     importHere(payload)
   }
 
-  // Incomplete steps (excluding the final sheet) for the to-do guidance list.
+  // Incomplete steps (excluding the final sheet and optional steps) for the
+  // to-do guidance list. Optional steps still show a ✓ when engaged with, but
+  // an untouched one is not "to do".
   const todo = steps.slice(0, -1)
     .map((step, i) => ({ step, i }))
-    .filter(({ step }) => !system.stepDone(step.id, state, derived))
+    .filter(({ step }) => !step.optional && !system.stepDone(step.id, state, derived))
 
   // Build a shareable hash URL that encodes the current character.
   const handleShare = async () => {
@@ -236,7 +246,7 @@ function SystemRunner({ system, pendingImport, onConsumePending, onCrossImport }
         </aside>
 
         <section className="cc__pane">
-          <Active state={state} update={update} setState={setState} derived={derived} />
+          <Active state={state} update={update} setState={stepSetState} derived={derived} />
           <div className="cc__nav">
             <button className="cc-btn cc-btn--ghost" disabled={stepIdx === 0} onClick={() => setStepIdx((i) => i - 1)}>
               ← Föregående / Back

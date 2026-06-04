@@ -1,8 +1,13 @@
+import { useState } from 'react'
 import { v4 as uuid } from 'uuid'
 import { rollStartingWealth } from '../../lib/wfrpLibrary.js'
+import { UIA_EQUIPMENT, equipmentItemText } from '../../lib/wfrpData.js'
+import FilterInput, { matches } from '../FilterInput.jsx'
 
 export default function TrappingsStep({ state, update, setState, derived }) {
   const { species, career, klass, careerL1 } = derived
+  const [catGroup, setCatGroup] = useState(UIA_EQUIPMENT[0].group)
+  const [catQuery, setCatQuery] = useState('')
 
   if (!species || !career) {
     return (
@@ -60,10 +65,17 @@ export default function TrappingsStep({ state, update, setState, derived }) {
 
       <h3 className="cc-subhead">Trappings</h3>
       <p className="cc-note"><strong>{klass.name} class:</strong> {klass.trappings.join(', ')}.</p>
-      <p className="cc-note">
-        Your career also grants its first-level trappings (see the {career.name} entry in the rulebook).
-        Add them — and anything else you start with — below.
-      </p>
+      {career.trappings ? (
+        <p className="cc-note">
+          <strong>{careerL1.title} career:</strong> {career.trappings.join(', ')}.
+          {' '}Add them — and anything else you start with — below.
+        </p>
+      ) : (
+        <p className="cc-note">
+          Your career also grants its first-level trappings (see the {career.name} entry in the rulebook).
+          Add them — and anything else you start with — below.
+        </p>
+      )}
       <div className="cc-inv">
         {state.extraTrappings.map((it) => (
           <div key={it.id} className="cc-inv-row">
@@ -72,6 +84,61 @@ export default function TrappingsStep({ state, update, setState, derived }) {
           </div>
         ))}
         <button className="cc-btn cc-btn--ghost" onClick={addItem}>+ Add trapping</button>
+        {career.trappings && (
+          <button
+            className="cc-btn cc-btn--ghost"
+            onClick={() => setState((s) => ({
+              ...s,
+              extraTrappings: [
+                ...s.extraTrappings,
+                ...career.trappings
+                  .filter((t) => !s.extraTrappings.some((it) => it.text === t))
+                  .map((t) => ({ id: uuid(), text: t })),
+              ],
+            }))}
+          >
+            + Add all {careerL1.title} trappings
+          </button>
+        )}
+      </div>
+
+      <h3 className="cc-subhead">Equipment catalogue — Up in Arms</h3>
+      <p className="cc-note">Gear and weapons from the Quartermaster&apos;s Store. Click an item to add it to your trappings.</p>
+      <div className="cc-roll-bar">
+        <div className="cc-seg cc-seg--wrap">
+          {UIA_EQUIPMENT.map((g) => (
+            <button key={g.group} className={catGroup === g.group ? 'is-on' : ''} onClick={() => setCatGroup(g.group)}>{g.group}</button>
+          ))}
+        </div>
+      </div>
+      <FilterInput value={catQuery} onChange={setCatQuery} placeholder="Search equipment…" />
+      <div className="cc-skill-list" style={{ marginTop: 8 }}>
+        {(UIA_EQUIPMENT.find((g) => g.group === catGroup)?.items || [])
+          .filter((it) => matches(`${it.name} ${it.qualities || ''}`, catQuery))
+          .map((it) => {
+            const added = state.extraTrappings.some((t) => t.text === equipmentItemText(it))
+            const detail = [
+              it.price !== 'N/A' && it.price, it.enc !== 0 && it.enc != null && `Enc ${it.enc}`, it.avail !== 'N/A' && it.avail,
+              it.reach && it.reach !== 'N/A' && `Reach ${it.reach}`, it.range && `Range ${it.range}`,
+              it.dmg && it.dmg !== '–' && `Dmg ${it.dmg}`, it.qualities,
+            ].filter(Boolean).join(' · ')
+            return (
+              <div key={it.name} className="cc-skill-row">
+                <span className="cc-skill-row__name">
+                  <strong>{it.name}</strong>
+                  <span className="cc-note" style={{ display: 'block', margin: 0 }}>{detail}</span>
+                </span>
+                <button
+                  className="cc-btn cc-btn--ghost"
+                  disabled={added}
+                  title={added ? 'Already in your trappings' : 'Add to trappings'}
+                  onClick={() => setState((s) => ({ ...s, extraTrappings: [...s.extraTrappings, { id: uuid(), text: equipmentItemText(it) }] }))}
+                >
+                  {added ? '✓' : '+'}
+                </button>
+              </div>
+            )
+          })}
       </div>
     </div>
   )

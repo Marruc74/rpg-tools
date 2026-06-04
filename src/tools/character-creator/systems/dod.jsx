@@ -50,6 +50,25 @@ function stepDone(id, state, derived) {
   }
 }
 
+// Which state fields each step owns — editing a step resets all later steps'
+// fields (see cascadeReset in CharacterCreatorPage). Identity fields (namn,
+// spelare, kon) belong to no step and are never auto-reset.
+const STEP_FIELDS = {
+  ras: ['raceId', 'tier'],
+  yrke: ['yrkeId'],
+  grund: ['base', 'stoMod'],
+  fardigheter: ['yrkesSkills', 'fvBoost', 'spells', 'specialiseringar'],
+  bakgrund: [
+    'alderId', 'alderAr', 'socialBP', 'socialRoll', 'kapitalBP', 'kapitalRoll',
+    'svardshandBP', 'svardshandRoll', 'synBP', 'synRoll', 'horselBP', 'horselRoll',
+    'formagor', 'vildMagi', 'familjar', 'utseende', 'bakgrund',
+  ],
+  utrustning: ['inventory'],
+  rollformular: [],
+}
+// Free-text fields: reset with their step, but typing in them never cascades.
+const NO_CASCADE = ['alderAr', 'familjar', 'utseende', 'bakgrund']
+
 export default {
   id: 'dod',
   name: 'Drakar och Demoner',
@@ -60,6 +79,8 @@ export default {
   storageKey: CHARACTER_KEY,
   emptyState, migrateState, deriveCharacter, rollRandom: rollRandomCharacter,
   steps: STEPS,
+  stepFields: STEP_FIELDS,
+  noCascadeFields: NO_CASCADE,
   Budgets: DodBudgets,
   stepDone,
   getName: (state) => state.namn,

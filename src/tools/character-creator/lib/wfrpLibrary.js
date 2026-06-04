@@ -339,7 +339,8 @@ export function deriveCharacter(state) {
 export function rollRandomCharacter(rng = Math.random) {
   const s = emptyState()
   const sp = wpick(SPECIES, rng)
-  const car = wpick(CAREERS, rng)
+  // Expansion careers carry a species eligibility list — only roll legal combos.
+  const car = wpick(CAREERS.filter((c) => !c.species || c.species.includes(sp.id)), rng)
   s.speciesId = sp.id
   s.careerId = car.id
   s.careerMethod = 'choose'

@@ -20,7 +20,7 @@ const STEPS = [
   { id: 'skills', label: 'Skills & Talents', Comp: SkillsTalentsStep },
   { id: 'trappings', label: 'Trappings', Comp: TrappingsStep },
   { id: 'detail', label: 'Detail', Comp: DetailStep },
-  { id: 'advancement', label: 'Advancement', Comp: AdvancementStep },
+  { id: 'advancement', label: 'Advancement', Comp: AdvancementStep, optional: true },
   { id: 'sheet', label: 'Character Sheet', Comp: WfrpSheetView },
 ]
 
@@ -69,10 +69,31 @@ function stepDone(id, state, derived) {
         && !!state.careerTalent
     case 'trappings': return !!state.moneyRoll && derived.extraSpent === derived.extraAllowed
     case 'detail': return !!state.motivation
-    case 'advancement': return derived.xpAvailable >= 0
+    // Optional step: only ✓ once XP has actually been spent or added (a fresh
+    // or cascade-reset advancement state shows no checkmark).
+    case 'advancement':
+      return (derived.xpSpentAdv > 0 || (Number(state.xpAdded) || 0) > 0) && derived.xpAvailable >= 0
     default: return false
   }
 }
+
+// Which state fields each step owns — editing a step resets all later steps'
+// fields (see cascadeReset in CharacterCreatorPage). `name`/`player` belong to
+// no step and are never auto-reset. Note: the Advancement step may change
+// careerId (career change in play) — cascades only trigger from the step the
+// user is on, so that does not wipe the character.
+const STEP_FIELDS = {
+  species: ['speciesId', 'speciesRandom'],
+  career: ['careerId', 'careerMethod'],
+  characteristics: ['charBase', 'charRolls'],
+  skills: ['speciesSkillAdv', 'careerSkillAdv', 'speciesTalentChoices', 'speciesRandomTalents', 'careerTalent'],
+  trappings: ['fateExtra', 'resilienceExtra', 'moneyRoll', 'extraTrappings'],
+  detail: ['motivation', 'shortAmbition', 'longAmbition', 'age', 'height', 'hair', 'eyes', 'background'],
+  advancement: ['xpAdded', 'advChar', 'advSkill', 'boughtTalents', 'extraSkills', 'careerLevel', 'careerChangeXp'],
+  sheet: [],
+}
+// Free-text fields: reset with their step, but typing in them never cascades.
+const NO_CASCADE = ['extraTrappings', 'motivation', 'shortAmbition', 'longAmbition', 'age', 'height', 'hair', 'eyes', 'background']
 
 export default {
   id: 'wfrp',
@@ -84,6 +105,8 @@ export default {
   storageKey: WFRP_KEY,
   emptyState, migrateState, deriveCharacter, rollRandom: rollRandomCharacter,
   steps: STEPS,
+  stepFields: STEP_FIELDS,
+  noCascadeFields: NO_CASCADE,
   Budgets: WfrpBudgets,
   stepDone,
   getName: (state) => state.name,
